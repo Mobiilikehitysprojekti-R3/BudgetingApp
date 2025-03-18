@@ -5,7 +5,6 @@ import { getFirestore } from "firebase/firestore";
 // Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_API_KEY,
     authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN,
