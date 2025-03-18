@@ -26,6 +26,9 @@ const updateUserIncome = async (userId, income) => {
     }
   };
 
+// Test values for income
+updateUserIncome(userId, 50000);
+
 // Function to create a budget field and update it to Firestore
 const updateUserBudget = async (userId, budget) => {
     if (!userId) {
@@ -43,8 +46,7 @@ const updateUserBudget = async (userId, budget) => {
     }
 };
   
-// Test values for income and budget
-updateUserIncome(userId, 50000);
+// Test values for budget
 updateUserBudget(userId, 10000);
 
 
