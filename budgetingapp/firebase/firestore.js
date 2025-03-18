@@ -9,7 +9,8 @@ const db = getFirestore();
 // Get the currently signed-in user
 //const user = auth.currentUser;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, () => {
+    const user = auth.currentUser;
     if (user) {
         console.log("User logged in:", user.uid);
         
@@ -31,10 +32,11 @@ const updateUserIncome = async (income) => {
       return;
     } else {
         try {
-            await updateDoc(doc(db, "users", user.uid), {
+            await setDoc(doc(db, "users", user.uid), {
                 income: income, // Add or update the "income" field
             });
             console.log("Income field added/updated!");
+            console.log("User income:", income);
             } catch (error) {
             console.error("Error updating user data:", error);
             }
@@ -50,10 +52,11 @@ const updateUserBudget = async (budget) => {
         return;
     } else {
         try {
-            await updateDoc(doc(db, "users", user.uid), {
+            await setDoc(doc(db, "users", user.uid), {
                 budget: budget, // Add or update the "budget" field
             });
             console.log("Budget field added/updated!");
+            console.log("User budget:", budget);
             } catch (error) {
             console.error("Error updating user data:", error);
             }
@@ -61,7 +64,6 @@ const updateUserBudget = async (budget) => {
 };
 
 // Function to get user data from Firestore
-// This function will log the user data to the console
 async function getUserData() {
     const user = auth.currentUser;
     if (auth.currentUser) {
