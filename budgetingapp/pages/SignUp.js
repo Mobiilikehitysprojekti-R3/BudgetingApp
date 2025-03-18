@@ -64,6 +64,9 @@ export default function SignUp({ navigation }) {
       <TextInput placeholder="Phone Number" value={phone} onChangeText={setPhone} style={styles.input} keyboardType="phone-pad" />
       <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
       <Button title="Register" onPress={handleRegister} />
+       <Text style={styles.link} onPress={() => navigation.navigate("SignIn")}>
+              Already have an account? Sign in
+            </Text>
     </View>
   )
 }
