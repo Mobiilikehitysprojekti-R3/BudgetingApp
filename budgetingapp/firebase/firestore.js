@@ -4,10 +4,6 @@ import { getDoc } from "firebase/firestore";
 import { auth } from "./config";
 
 const db = getFirestore();
-//const auth = getAuth();
-
-// Get the currently signed-in user
-//const user = auth.currentUser;
 
 onAuthStateChanged(auth, () => {
     const user = auth.currentUser;
