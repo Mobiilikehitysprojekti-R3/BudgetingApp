@@ -5,7 +5,6 @@ import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import Profile from './pages/Profile';
 
-
 const Stack = createStackNavigator();
 
 export default function App() {

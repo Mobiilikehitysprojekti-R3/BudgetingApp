@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
+import { updateUserBudget, updateUserIncome } from "../firebase/firestore";
 
 /* 
     The SignIn allows users to log in by providing
