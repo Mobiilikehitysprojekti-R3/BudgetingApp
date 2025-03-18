@@ -75,6 +75,44 @@ async function getUserData() {
     }
 }
 
+// This function allows users to change their username.
+const updateUserName = async (name) => {
+    const user = auth.currentUser
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    try {
+        await updateDoc(doc(db, "users", user.uid), {
+            name: name
+        })
+        console.log("User name updated!")
+    } catch (error) {
+        console.error("Error updating user name:", error)
+    }
+}
+
+// This function allows users to change their phone number.
+const updateUserPhone = async (phone) => {
+    const user = auth.currentUser
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    try {
+        await updateDoc(doc(db, "users", user.uid), {
+            phone: phone
+        })
+        console.log("User phone updated!")
+    } catch (error) {
+        console.error("Error updating user phone:", error)
+    }
+}
+
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData };
+export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName };
