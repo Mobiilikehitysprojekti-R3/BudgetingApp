@@ -1,5 +1,5 @@
 import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
-import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 
@@ -144,6 +144,30 @@ const updateUserEmail = async (newEmail, currentPassword) => {
     }
 }
 
+const updateUserPassword = async (currentPassword, newPassword) => {
+    const user = auth.currentUser
+    
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
+
+    try {
+        // Re-authenticate the user
+        await reauthenticateWithCredential(user, credential);
+        console.log("Re-authentication successful!");
+
+        // Update password in Firebase Authentication
+        await updatePassword(user, newPassword)
+        console.log("Password updated successfully!")
+
+    } catch (error) {
+        console.error("Error updating password:", error.message)
+    }
+}
+
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail };
+export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword };

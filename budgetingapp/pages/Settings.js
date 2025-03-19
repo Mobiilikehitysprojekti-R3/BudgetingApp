@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
-import { updateUserName, updateUserPhone, updateUserEmail } from "../firebase/firestore";
+import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
 
 export default function Settings() {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
 
   const handleUpdateName = async () => {
     await updateUserName(name)
@@ -25,12 +26,25 @@ export default function Settings() {
       Alert.alert("Please enter both new email and current password.")
       return
     }
+    await updateUserEmail(email, password)
 
     setEmail("")
     setPassword("")
-
-    await updateUserEmail(email, password)
+    
     Alert.alert("Email updated successfully!")
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!password || !newPassword) {
+      Alert.alert("Please enter both current and new password.")
+      return
+    }
+    await updateUserPassword(password, newPassword)
+
+    setPassword("")
+    setNewPassword("")
+    
+    Alert.alert("Password updated successfully!")
   }
 
   return (
@@ -46,6 +60,10 @@ export default function Settings() {
       <TextInput placeholder="New Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="Current Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
       <Button title="Update" onPress={handleUpdateEmail} />
+
+      <TextInput placeholder="Current Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
+      <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} style={styles.input} secureTextEntry />
+      <Button title="Update Password" onPress={handleUpdatePassword} />
     </View>
   )
 }
