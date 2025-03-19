@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenti
 import { getDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 
-const db = getFirestore();
+//const db = getFirestore();
 
 onAuthStateChanged(auth, () => {
     const user = auth.currentUser;
@@ -142,6 +142,7 @@ const updateUserEmail = async (newEmail, currentPassword) => {
     }
 }
 
+// This function allows users to change their password.
 const updateUserPassword = async (currentPassword, newPassword) => {
     const user = auth.currentUser
     
