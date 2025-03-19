@@ -1,9 +1,9 @@
 import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
-import { auth } from "./config";
+import { auth, db } from "./config";
 
-const db = getFirestore();
+//const db = getFirestore();
 //const auth = getAuth();
 
 // Get the currently signed-in user
@@ -113,6 +113,37 @@ const updateUserPhone = async (phone) => {
     }
 }
 
+// This function allows the user to update their email address.
+const updateUserEmail = async (newEmail, currentPassword) => {
+    const user = auth.currentUser
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+    try {
+        // Re-authenticate the user
+        await reauthenticateWithCredential(user, credential)
+        console.log("Re-authentication successful!")
+
+        // Update email in Firebase Authentication
+        await updateEmail(user, newEmail)
+        console.log("Email updated successfully in Authentication!")
+
+        // Update email in Firestore
+        await updateDoc(doc(db, "users", user.uid), {
+            email: newEmail,
+        })
+        console.log("Email updated successfully in Firestore!")
+
+    } catch (error) {
+        console.error("Error updating email:", error.message)
+    }
+}
+
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName };
+export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail };
