@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
+import styles from "../styles"
 
 /* 
     The SignUp component allows users to register by providing
@@ -58,36 +59,45 @@ export default function SignUp({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
-      <TextInput placeholder="Name" value={name} onChangeText={setName} style={styles.input} />
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="Phone Number" value={phone} onChangeText={setPhone} style={styles.input} keyboardType="phone-pad" />
-      <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
-      <Button title="Register" onPress={handleRegister} />
+      <Text style={styles.title}>SIGN UP</Text>
+      <View style={styles.form}>
+        <Text style={styles.link}>Name</Text>
+        <TextInput 
+          placeholder="..." 
+          value={name} 
+          onChangeText={setName} 
+          style={styles.formInput} />
+        <Text style={styles.link}>Email</Text>
+        <TextInput 
+          placeholder="..." 
+          value={email} 
+          onChangeText={setEmail} 
+          style={styles.formInput} 
+          keyboardType="email-address" />
+        <Text style={styles.link}>Phone number</Text>
+        <TextInput 
+          placeholder="..." 
+          value={phone} 
+          onChangeText={setPhone} 
+          style={styles.formInput} 
+          keyboardType="phone-pad" />
+        <Text style={styles.link}>Password</Text>
+        <TextInput 
+          placeholder="..." 
+          value={password} 
+          onChangeText={setPassword} 
+          style={styles.formInput} 
+          secureTextEntry />
+      </View> 
+        <TouchableOpacity style={styles.buttonTwo} onPress={handleRegister}>
+          <Text style={styles.buttonTextMiddle}>
+            Register
+          </Text>
+        </TouchableOpacity>
+
        <Text style={styles.link} onPress={() => navigation.navigate("SignIn")}>
-              Already have an account? Sign in
-            </Text>
+          Already have an account? Sign in
+       </Text>
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-})
