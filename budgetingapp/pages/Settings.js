@@ -4,12 +4,12 @@ import { auth } from '../firebase/config';
 import { deleteUser , signOut } from 'firebase/auth';
 import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
 
-/*
+/* 
+    The Settings component allows logged-in users to update 
+    their profile information, including name, phone number, 
+    email, and password.
 
-  On the settings page a logged in user can update their user info
-  such as their name, phone number, email and password. They can also
-  logout and delete their account.
-
+    Users can also log out or permanently delete their accounts.
 */
 
 export default function Settings({ navigation }) {
