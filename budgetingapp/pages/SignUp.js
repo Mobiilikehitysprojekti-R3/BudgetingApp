@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import styles from "../styles"
-
 /* 
     The SignUp component allows users to register by providing
     their name, email, phone, and password.
@@ -66,28 +65,32 @@ export default function SignUp({ navigation }) {
           placeholder="..." 
           value={name} 
           onChangeText={setName} 
-          style={styles.formInput} />
+          style={styles.formInput} 
+        />
         <Text style={styles.link}>Email</Text>
         <TextInput 
           placeholder="..." 
           value={email} 
           onChangeText={setEmail} 
           style={styles.formInput} 
-          keyboardType="email-address" />
+          keyboardType="email-address" 
+        />
         <Text style={styles.link}>Phone number</Text>
         <TextInput 
           placeholder="..." 
           value={phone} 
           onChangeText={setPhone} 
           style={styles.formInput} 
-          keyboardType="phone-pad" />
+          keyboardType="phone-pad" 
+        />
         <Text style={styles.link}>Password</Text>
         <TextInput 
           placeholder="..." 
           value={password} 
           onChangeText={setPassword} 
           style={styles.formInput} 
-          secureTextEntry />
+          secureTextEntry 
+        />
       </View> 
         <TouchableOpacity style={styles.buttonTwo} onPress={handleRegister}>
           <Text style={styles.buttonTextMiddle}>

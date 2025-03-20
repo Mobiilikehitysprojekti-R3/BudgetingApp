@@ -73,7 +73,12 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     profile: {
-        marginBottom: 40,
+        margin: 40,
+    },
+    avatar: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
     }
 
 })

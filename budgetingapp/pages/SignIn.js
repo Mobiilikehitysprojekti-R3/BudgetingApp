@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
 import { updateUserBudget, updateUserIncome } from "../firebase/firestore";
 import styles from "../styles";
+
 /* 
     The SignIn allows users to log in by providing
     their email and password.
@@ -11,8 +12,8 @@ import styles from "../styles";
 
 export default function SignIn({ navigation }) {
   // useState hooks to store input values from the user
-  const [email, setEmail] = useState("kiia@testi.com");
-  const [password, setPassword] = useState("testi2");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Function to handle user sign in
   const handleSignIn = async () => {
@@ -44,7 +45,7 @@ export default function SignIn({ navigation }) {
       <View style={styles.form}>
         <Text style={styles.link}>Email</Text>
         <TextInput
-          placeholder="Email"
+          placeholder="..."
           value={email}
           onChangeText={setEmail}
           style={styles.formInput}
@@ -52,7 +53,7 @@ export default function SignIn({ navigation }) {
         />
         <Text style={styles.link}>Password</Text>
         <TextInput
-          placeholder="Password"
+          placeholder="..."
           value={password}
           onChangeText={setPassword}
           style={styles.formInput}
@@ -64,7 +65,6 @@ export default function SignIn({ navigation }) {
             Sign In
           </Text>
         </TouchableOpacity>
-
       <Text style={styles.link} onPress={() => navigation.navigate("SignUp")}>
         Don't have an account? Sign Up
       </Text>
