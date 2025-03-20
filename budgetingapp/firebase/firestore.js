@@ -73,9 +73,9 @@ async function getUserData() {
     }
 }
 
-// Function that allows users to change their username.
+// Function to update the user's name.
 const updateUserName = async (name) => {
-    const user = auth.currentUser
+    const user = auth.currentUser // Get the currently logged-in user
 
     if (!user) {
         console.error("No user logged in.")
@@ -83,6 +83,7 @@ const updateUserName = async (name) => {
     }
 
     try {
+        // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             name: name
         })
@@ -92,7 +93,7 @@ const updateUserName = async (name) => {
     }
 }
 
-// Function that allows users to change their phone number.
+// Function to update the user's phone number.
 const updateUserPhone = async (phone) => {
     const user = auth.currentUser
 
@@ -102,6 +103,7 @@ const updateUserPhone = async (phone) => {
     }
 
     try {
+        // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             phone: phone
         })
@@ -111,7 +113,7 @@ const updateUserPhone = async (phone) => {
     }
 }
 
-// Function that allows the user to update their email address.
+// Function to update the user's email address (requires re-authentication).
 const updateUserEmail = async (newEmail, currentPassword) => {
     const user = auth.currentUser
 
@@ -120,6 +122,7 @@ const updateUserEmail = async (newEmail, currentPassword) => {
         return
     }
 
+    // Create credential for re-authentication
     const credential = EmailAuthProvider.credential(user.email, currentPassword);
 
     try {
@@ -142,7 +145,7 @@ const updateUserEmail = async (newEmail, currentPassword) => {
     }
 }
 
-// Function that allows users to change their password.
+// Function to update the user's password (requires re-authentication).
 const updateUserPassword = async (currentPassword, newPassword) => {
     const user = auth.currentUser
     

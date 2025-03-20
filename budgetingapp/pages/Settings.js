@@ -4,46 +4,56 @@ import { auth } from '../firebase/config';
 import { deleteUser , signOut } from 'firebase/auth';
 import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
 
+/*
+
+  On the settings page a logged in user can update their user info
+  such as their name, phone number, email and password. They can also
+  logout and delete their account.
+
+*/
+
 export default function Settings({ navigation }) {
+  // State variables to store user input.
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [emailPassword, setEmailPassword] = useState("")
+  const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
 
   const handleUpdateName = async () => {
-    await updateUserName(name)
-    setName("")
+    await updateUserName(name) // Calls function to update name in database.
+    setName("") // Clears input field.
     Alert.alert("Name updated successfully!")
   }
 
   const handleUpdatePhone = async () => {
-    await updateUserPhone(phone)
+    await updateUserPhone(phone) // Calls function to update phone in database.
     setPhone("")
     Alert.alert("Phone number updated successfully!")
   }
 
   const handleUpdateEmail = async () => {
-    if (!email || !password) {
+    if (!email || !emailPassword) {
       Alert.alert("Please enter both new email and current password.")
       return
     }
-    await updateUserEmail(email, password)
+    await updateUserEmail(email, emailPassword) // Calls function to update email.
 
     setEmail("")
-    setPassword("")
+    setEmailPassword("")
     
     Alert.alert("Email updated successfully!")
   }
 
   const handleUpdatePassword = async () => {
-    if (!password || !newPassword) {
+    if (!currentPassword || !newPassword) {
       Alert.alert("Please enter both current and new password.")
       return
     }
-    await updateUserPassword(password, newPassword)
+    await updateUserPassword(currentPassword, newPassword) // Calls function to update password.
 
-    setPassword("")
+    setCurrentPassword("")
     setNewPassword("")
     
     Alert.alert("Password updated successfully!")
@@ -90,10 +100,10 @@ export default function Settings({ navigation }) {
       <Button title="Update" onPress={handleUpdatePhone} />
 
       <TextInput placeholder="New Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="Current Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
+      <TextInput placeholder="Current Password" value={emailPassword} onChangeText={setEmailPassword} style={styles.input} secureTextEntry />
       <Button title="Update" onPress={handleUpdateEmail} />
 
-      <TextInput placeholder="Current Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
+      <TextInput placeholder="Current Password" value={currentPassword} onChangeText={setCurrentPassword} style={styles.input} secureTextEntry />
       <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} style={styles.input} secureTextEntry />
       <Button title="Update Password" onPress={handleUpdatePassword} />
     </View>
