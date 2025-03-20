@@ -78,8 +78,8 @@ export default function Settings({ navigation }) {
   };
 
   return (
-    <View>
-      <Text>Settings</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Settings</Text>
       <View style={styles.container}>
       <Text style={styles.title}>Profile settings</Text>
 
