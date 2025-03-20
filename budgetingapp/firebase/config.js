@@ -7,14 +7,14 @@ import { getFirestore } from "firebase/firestore";
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBFyBpPXzdPiT-OEHGE3zTMlAdGn9rAaw0",
-    authDomain: "budgetingappdb.firebaseapp.com",
-    projectId: "budgetingappdb",
-    storageBucket: "budgetingappdb.firebasestorage.app",
-    messagingSenderId: "982570774761",
-    appId: "1:982570774761:web:a6c6e22a9118efd9e48078",
-    measurementId: "G-4ZRETXPH70"
-}
+    apiKey: Constants.expoConfig.extra.apiKey,
+    authDomain: Constants.expoConfig.extra.authDomain,
+    projectId: Constants.expoConfig.extra.projectId,
+    storageBucket: Constants.expoConfig.extra.storageBucket,
+    messagingSenderId: Constants.expoConfig.extra.messagingSenderId,
+    appId: Constants.expoConfig.extra.appId,
+    measurementId: Constants.expoConfig.extra.measurementId,
+  };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
