@@ -32,7 +32,7 @@ export default function SignIn({ navigation }) {
 
       // Navigates the user to the profile screen
       Alert.alert("Signed in successfully");
-      navigation.navigate("Profile"); 
+      navigation.navigate("Profile");
     } catch (error) {
       Alert.alert("Error", error.message);
     }
