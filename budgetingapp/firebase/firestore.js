@@ -73,7 +73,7 @@ async function getUserData() {
     }
 }
 
-// This function allows users to change their username.
+// Function that allows users to change their username.
 const updateUserName = async (name) => {
     const user = auth.currentUser
 
@@ -92,7 +92,7 @@ const updateUserName = async (name) => {
     }
 }
 
-// This function allows users to change their phone number.
+// Function that allows users to change their phone number.
 const updateUserPhone = async (phone) => {
     const user = auth.currentUser
 
@@ -111,7 +111,7 @@ const updateUserPhone = async (phone) => {
     }
 }
 
-// This function allows the user to update their email address.
+// Function that allows the user to update their email address.
 const updateUserEmail = async (newEmail, currentPassword) => {
     const user = auth.currentUser
 
@@ -142,7 +142,7 @@ const updateUserEmail = async (newEmail, currentPassword) => {
     }
 }
 
-// This function allows users to change their password.
+// Function that allows users to change their password.
 const updateUserPassword = async (currentPassword, newPassword) => {
     const user = auth.currentUser
     
