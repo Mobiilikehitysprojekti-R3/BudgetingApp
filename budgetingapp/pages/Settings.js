@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import React, { useState } from 'react';
+import { View, Text, Button, Alert, StyleSheet, TextInput } from 'react-native';
+import { auth } from '../firebase/config';
+import { deleteUser , signOut } from 'firebase/auth';
 import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
 
-export default function Settings() {
+export default function Settings({ navigation }) {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
@@ -46,9 +48,39 @@ export default function Settings() {
     
     Alert.alert("Password updated successfully!")
   }
+  
+  // Function to handle user logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert("Logged out successfully");
+      navigation.navigate("SignIn"); // Navigate back to SignIn screen
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  // Function to handle user account deletion
+  const handleDeleteUser  = async () => {
+    const user = auth.currentUser ;
+
+    if (user) {
+      try {
+        await deleteUser (user);
+        Alert.alert("User  deleted successfully");
+        navigation.navigate("SignIn"); // Navigate back to SignIn screen
+      } catch (error) {
+        Alert.alert("Error", error.message);
+      }
+    } else {
+      Alert.alert("Error", "No user is currently signed in.");
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <View>
+      <Text>Settings</Text>
+      <View style={styles.container}>
       <Text style={styles.title}>Profile settings</Text>
 
       <TextInput placeholder="New Name" value={name} onChangeText={setName} style={styles.input} />
@@ -65,9 +97,13 @@ export default function Settings() {
       <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} style={styles.input} secureTextEntry />
       <Button title="Update Password" onPress={handleUpdatePassword} />
     </View>
-  )
-}
-
+      <View>
+        <Button title="Delete Account" onPress={handleDeleteUser } />
+        <Button title="Logout" onPress={handleLogout} />
+      </View>
+    </View>
+  );
+};
 const styles = StyleSheet.create({
   container: {
     flex: 1,
