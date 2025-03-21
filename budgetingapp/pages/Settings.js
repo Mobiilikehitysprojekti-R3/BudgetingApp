@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Button, Alert, StyleSheet, TextInput } from 'react-native';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import { deleteUser , signOut } from 'firebase/auth';
-import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
+import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, doc, deleteDoc } from "../firebase/firestore";
+
 
 /* 
     The Settings component allows logged-in users to update 
@@ -73,10 +74,16 @@ export default function Settings({ navigation }) {
   // Function to handle user account deletion
   const handleDeleteUser  = async () => {
     const user = auth.currentUser ;
-
+  
     if (user) {
       try {
+        //deletes the user's data from Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        await deleteDoc(userDocRef);
+  
+        // deletes the user from Firebase Authentication
         await deleteUser (user);
+        
         Alert.alert("User  deleted successfully");
         navigation.navigate("SignIn"); // Navigate back to SignIn screen
       } catch (error) {
