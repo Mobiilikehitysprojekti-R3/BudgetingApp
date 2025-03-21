@@ -11,8 +11,8 @@ onAuthStateChanged(auth, () => {
         console.log("User logged in:", user.uid);
         
         // Call functions only after the user is logged in
-        updateUserIncome(50000);
-        updateUserBudget(10000);
+        //updateUserIncome(50000);
+        //updateUserBudget(10000);
         getUserData();
     } else {
         console.error("No user logged in.");
@@ -28,7 +28,7 @@ const updateUserIncome = async (income) => {
       return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), {
+            await setDoc(doc(db, "users", user.uid), { //updateDoc?
                 income: income, // Add or update the "income" field
             });
             console.log("Income field added/updated!");
