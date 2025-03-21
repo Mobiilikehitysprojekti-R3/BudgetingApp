@@ -1,7 +1,7 @@
-import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
-import { auth, db } from "./config";
+import { auth, db, deleteUser } from "./config";
 
 //const db = getFirestore();
 
@@ -30,7 +30,7 @@ const updateUserIncome = async (income) => {
         try {
             await setDoc(doc(db, "users", user.uid), {
                 income: income, // Add or update the "income" field
-            });
+            }, {merge: true});
             console.log("Income field added/updated!");
             console.log("User income:", income);
             } catch (error) {
@@ -50,7 +50,7 @@ const updateUserBudget = async (budget) => {
         try {
             await setDoc(doc(db, "users", user.uid), {
                 budget: budget, // Add or update the "budget" field
-            });
+            }, {merge: true});
             console.log("Budget field added/updated!");
             console.log("User budget:", budget);
             } catch (error) {
@@ -86,7 +86,7 @@ const updateUserName = async (name) => {
         // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             name: name
-        })
+        }, {merge: true})
         console.log("User name updated!")
     } catch (error) {
         console.error("Error updating user name:", error)
@@ -106,7 +106,7 @@ const updateUserPhone = async (phone) => {
         // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             phone: phone
-        })
+        }, {merge: true})
         console.log("User phone updated!")
     } catch (error) {
         console.error("Error updating user phone:", error)
@@ -137,7 +137,7 @@ const updateUserEmail = async (newEmail, currentPassword) => {
         // Update email in Firestore
         await updateDoc(doc(db, "users", user.uid), {
             email: newEmail,
-        })
+        }, {merge: true})
         console.log("Email updated successfully in Firestore!")
 
     } catch (error) {
@@ -170,6 +170,23 @@ const updateUserPassword = async (currentPassword, newPassword) => {
     }
 }
 
+const deleteAccount = async () => {
+    const user = auth.currentUser;
+    if (user) {
+        try {
+            await deleteDoc(doc(db, "users", user.uid));
+            console.log("User data deleted successfully!");    
+
+            await deleteUser(user);
+            console.log("User deleted successfully!");
+        } catch (error) {
+            console.error("Error deleting user:", error.message);
+        }
+    } else {
+        console.error("No user logged in.");
+    }
+}
+
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword };
+export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount };
