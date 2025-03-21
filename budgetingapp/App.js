@@ -6,6 +6,7 @@ import SignIn from './pages/SignIn';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import CreateGroup from './pages/CreateGroup';
+import MyBudget from './pages/MyBudget';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ export default function App() {
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="Settings" component={Settings} />
         <Stack.Screen name="CreateGroup" component={CreateGroup} />
+        <Stack.Screen name="MyBudget" component={MyBudget} />
       </Stack.Navigator>
     </NavigationContainer>
   )

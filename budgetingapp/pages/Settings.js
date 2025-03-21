@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Button, Alert, StyleSheet, TextInput } from 'react-native';
 import { auth } from '../firebase/config';
 import { deleteUser , signOut } from 'firebase/auth';
-import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword } from "../firebase/firestore";
+import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, deleteAccount } from "../firebase/firestore";
 import styles from "../styles";
 /* 
     The Settings component allows logged-in users to update 
@@ -76,7 +76,7 @@ export default function Settings({ navigation }) {
 
     if (user) {
       try {
-        await deleteUser (user);
+        await deleteAccount (user);
         Alert.alert("User  deleted successfully");
         navigation.navigate("SignIn"); // Navigate back to SignIn screen
       } catch (error) {
