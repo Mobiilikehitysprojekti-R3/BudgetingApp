@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
 import { updateUserBudget, updateUserIncome } from "../firebase/firestore";
+import styles from "../styles";
 
 /* 
     The SignIn allows users to log in by providing
@@ -40,51 +41,33 @@ export default function SignIn({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-      />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-      />
-      <Button title="Sign In" onPress={handleSignIn} />
+      <Text style={styles.title}>SIGN IN</Text>
+      <View style={styles.form}>
+        <Text style={styles.link}>Email</Text>
+        <TextInput
+          placeholder="..."
+          value={email}
+          onChangeText={setEmail}
+          style={styles.formInput}
+          keyboardType="email-address"
+        />
+        <Text style={styles.link}>Password</Text>
+        <TextInput
+          placeholder="..."
+          value={password}
+          onChangeText={setPassword}
+          style={styles.formInput}
+          secureTextEntry
+        />
+      </View>
+        <TouchableOpacity style={styles.buttonTwo} onPress={handleSignIn}>
+          <Text style={styles.buttonTextMiddle}>
+            Sign In
+          </Text>
+        </TouchableOpacity>
       <Text style={styles.link} onPress={() => navigation.navigate("SignUp")}>
         Don't have an account? Sign Up
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-  link: {
-    marginTop: 15,
-    color: "blue",
-    textDecorationLine: "underline",
-  },
-});
