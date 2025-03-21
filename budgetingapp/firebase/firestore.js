@@ -170,13 +170,15 @@ const updateUserPassword = async (currentPassword, newPassword) => {
     }
 }
 
+// Function to delete the user's account and data
 const deleteAccount = async () => {
     const user = auth.currentUser;
     if (user) {
         try {
+            // Delete user data from Firestore
             await deleteDoc(doc(db, "users", user.uid));
             console.log("User data deleted successfully!");    
-
+            // Delete user from Firebase Authentication
             await deleteUser(user);
             console.log("User deleted successfully!");
         } catch (error) {
@@ -187,6 +189,62 @@ const deleteAccount = async () => {
     }
 }
 
+// Get remaining budget from Firestore
+const getRemainingBudget = async () => {
+    const user = auth.currentUser;
+    if (!user) return null;
+
+    const userRef = doc(db, "users", user.uid);
+    // get data from the user document
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+        const data = userSnap.data();
+        return data.remainingBudget ?? data.budget ?? 0;
+    } else {
+        // If no document, create one with default budget
+        await setDoc(userRef, {
+            budget: 10000,
+            remainingBudget: 10000
+        });
+        return 10000;
+    }
+};
+
+// Add a new budget field and subtract from remaining budget
+const addBudgetField = async (field, value) => {
+    console.log("Current user:", auth.currentUser);
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+    // ger user document
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+
+    if (value > currentRemaining) {
+        return { error: "Insufficient remaining budget." };
+    }
+    const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
+    // add new field and update remaining budget
+    try {
+        await setDoc(userRef, {
+            [safeField]: value,
+            remainingBudget: currentRemaining - value
+        }, { merge: true });
+
+        console.log("Firestore update successful:", {
+            [safeField]: value,
+            remainingBudget: currentRemaining - value
+        });
+
+        return { success: true, remainingBudget: currentRemaining - value };
+    } catch (error) {
+        console.error("Error adding budget field:", error);
+        return { error: "Failed to update budget." };
+    }
+};
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount };
+export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
