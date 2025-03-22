@@ -28,7 +28,7 @@ const updateUserIncome = async (income) => {
       return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), { //updateDoc?
+            await setDoc(doc(db, "users", user.uid), {
                 income: income, // Add or update the "income" field
             }, {merge: true});
             console.log("Income field added/updated!");
@@ -74,7 +74,7 @@ async function getUserData() {
 }
 
 // Function to update the user's name.
-const updateUserName = async (name) => {
+const updateUserName = async (name, currentPassword) => {
     const user = auth.currentUser // Get the currently logged-in user
 
     if (!user) {
@@ -82,7 +82,12 @@ const updateUserName = async (name) => {
         return
     }
 
+    // Create credential for re-authentication
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
     try {
+        await reauthenticateWithCredential(user, credential)
+
         // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             name: name
@@ -94,7 +99,7 @@ const updateUserName = async (name) => {
 }
 
 // Function to update the user's phone number.
-const updateUserPhone = async (phone) => {
+const updateUserPhone = async (phone, currentPassword) => {
     const user = auth.currentUser
 
     if (!user) {
@@ -102,7 +107,12 @@ const updateUserPhone = async (phone) => {
         return
     }
 
+    // Create credential for re-authentication
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
     try {
+        await reauthenticateWithCredential(user, credential)
+
         // Update Firestore document
         await updateDoc(doc(db, "users", user.uid), {
             phone: phone
