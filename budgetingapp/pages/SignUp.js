@@ -42,9 +42,6 @@ export default function SignUp({ navigation }) {
         uid: user.uid, // User ID
       })
 
-      // Firebase automatically logs in users after successful registration
-      await auth.signOut()
-
       // Empty all input fields after a successful registration
       setName("")
       setEmail("")
@@ -54,7 +51,12 @@ export default function SignUp({ navigation }) {
       // Navigate the user to the SignIn screen
       Alert.alert("User registered successfully!")
 
-      navigation.navigate("SignIn")
+      // Automatically navigate to Profile after successful sign-up
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Protected' }],
+      })
+      // navigation.navigate("SignIn")
     } catch (error) {
       Alert.alert("Error", error.message)
     }
