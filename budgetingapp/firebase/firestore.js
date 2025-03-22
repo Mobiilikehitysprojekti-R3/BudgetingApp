@@ -245,6 +245,7 @@ const addBudgetField = async (field, value) => {
         return { error: "Failed to update budget." };
     }
 };
+
 getUserData();
 
 export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };

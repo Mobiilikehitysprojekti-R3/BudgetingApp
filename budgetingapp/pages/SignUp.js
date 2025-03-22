@@ -3,6 +3,7 @@ import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } fr
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import styles from "../styles"
+
 /* 
     The SignUp component allows users to register by providing
     their name, email, phone, and password.
@@ -40,6 +41,9 @@ export default function SignUp({ navigation }) {
         phone,
         uid: user.uid, // User ID
       })
+
+      // Firebase automatically logs in users after successful registration
+      await auth.signOut()
 
       // Empty all input fields after a successful registration
       setName("")
