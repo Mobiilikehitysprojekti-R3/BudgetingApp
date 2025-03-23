@@ -95,6 +95,10 @@ export default function Profile({ navigation }) {
                    My Groups 
                 </Text>
             </TouchableOpacity>
+            { /* FOR TESTING */ }
+            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("CreateGroup")}>
+                <Text style={styles.buttonText}>Create Group</Text>
+            </TouchableOpacity>
         </View>
     )
 }

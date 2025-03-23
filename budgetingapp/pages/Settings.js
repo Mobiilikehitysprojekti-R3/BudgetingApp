@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Alert, StyleSheet, TextInput } from 'react-native';
+import { View, Text, Button, Alert, TextInput, Modal } from 'react-native';
 import { auth } from '../firebase/config';
-import { deleteUser , signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, deleteAccount } from "../firebase/firestore";
 import styles from "../styles";
+
 /* 
     The Settings component allows logged-in users to update 
     their profile information, including name, phone number, 
@@ -17,46 +18,38 @@ export default function Settings({ navigation }) {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
-  const [emailPassword, setEmailPassword] = useState("")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
+  const [isEditing, setIsEditing] = useState(false)
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
 
-  const handleUpdateName = async () => {
-    await updateUserName(name) // Calls function to update name in database.
-    setName("") // Clears input field.
-    Alert.alert("Name updated successfully!")
-  }
-
-  const handleUpdatePhone = async () => {
-    await updateUserPhone(phone) // Calls function to update phone in database.
-    setPhone("")
-    Alert.alert("Phone number updated successfully!")
-  }
-
-  const handleUpdateEmail = async () => {
-    if (!email || !emailPassword) {
-      Alert.alert("Please enter both new email and current password.")
+  const handleSave = async () => {
+    // Edit profile details (requires password verification)
+    if (!currentPassword) {
+      Alert.alert("Please enter your current password to verify.")
       return
     }
-    await updateUserEmail(email, emailPassword) // Calls function to update email.
+    try {
+      if (name) await updateUserName(name, currentPassword)
+      if (phone) await updateUserPhone(phone, currentPassword)
+      if (email) await updateUserEmail(email, currentPassword)
+      if (newPassword) await updateUserPassword(currentPassword, newPassword)
 
-    setEmail("")
-    setEmailPassword("")
-    
-    Alert.alert("Email updated successfully!")
-  }
+      Alert.alert("Profile updated successfully!")
+      setIsEditing(false)
+      setIsPasswordModalVisible(false)
 
-  const handleUpdatePassword = async () => {
-    if (!currentPassword || !newPassword) {
-      Alert.alert("Please enter both current and new password.")
-      return
+      // Empty fields after successful update
+      setName("")
+      setPhone("")
+      setEmail("")
+      setCurrentPassword("")
+      setNewPassword("")
+
+    } catch (error) {
+      Alert.alert("Error", error.message)
+      setCurrentPassword("")
     }
-    await updateUserPassword(currentPassword, newPassword) // Calls function to update password.
-
-    setCurrentPassword("")
-    setNewPassword("")
-    
-    Alert.alert("Password updated successfully!")
   }
   
   // Function to handle user logout
@@ -64,7 +57,13 @@ export default function Settings({ navigation }) {
     try {
       await signOut(auth);
       Alert.alert("Logged out successfully");
-      navigation.navigate("SignIn"); // Navigate back to SignIn screen
+
+      // Reset navigation after logout
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SignIn' }],
+      });
+      //navigation.navigate("SignIn"); // Navigate back to SignIn screen
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -78,7 +77,13 @@ export default function Settings({ navigation }) {
       try {
         await deleteAccount (user);
         Alert.alert("User  deleted successfully");
-        navigation.navigate("SignIn"); // Navigate back to SignIn screen
+
+        // Reset navigation
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SignIn' }],
+        });
+        //navigation.navigate("SignIn"); // Navigate back to SignIn screen
       } catch (error) {
         Alert.alert("Error", error.message);
       }
@@ -93,47 +98,43 @@ export default function Settings({ navigation }) {
       <View style={styles.form}>
       <Text style={styles.link}>Profile settings</Text>
 
-      <TextInput placeholder="New Name" value={name} onChangeText={setName} style={styles.input} />
-      <Button title="Update" onPress={handleUpdateName} />
+      <TextInput placeholder="Name" value={name} onChangeText={setName} editable={isEditing} style={styles.input} />
+      <TextInput placeholder="Phone" value={phone} onChangeText={setPhone} editable={isEditing} style={styles.input} keyboardType="phone-pad" />
+      <TextInput placeholder="Email" value={email} onChangeText={setEmail} editable={isEditing} style={styles.input} keyboardType="email-address" />
+      <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} editable={isEditing} style={styles.input} secureTextEntry />
+      
+      {!isEditing ? (
+          <Button title="Edit" onPress={() => setIsEditing(true)} />
+        ) : (
+          <Button title="Save" onPress={() => setIsPasswordModalVisible(true)} />
+        )}
+      </View>
+      
+      {/* Password verification pop-up */}
+      <Modal visible={isPasswordModalVisible} transparent animationType="slide">
+        <View>
+          <View style={styles.form}>
+            <Text>Enter current password to confirm changes:</Text>
+            <TextInput 
+              placeholder="Current Password" 
+              value={currentPassword} 
+              onChangeText={setCurrentPassword} 
+              secureTextEntry 
+              style={styles.input} 
+            />
+            <Button title="Confirm" onPress={handleSave} />
+            <Button title="Cancel" onPress={() => {
+              setIsPasswordModalVisible(false);
+              setCurrentPassword("");
+            }} />
+          </View>
+        </View>
+      </Modal>
 
-      <TextInput placeholder="New Phone" value={phone} onChangeText={setPhone} style={styles.input} keyboardType="phone-pad" />
-      <Button title="Update" onPress={handleUpdatePhone} />
-
-      <TextInput placeholder="New Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="Current Password" value={emailPassword} onChangeText={setEmailPassword} style={styles.input} secureTextEntry />
-      <Button title="Update" onPress={handleUpdateEmail} />
-
-      <TextInput placeholder="Current Password" value={currentPassword} onChangeText={setCurrentPassword} style={styles.input} secureTextEntry />
-      <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} style={styles.input} secureTextEntry />
-      <Button title="Update Password" onPress={handleUpdatePassword} />
-    </View>
       <View>
-        <Button title="Delete Account" onPress={handleDeleteUser } />
         <Button title="Logout" onPress={handleLogout} />
+        <Button title="Delete Account" onPress={handleDeleteUser } />
       </View>
     </View>
   );
 };
-{/* 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  input: {
-    width: "100%",
-    height: 40,
-    borderWidth: 1,
-    marginBottom: 10,
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
-})
-  */}
