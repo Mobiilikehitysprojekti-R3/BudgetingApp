@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
-import { updateUserBudget, updateUserIncome } from "../firebase/firestore";
 import styles from "../styles";
 
 /* 
@@ -30,10 +29,14 @@ export default function SignIn({ navigation }) {
       // Empty all input fields after a successful sign in
       setEmail("");
       setPassword("");
-
-      // Navigates the user to the profile screen
+      
       Alert.alert("Signed in successfully");
-      navigation.navigate("Profile");
+      // Reset navigation after logging-in
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Protected" }],
+      });
+      //navigation.navigate("Protected"); // Navigates the user to the profile screen
     } catch (error) {
       Alert.alert("Error", error.message);
     }

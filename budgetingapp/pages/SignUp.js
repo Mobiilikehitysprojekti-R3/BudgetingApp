@@ -3,6 +3,7 @@ import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } fr
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import styles from "../styles"
+
 /* 
     The SignUp component allows users to register by providing
     their name, email, phone, and password.
@@ -50,7 +51,12 @@ export default function SignUp({ navigation }) {
       // Navigate the user to the SignIn screen
       Alert.alert("User registered successfully!")
 
-      navigation.navigate("SignIn")
+      // Automatically navigate to Profile after successful sign-up
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Protected' }],
+      })
+      // navigation.navigate("SignIn")
     } catch (error) {
       Alert.alert("Error", error.message)
     }
