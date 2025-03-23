@@ -77,7 +77,13 @@ export default function Settings({ navigation }) {
       try {
         await deleteAccount (user);
         Alert.alert("User  deleted successfully");
-        navigation.navigate("SignIn"); // Navigate back to SignIn screen
+
+        // Reset navigation
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SignIn' }],
+        });
+        //navigation.navigate("SignIn"); // Navigate back to SignIn screen
       } catch (error) {
         Alert.alert("Error", error.message);
       }
