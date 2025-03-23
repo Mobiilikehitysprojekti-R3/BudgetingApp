@@ -1,8 +1,7 @@
 import * as Contacts from "expo-contacts";
 import { useEffect, useState } from "react";
 import { View, Text, Button, FlatList, TextInput } from "react-native";
-import { db } from "../firebase/config";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { matchContactsToUsers, createGroup } from "../firebase/firestore";
 
 /* 
     The CreateGroup component allows users to create a new budgeting group
@@ -27,50 +26,12 @@ export default function CreateGroup() {
         const { data } = await Contacts.getContactsAsync()
         if (data.length > 0) {
           setContacts(data)
-          checkContactsInDatabase(data)
+          const matched = await matchContactsToUsers(data)
+          setMatchedUsers(matched)
         }
       }
     })()
   }, [])
-
-  // Normalize phone numbers by removing non-digit characters.
-  const normalizePhoneNumber = (number) => {
-    if (!number) return ""
-    let formatted = number.replace(/\D/g, "") // Remove all non-digit characters.
-    if (formatted.startsWith("0")) {
-      formatted = "358" + formatted.slice(1) // Convert local Finnish numbers to international format.
-    }
-    return formatted
-  }
-
-  // Check if contacts exist in the database.
-  const checkContactsInDatabase = async (contactList) => {
-    const usersRef = collection(db, "users")
-    const snapshot = await getDocs(usersRef)
-
-    // Fetch users from database and normalize their phone numbers.
-    const usersFromDB = snapshot.docs.map((doc) => ({
-      phone: normalizePhoneNumber(doc.data().phone),
-      dbName: doc.data().name, // Get name from database.
-    }))
-
-    // Match contacts from phone with users from database.
-    const matched = contactList.map((contact) => {
-      const phoneNumber = normalizePhoneNumber(contact.phoneNumbers?.[0]?.number)
-      const matchedUser = usersFromDB.find((user) => user.phone === phoneNumber)
-      if (matchedUser) {
-        return {
-          id: contact.id,
-          contactName: contact.name, // Contact name from phone.
-          dbName: matchedUser.dbName, // Name from database.
-          phone: phoneNumber,
-        }
-      }
-      return null
-    }).filter(Boolean)
-
-    setMatchedUsers(matched)
-  }
 
   const toggleSelection = (user) => {
     setSelectedMembers((prev) =>
@@ -78,17 +39,19 @@ export default function CreateGroup() {
     )
   }
 
-  // Create a new group and save it to Firestore.
-  const createGroup = async () => {
-    if (!groupName) return alert("Enter a group name") // Prevent empty group names.
-
-    await addDoc(collection(db, "groups"), {
-      name: groupName,
-      members: selectedMembers.map((user) => user.phone),
-    })
-
-    alert("Group Created!")
-    setGroupName("")
+  const handleCreateGroup = async () => {
+    if (!groupName) {
+      Alert.alert("Error", "Enter a group name")
+      return
+    }
+    try {
+      await createGroup(groupName, selectedMembers)
+      Alert.alert("Success", "Group Created!")
+      setGroupName("")
+      setSelectedMembers([])
+    } catch (error) {
+      Alert.alert("Error", error.message)
+    }
   }
 
   return (
@@ -104,7 +67,7 @@ export default function CreateGroup() {
           </Text>
         )}
       />
-      <Button title="Create Group" onPress={createGroup} />
+      <Button title="Create Group" onPress={handleCreateGroup} />
     </View>
   )
 }

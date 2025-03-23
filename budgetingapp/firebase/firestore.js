@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -256,6 +256,77 @@ const addBudgetField = async (field, value) => {
     }
 };
 
+const createGroup = async () => {
+    const user = auth.currentUser // Get the currently logged-in user
+  
+    if (!user) {
+      return alert("You need to be logged in to create a group")
+    }
+  
+    if (!groupName.trim()) {
+      return alert("Enter a valid group name")
+    }
+  
+    // Prepare group data
+    const newGroup = {
+      name: groupName,
+      owner: user.uid, // Set the creator as the owner
+      members: selectedMembers.map((user) => user.phone), // Members list
+    }
+  
+    try {
+      await addDoc(collection(db, "groups"), newGroup)
+      alert("Group Created!")
+      setGroupName("")
+      setSelectedMembers([])
+    } catch (error) {
+      console.error("Error creating group:", error)
+      alert("Failed to create group")
+    }
+}
+
+// Normalize phone numbers by removing non-digit characters
+const normalizePhoneNumber = (number) => {
+    if (!number) return ""
+    let formatted = number.replace(/\D/g, "") // Remove all non-digit characters
+    if (formatted.startsWith("0")) {
+      formatted = "358" + formatted.slice(1) // Convert local Finnish numbers to international format
+    }
+    return formatted
+}
+
+// Fetch all registered users from database
+const getRegisteredUsers = async () => {
+    const usersRef = collection(db, "users")
+    const snapshot = await getDocs(usersRef)
+  
+    return snapshot.docs.map((doc) => ({
+      phone: normalizePhoneNumber(doc.data().phone),
+      dbName: doc.data().name, // Get name from database
+    }))
+}
+
+// Check if contacts exist in database
+const matchContactsToUsers = async (contacts) => {
+    const usersFromDB = await getRegisteredUsers()
+  
+    return contacts
+      .map((contact) => {
+        const phoneNumber = normalizePhoneNumber(contact.phoneNumbers?.[0]?.number)
+        const matchedUser = usersFromDB.find((user) => user.phone === phoneNumber)
+        if (matchedUser) {
+          return {
+            id: contact.id,
+            contactName: contact.name, // Contact name from phone
+            dbName: matchedUser.dbName, // Name from database
+            phone: phoneNumber,
+          }
+        }
+        return null
+      })
+      .filter(Boolean)
+}
+
 getUserData();
 
-export { updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
+export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
