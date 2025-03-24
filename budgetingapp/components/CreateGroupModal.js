@@ -49,7 +49,7 @@ export default function CreateGroupModal() {
       Alert.alert("Success", "Group Created!")
       setGroupName("")
       setSelectedMembers([])
-      onclose()
+      //onClose()
     } catch (error) {
       Alert.alert("Error", error.message)
     }
