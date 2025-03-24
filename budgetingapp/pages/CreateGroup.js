@@ -21,17 +21,22 @@ export default function CreateGroup() {
   // Request contact permissions and fetch contacts.
   useEffect(() => {
     (async () => {
-      const { status } = await Contacts.requestPermissionsAsync()
-      if (status === "granted") {
-        const { data } = await Contacts.getContactsAsync()
-        if (data.length > 0) {
-          setContacts(data)
-          const matched = await matchContactsToUsers(data)
-          setMatchedUsers(matched)
+      try {
+        const { status } = await Contacts.requestPermissionsAsync();
+        if (status === "granted") {
+          const { data } = await Contacts.getContactsAsync();
+          if (data.length > 0) {
+            setContacts(data);
+            const matched = await matchContactsToUsers(data);
+            setMatchedUsers(matched);
+          }
         }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
       }
-    })()
-  }, [])
+    })();
+  }, []);
+  
 
   const toggleSelection = (user) => {
     setSelectedMembers((prev) =>
@@ -46,9 +51,9 @@ export default function CreateGroup() {
     }
     try {
       await createGroup(groupName, selectedMembers)
-      Alert.alert("Success", "Group Created!")
-      setGroupName("")
+      setGroupName("")  // Reset state here instead
       setSelectedMembers([])
+      Alert.alert("Success", "Group Created!")
     } catch (error) {
       Alert.alert("Error", error.message)
     }

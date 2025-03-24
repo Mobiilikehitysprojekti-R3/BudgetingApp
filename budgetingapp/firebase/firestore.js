@@ -256,7 +256,7 @@ const addBudgetField = async (field, value) => {
     }
 };
 
-const createGroup = async () => {
+const createGroup = async (groupName, selectedMembers) => {
     const user = auth.currentUser // Get the currently logged-in user
   
     if (!user) {
@@ -271,7 +271,11 @@ const createGroup = async () => {
     const newGroup = {
       name: groupName,
       owner: user.uid, // Set the creator as the owner
-      members: selectedMembers.map((user) => user.phone), // Members list
+      members: selectedMembers.map(member => ({
+        uid: member.uid,      // User's UID from Firestore
+        phone: member.phone,  // User's phone number
+        name: member.dbName   // User's name from Firestore
+    }))
     }
   
     try {
@@ -313,10 +317,11 @@ const matchContactsToUsers = async (contacts) => {
     return contacts
       .map((contact) => {
         const phoneNumber = normalizePhoneNumber(contact.phoneNumbers?.[0]?.number)
-        const matchedUser = usersFromDB.find((user) => user.phone === phoneNumber)
+        const matchedUser = usersFromDB.find(user => user.phone === phoneNumber)
         if (matchedUser) {
           return {
             id: contact.id,
+            uid: matchedUser.uid,  // Include UID
             contactName: contact.name, // Contact name from phone
             dbName: matchedUser.dbName, // Name from database
             phone: phoneNumber,
