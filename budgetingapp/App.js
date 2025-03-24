@@ -16,7 +16,7 @@ export default function App() {
           {/* Public Routes */}
           <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
           <Stack.Screen name="SignIn" component={SignIn} options={{ headerShown: false }} />
-
+          
           {/* Protected Routes */}
           <Stack.Screen name="Protected" component={ProtectedStackNavigator} options={{ headerShown: false }} />
         </Stack.Navigator>

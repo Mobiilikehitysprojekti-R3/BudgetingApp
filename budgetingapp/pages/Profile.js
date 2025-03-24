@@ -90,13 +90,13 @@ export default function Profile({ navigation }) {
                    My Budget 
                 </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyGroups??")}>
+            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyGroups")}>
                 <Text style={styles.buttonText}>
                    My Groups 
                 </Text>
             </TouchableOpacity>
             { /* FOR TESTING */ }
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("CreateGroup")}>
+            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("NoGroups")}>
                 <Text style={styles.buttonText}>Create Group</Text>
             </TouchableOpacity>
         </View>

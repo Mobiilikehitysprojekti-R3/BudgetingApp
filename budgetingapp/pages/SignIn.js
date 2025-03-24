@@ -30,7 +30,7 @@ export default function SignIn({ navigation }) {
       setEmail("");
       setPassword("");
       
-      Alert.alert("Signed in successfully");
+      //Alert.alert("Signed in successfully");
       // Reset navigation after logging-in
       navigation.reset({
         index: 0,
