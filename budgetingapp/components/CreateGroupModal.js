@@ -12,7 +12,7 @@ import { matchContactsToUsers, createGroup } from "../firebase/firestore";
     Firestore is used to check which contacts are already in the database.
 */
 
-export default function CreateGroupModal() {
+export default function CreateGroupModal({ navigation }) {
   const [contacts, setContacts] = useState([])
   const [matchedUsers, setMatchedUsers] = useState([])
   const [groupName, setGroupName] = useState("")
@@ -49,6 +49,9 @@ export default function CreateGroupModal() {
       Alert.alert("Success", "Group Created!")
       setGroupName("")
       setSelectedMembers([])
+
+      // Navigate to the group's page after successful creation
+      //navigation.navigate("Group", { groupId: newGroup.id, groupName })
       //onClose()
     } catch (error) {
       Alert.alert("Error", error.message)
