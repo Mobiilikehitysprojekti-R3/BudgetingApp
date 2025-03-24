@@ -23,10 +23,19 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginBottom: 10,
     },
+    /* Form with black text and text centered in the middle */
+    formTwo: {
+        backgroundColor: "#F5F5F5",
+        width: "80%",
+        padding: 20,
+        borderRadius: 18,
+        marginBottom: 10,
+        alignItems: "center",
+    },
     /* Small text, links to new pages etc. */
     link: {
         color: "#A984BE",
-
+        fontSize: 16,
     },
     /* Input fields in forms */
     formInput: {
@@ -42,6 +51,7 @@ const styles = StyleSheet.create({
     buttonOne: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
         backgroundColor: "#A984BE",
         width: "80%",
         height: "40",
@@ -58,6 +68,14 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginVertical: 10,
     },
+    buttonForm: {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#A984BE",
+        height: "40",
+        borderRadius: 18,
+        marginVertical: 15,
+    },
     /* Button text aligned left */
     buttonText: {
         color: "white",
@@ -72,6 +90,10 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "center",
     },
+    iconStyle: {
+        marginRight: 20,
+        fontWeight: "bold",
+    },
     profile: {
         margin: 40,
     },
@@ -79,7 +101,13 @@ const styles = StyleSheet.create({
         width: 150,
         height: 150,
         borderRadius: 75,
-    }
+    },
+    list:{
+        width: "80%",
+        padding: 20,
+        borderRadius: 18,
+        marginBottom: 10,
+    },
 
 })
 
