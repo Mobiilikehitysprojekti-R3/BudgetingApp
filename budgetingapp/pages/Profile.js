@@ -90,7 +90,7 @@ export default function Profile({ navigation }) {
                    My Budget 
                 </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyGroups??")}>
+            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyGroups")}>
                 <Text style={styles.buttonText}>
                    My Groups 
                 </Text>

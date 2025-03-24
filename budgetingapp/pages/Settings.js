@@ -72,7 +72,7 @@ export default function Settings({ navigation }) {
   // Function to handle user account deletion
   const handleDeleteUser  = async () => {
     const user = auth.currentUser ;
-
+  
     if (user) {
       try {
         await deleteAccount (user);
