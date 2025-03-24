@@ -1,35 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, Button } from 'react-native';
 import styles from '../styles';
+import CreateGroupModal from '../components/CreateGroupModal';
 
-export default function NoGroups ({ navigation }) {
-    const [groups] = useState([]); 
-  
-    const handleCreateGroup = () => {
-      navigation.navigate('CreateGroup'); // Navigate to CreateGroup page
-    };
+export default function NoGroups () {
+    const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
+
+    const handleCloseModal = () => {
+        setOpenCreateGroupModal(false)
+    }
+
   
     return (
       <View style={styles.container}>
-          <Text style={styles.title}>MY GROUPS</Text>
-        {groups.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>You're not in any group yet, start here</Text>
-            <TouchableOpacity style={styles.buttonTwo} onPress={handleCreateGroup}>
-              <Text style={styles.buttonText}>Create Group</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={groups}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.groupItem}>
-                <Text style={styles.groupName}>{item.name}</Text>
-              </View>
-            )}
-          />
-        )}
+        <Text style={styles.title}>My Groups</Text>
+        <View style={styles.form}>
+            <Text>You're not in a group yet, start here!</Text>
+        </View>
+        <TouchableOpacity 
+            style={styles.buttonTwo} 
+            onPress={() => {setOpenCreateGroupModal(true)}}>
+            <Text style={styles.buttonTextMiddle}>Greate group</Text>
+        </TouchableOpacity>
+
+        <Modal
+                visible={openCreateGroupModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={handleCloseModal} // Handle back button on Android
+            >
+            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <View style={{ backgroundColor: 'white', margin: 20, borderRadius: 10, padding: 20 }}>
+                        <CreateGroupModal onClose={handleCloseModal} />
+                        <Button title="Close" onPress={handleCloseModal} />
+                    </View>
+                </View>
+        </Modal>
       </View>
     );
   };
