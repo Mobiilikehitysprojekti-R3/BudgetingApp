@@ -9,7 +9,6 @@ export default function NoGroups () {
     const handleCloseModal = () => {
         setOpenCreateGroupModal(false)
     }
-
   
     return (
       <View style={styles.container}>
