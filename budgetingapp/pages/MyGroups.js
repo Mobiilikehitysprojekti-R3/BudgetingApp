@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import styles from '../styles';
 
-const MyGroups = ({ navigation }) => {
-    const [groups, setGroups] = useState([]); 
+export default function MyGroups ({ navigation }) {
+    const [groups] = useState([]); 
   
     const handleCreateGroup = () => {
       navigation.navigate('CreateGroup'); // Navigate to CreateGroup page
@@ -15,7 +15,7 @@ const MyGroups = ({ navigation }) => {
         {groups.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>You're not in any group yet, start here</Text>
-            <TouchableOpacity style={styles.button} onPress={handleCreateGroup}>
+            <TouchableOpacity style={styles.buttonTwo} onPress={handleCreateGroup}>
               <Text style={styles.buttonText}>Create Group</Text>
             </TouchableOpacity>
           </View>
