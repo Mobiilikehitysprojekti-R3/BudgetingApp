@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { AuthContext } from '../context/AuthContext';
 import Profile from '../pages/Profile';
 import Settings from '../pages/Settings';
-import CreateGroup from '../pages/CreateGroup';
+import NoGroups from '../pages/NoGroups';
 import MyBudget from '../pages/MyBudget';
 import { ActivityIndicator, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -43,7 +43,7 @@ export default function ProtectedStackNavigator() {
     <Stack.Navigator>
       <Stack.Screen name="Profile" component={Profile} />
       <Stack.Screen name="Settings" component={Settings} />
-      <Stack.Screen name="CreateGroup" component={CreateGroup} />
+      <Stack.Screen name="NoGroups" component={NoGroups} />
       <Stack.Screen name="MyBudget" component={MyBudget} />
       <Stack.Screen name="MyGroups" component={MyGroups} />
     </Stack.Navigator>

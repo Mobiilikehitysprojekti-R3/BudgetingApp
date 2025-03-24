@@ -97,18 +97,20 @@ export default function Settings({ navigation }) {
       <Text style={styles.title}>Settings</Text>
       <View style={styles.form}>
       <Text style={styles.link}>Profile settings</Text>
+      {!isEditing ? (
+          <Button title="Edit" onPress={() => setIsEditing(true)} />
+        ) : (
+          <Button title="Save" onPress={() => setIsPasswordModalVisible(true)} />
+        )}
+     
 
       <TextInput placeholder="Name" value={name} onChangeText={setName} editable={isEditing} style={styles.input} />
       <TextInput placeholder="Phone" value={phone} onChangeText={setPhone} editable={isEditing} style={styles.input} keyboardType="phone-pad" />
       <TextInput placeholder="Email" value={email} onChangeText={setEmail} editable={isEditing} style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} editable={isEditing} style={styles.input} secureTextEntry />
       
-      {!isEditing ? (
-          <Button title="Edit" onPress={() => setIsEditing(true)} />
-        ) : (
-          <Button title="Save" onPress={() => setIsPasswordModalVisible(true)} />
-        )}
       </View>
+      
       
       {/* Password verification pop-up */}
       <Modal visible={isPasswordModalVisible} transparent animationType="slide">
