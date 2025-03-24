@@ -19,7 +19,7 @@ export default function NoGroups () {
         <TouchableOpacity 
             style={styles.buttonTwo} 
             onPress={() => {setOpenCreateGroupModal(true)}}>
-            <Text style={styles.buttonTextMiddle}>Greate group</Text>
+            <Text style={styles.buttonTextMiddle}>Create group</Text>
         </TouchableOpacity>
 
         <Modal
