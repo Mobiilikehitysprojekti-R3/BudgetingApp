@@ -296,7 +296,7 @@ const normalizePhoneNumber = (number) => {
     }
     return formatted
 }
-
+ 
 // Fetch all registered users from database
 const getRegisteredUsers = async () => {
     const usersRef = collection(db, "users")
@@ -330,9 +330,9 @@ const matchContactsToUsers = async (contacts) => {
       })
       .filter(Boolean)
 }
-const getUsersGroups = async (userId) => {
+const getUsersGroups = async (uid) => {
     try {
-      const querySnapshot = await db.collection('groups').where('members', 'array-contains', userId).get();
+      const querySnapshot = await db.collection('groups').where('members', 'array-contains', uid).get();
       
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
