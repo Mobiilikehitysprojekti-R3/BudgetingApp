@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, Button } from 'react-native';
 import styles from '../styles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CreateGroupModal from '../components/CreateGroupModal';
+import { getUsersGroups } from '../firebase/firestore';
 
-export default function MyGroups({ navigation }) {
-  const [groups] = useState([]);
+export default function MyGroups({ navigation, uid }) {
+  const [groups, setGroups] = useState([]);
 	const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
+
+	useEffect(() => {
+        const fetchGroups = async () => {
+            try {
+                const userGroups = await getUsersGroups(uid); // Fetch groups for the user
+                setGroups(userGroups); // Set the fetched groups in state
+            } catch (error) {
+                console.error("Failed to fetch groups: ", error);
+            }
+        };
+
+        fetchGroups(); // Call the function to fetch groups
+    }, [uid]); // Dependency array includes userId to refetch if it changes
+
 
   const handleGroupPress = (groupId) => {
     navigation.navigate('Group', { groupId }); // Navigate to Group page

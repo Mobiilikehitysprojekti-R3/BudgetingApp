@@ -5,20 +5,6 @@ import styles from '../styles';
 export default function Group({ navigation, uid }) {
     const [budgets] = useState([]);
 
-    useEffect(() => {
-        const fetchGroups = async () => {
-            try {
-                const userGroups = await getUsersGroups(userId); // Fetch groups for the user
-                setGroups(userGroups); // Set the fetched groups in state
-            } catch (error) {
-                console.error("Failed to fetch groups: ", error);
-            }
-        };
-
-        fetchGroups(); // Call the function to fetch groups
-    }, [userId]); // Dependency array includes userId to refetch if it changes
-
-
     const handleBudgetPress = (groupId) => {
         navigation.navigate('SharedBudget', { groupId }); // Navigate to groups budget page
     };
