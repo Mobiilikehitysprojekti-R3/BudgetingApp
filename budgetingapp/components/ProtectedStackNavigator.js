@@ -8,6 +8,7 @@ import MyBudget from '../pages/MyBudget';
 import { ActivityIndicator, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import MyGroups from '../pages/MyGroups';
+import Group from '../pages/Group';
 
 /* 
     The ProtectedStackNavigator component handles navigation for authenticated users.
@@ -46,6 +47,7 @@ export default function ProtectedStackNavigator() {
       <Stack.Screen name="NoGroups" component={NoGroups} />
       <Stack.Screen name="MyBudget" component={MyBudget} />
       <Stack.Screen name="MyGroups" component={MyGroups} />
+      <Stack.Screen name="Group" component={Group} />
     </Stack.Navigator>
   )
 }

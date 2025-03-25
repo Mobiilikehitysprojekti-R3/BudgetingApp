@@ -256,7 +256,7 @@ const addBudgetField = async (field, value) => {
     }
 };
 
-const createGroup = async () => {
+const createGroup = async (groupName, selectedMembers) => {
     const user = auth.currentUser // Get the currently logged-in user
   
     if (!user) {
@@ -269,19 +269,21 @@ const createGroup = async () => {
   
     // Prepare group data
     const newGroup = {
-      name: groupName,
-      owner: user.uid, // Set the creator as the owner
-      members: selectedMembers.map((user) => user.phone), // Members list
+        name: groupName,
+        owner: user.uid, // Set the creator as the owner
+        members: selectedMembers.map((user) => ({
+            uid: user.uid, // Store user ID
+            phone: user.phone, // Store phone number
+            name: user.dbName, // Store name from database
+        })),
     }
-  
+    
     try {
-      await addDoc(collection(db, "groups"), newGroup)
-      alert("Group Created!")
-      setGroupName("")
-      setSelectedMembers([])
+        await addDoc(collection(db, "groups"), newGroup)
+        alert("Group Created!")
     } catch (error) {
-      console.error("Error creating group:", error)
-      alert("Failed to create group")
+        console.error("Error creating group:", error)
+        alert("Failed to create group")
     }
 }
 
@@ -301,8 +303,9 @@ const getRegisteredUsers = async () => {
     const snapshot = await getDocs(usersRef)
   
     return snapshot.docs.map((doc) => ({
-      phone: normalizePhoneNumber(doc.data().phone),
-      dbName: doc.data().name, // Get name from database
+        uid: doc.id, // Get user ID
+        phone: normalizePhoneNumber(doc.data().phone),
+        dbName: doc.data().name, // Get name from database
     }))
 }
 
@@ -313,14 +316,15 @@ const matchContactsToUsers = async (contacts) => {
     return contacts
       .map((contact) => {
         const phoneNumber = normalizePhoneNumber(contact.phoneNumbers?.[0]?.number)
-        const matchedUser = usersFromDB.find((user) => user.phone === phoneNumber)
+        const matchedUser = usersFromDB.find(user => user.phone === phoneNumber)
         if (matchedUser) {
-          return {
-            id: contact.id,
-            contactName: contact.name, // Contact name from phone
-            dbName: matchedUser.dbName, // Name from database
-            phone: phoneNumber,
-          }
+            return {
+                id: contact.id,
+                uid: matchedUser.uid,
+                contactName: contact.name, // Contact name from phone
+                dbName: matchedUser.dbName, // Name from database
+                phone: phoneNumber,
+            }
         }
         return null
       })
