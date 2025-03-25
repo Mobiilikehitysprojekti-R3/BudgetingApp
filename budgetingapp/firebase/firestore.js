@@ -266,9 +266,17 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!groupName.trim()) {
       return alert("Enter a valid group name")
     }
+    
+    try {
+    // First, add a new group and get its document reference
+    const docRef = await addDoc(collection(db, "groups"), {})
+
+    // Get the generated document ID to use as `gid`
+    const groupId = docRef.id
   
     // Prepare group data
     const newGroup = {
+        gid: groupId,
         name: groupName,
         owner: user.uid, // Set the creator as the owner
         members: selectedMembers.map((user) => ({
@@ -278,9 +286,8 @@ const createGroup = async (groupName, selectedMembers) => {
         })),
     }
     
-    try {
-        await addDoc(collection(db, "groups"), newGroup)
-        alert("Group Created!")
+    await setDoc(docRef, newGroup)
+    alert("Group Created!")
     } catch (error) {
         console.error("Error creating group:", error)
         alert("Failed to create group")
