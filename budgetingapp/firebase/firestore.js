@@ -326,7 +326,18 @@ const matchContactsToUsers = async (contacts) => {
       })
       .filter(Boolean)
 }
+const getUsersGroups = async (userId) => {
+    try {
+      const querySnapshot = await db.collection('groups').where('members', 'array-contains', userId).get();
+      
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error fetching user groups: ", error);
+      throw error; // Rethrow the error for handling in the calling function
+    }
+  };
+
 
 getUserData();
 
-export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
+export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField, getUsersGroups };
