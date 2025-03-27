@@ -11,8 +11,8 @@ import styles from "../styles";
 
 export default function SignIn({ navigation }) {
   // useState hooks to store input values from the user
-  const [email, setEmail] = useState("kiia@testi.com");
-  const [password, setPassword] = useState("Testi123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Function to handle user sign in
   const handleSignIn = async () => {
