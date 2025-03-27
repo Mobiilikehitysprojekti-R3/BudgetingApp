@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import styles from "../styles"
@@ -68,14 +68,14 @@ export default function SignUp({ navigation }) {
       <View style={styles.form}>
         <Text style={styles.link}>Name</Text>
         <TextInput 
-          placeholder="..." 
+          placeholder="" 
           value={name} 
           onChangeText={setName} 
           style={styles.formInput} 
         />
         <Text style={styles.link}>Email</Text>
         <TextInput 
-          placeholder="..." 
+          placeholder="" 
           value={email} 
           onChangeText={setEmail} 
           style={styles.formInput} 
@@ -83,7 +83,7 @@ export default function SignUp({ navigation }) {
         />
         <Text style={styles.link}>Phone number</Text>
         <TextInput 
-          placeholder="..." 
+          placeholder="" 
           value={phone} 
           onChangeText={setPhone} 
           style={styles.formInput} 
@@ -91,7 +91,7 @@ export default function SignUp({ navigation }) {
         />
         <Text style={styles.link}>Password</Text>
         <TextInput 
-          placeholder="..." 
+          placeholder="" 
           value={password} 
           onChangeText={setPassword} 
           style={styles.formInput} 

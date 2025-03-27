@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import styles from '../styles';
 import CreateGroupModal from '../components/CreateGroupModal';
 import Ionicons from '@expo/vector-icons/Ionicons';
