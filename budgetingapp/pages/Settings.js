@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Alert, TextInput, Modal } from 'react-native';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
+import { getDoc, doc } from "firebase/firestore";
 import { signOut } from 'firebase/auth';
-import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, deleteAccount } from "../firebase/firestore";
+import { 
+  updateUserName, updateUserPhone, updateUserEmail, 
+  updateUserPassword, deleteAccount, getUserData 
+} from "../firebase/firestore";
 import styles from "../styles";
 
 /* 
@@ -23,6 +27,24 @@ export default function Settings({ navigation }) {
   const [isEditing, setIsEditing] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
 
+  //Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setName(userData.name || "");
+          setPhone(userData.phone || "");
+          setEmail(userData.email || "");
+        }
+      }
+    };
+    fetchUserData()
+  }, [])
+
   const handleSave = async () => {
     // Edit profile details (requires password verification)
     if (!currentPassword) {
@@ -38,13 +60,6 @@ export default function Settings({ navigation }) {
       Alert.alert("Profile updated successfully!")
       setIsEditing(false)
       setIsPasswordModalVisible(false)
-
-      // Empty fields after successful update
-      setName("")
-      setPhone("")
-      setEmail("")
-      setCurrentPassword("")
-      setNewPassword("")
 
     } catch (error) {
       Alert.alert("Error", error.message)
@@ -92,26 +107,40 @@ export default function Settings({ navigation }) {
     }
   };
 
+  //Style for "locked" fields
+  const inputStyle = isEditing ? styles.inputActive : styles.inputInactive
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Settings</Text>
       <View style={styles.form}>
-      <Text style={styles.link}>Profile settings</Text>
-      {!isEditing ? (
+        <Text style={styles.link}>Profile settings</Text>
+        {!isEditing ? (
           <Button title="Edit" onPress={() => setIsEditing(true)} />
         ) : (
           <Button title="Save" onPress={() => setIsPasswordModalVisible(true)} />
         )}
-     
-
-      <TextInput placeholder="Name" value={name} onChangeText={setName} editable={isEditing} style={styles.input} />
-      <TextInput placeholder="Phone" value={phone} onChangeText={setPhone} editable={isEditing} style={styles.input} keyboardType="phone-pad" />
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} editable={isEditing} style={styles.input} keyboardType="email-address" />
-      <TextInput placeholder="New Password" value={newPassword} onChangeText={setNewPassword} editable={isEditing} style={styles.input} secureTextEntry />
-      
+        <TextInput 
+          placeholder="Name" value={name} 
+          onChangeText={setName} editable={isEditing} 
+          style={inputStyle} 
+        />
+        <TextInput 
+          placeholder="Phone" value={phone} 
+          onChangeText={setPhone} editable={isEditing} 
+          style={inputStyle} keyboardType="phone-pad" 
+        />
+        <TextInput 
+          placeholder="Email" value={email} 
+          onChangeText={setEmail} editable={isEditing} 
+          style={inputStyle} keyboardType="email-address" 
+        />
+        <TextInput 
+          placeholder="New Password" value={newPassword} 
+          onChangeText={setNewPassword} editable={isEditing} 
+          style={inputStyle} secureTextEntry 
+        />
       </View>
-      
-      
       {/* Password verification pop-up */}
       <Modal visible={isPasswordModalVisible} transparent animationType="slide">
         <View>

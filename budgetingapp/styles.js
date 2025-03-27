@@ -120,6 +120,24 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginBottom: 10,
     },
+    inputActive: {
+        backgroundColor: '#ffffff',
+        color: '#000000', // Black text color for active fields
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+      },
+      inputInactive: {
+        backgroundColor: '#f0f0f0',
+        color: '#aaaaaa', // Greyed out text color
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+      },
 
 })
 
