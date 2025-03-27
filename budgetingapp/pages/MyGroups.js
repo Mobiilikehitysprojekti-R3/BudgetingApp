@@ -4,23 +4,69 @@ import styles from '../styles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CreateGroupModal from '../components/CreateGroupModal';
 import { getUsersGroups } from '../firebase/firestore';
+import { auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function MyGroups({ navigation, uid }) {
   const [groups, setGroups] = useState([]);
 	const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
 
-	useEffect(() => {
-        const fetchGroups = async () => {
-            try {
-                const userGroups = await getUsersGroups(uid); // Fetch groups for the user
-                setGroups(userGroups); // Set the fetched groups in state
-            } catch (error) {
-                console.error("Failed to fetch groups: ", error);
-            }
-        };
 
-        fetchGroups(); // Call the function to fetch groups
-    }, [uid]); // Dependency array includes userId to refetch if it changes
+useEffect(() => {
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+
+      if (user) {
+
+        console.log("User logged in with UID:", user.uid);
+
+        setUid(user.uid);
+
+      } else {
+
+        console.log("No user logged in.");
+
+        setUid(null);
+
+      }
+
+    });
+ 
+    return () => unsubscribe(); // Cleanup the listener when component unmounts
+
+  }, []);
+ 
+  useEffect(() => {
+
+    if (!uid) {
+
+      console.log("UID is missing, skipping fetch...");
+
+      return;
+
+    }
+ 
+    console.log("Fetching groups for UID:", uid);
+ 
+    const fetchGroups = async () => {
+
+      try {
+
+        const userGroups = await getUsersGroups(uid);
+
+        setGroups(userGroups);
+
+      } catch (error) {
+
+        console.error("Failed to fetch groups:", error);
+
+      }
+
+    };
+ 
+    fetchGroups();
+
+  }, [uid]);
 
 
   const handleGroupPress = (groupId) => {

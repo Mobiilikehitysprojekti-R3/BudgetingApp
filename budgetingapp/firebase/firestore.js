@@ -1,6 +1,6 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, query} from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { getDoc } from "firebase/firestore";
+import { getDoc, where } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
 
 //const db = getFirestore();
@@ -271,11 +271,11 @@ const createGroup = async (groupName, selectedMembers) => {
     const newGroup = {
         name: groupName,
         owner: user.uid, // Set the creator as the owner
-        members: selectedMembers.map((user) => ({
+        members: selectedMembers.map((user) => user.uid)({
             uid: user.uid, // Store user ID
             phone: user.phone, // Store phone number
             name: user.dbName, // Store name from database
-        })),
+        }),
     }
     
     try {
@@ -330,18 +330,20 @@ const matchContactsToUsers = async (contacts) => {
       })
       .filter(Boolean)
 }
+
 const getUsersGroups = async (uid) => {
     try {
-      const querySnapshot = await db.collection('groups').where('members', 'array-contains', uid).get();
-      
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetching user groups: ", uid);
+        const q = query(collection(db, 'groups'), where('members', 'array-contains', { uid: uid }));
+        const querySnapshot = await getDocs(q);
+        
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error("Error fetching user groups: ", error);
-      throw error; // Rethrow the error for handling in the calling function
+        console.error("Error fetching user groups: ", error);
+        throw error; // Rethrow the error for handling in the calling function
     }
-  };
+};
 
-
-getUserData();
+getUserData(); 
 
 export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField, getUsersGroups };
