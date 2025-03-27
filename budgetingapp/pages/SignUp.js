@@ -40,6 +40,7 @@ export default function SignUp({ navigation }) {
         email,
         phone,
         uid: user.uid, // User ID
+        groupsId: [],
       })
 
       // Empty all input fields after a successful registration

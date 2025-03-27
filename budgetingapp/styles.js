@@ -68,6 +68,17 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginVertical: 10,
     },
+    /* Buttons in the my groups page */
+    buttonThree: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#A984BE",
+        width: "100%",
+        height: "40",
+        borderRadius: 18,
+        marginVertical: 10,
+    },
     buttonForm: {
         alignItems: "center",
         justifyContent: "center",
@@ -102,6 +113,7 @@ const styles = StyleSheet.create({
         height: 150,
         borderRadius: 75,
     },
+    /* My groups page groups list*/
     list:{
         width: "80%",
         padding: 20,
