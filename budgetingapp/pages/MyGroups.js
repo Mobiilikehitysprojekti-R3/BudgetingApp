@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Modal } from 'react-native';
 import styles from '../styles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CreateGroupModal from '../components/CreateGroupModal';
+import { fetchUserGroups } from '../firebase/firestore';
 
 export default function MyGroups({ navigation }) {
-  const [groups] = useState([]);
+  const [groups, setGroups] = useState([]);
 	const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
+
+	useEffect(() => {
+		const loadGroups = async () => {
+			const userGroups = await fetchUserGroups()
+			setGroups(userGroups)
+		}
+		loadGroups()
+	}, [])
 
   const handleGroupPress = (groupId) => {
     navigation.navigate('Group', { groupId }); // Navigate to Group page
@@ -24,8 +33,9 @@ export default function MyGroups({ navigation }) {
       data={groups}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
-      <TouchableOpacity onPress={() => handleGroupPress(item.id)} style={styles.buttonTwo}>
+      <TouchableOpacity onPress={() => handleGroupPress(item.id)} style={styles.buttonThree}>
         <Text style={styles.buttonText}>{item.name}</Text>
+				<Ionicons name="chevron-forward" size={20} color="white" style={styles.iconStyle} />
       </TouchableOpacity>
       )}     //lists all existing groups that user belongs to      
             // navigate to NoGroups page to create new group
@@ -37,19 +47,10 @@ export default function MyGroups({ navigation }) {
 			size={30} color="#A984BE" 
 			onPress={() => {setOpenCreateGroupModal(true)}}
 		/>
-		<Modal
+		<CreateGroupModal 
 			visible={openCreateGroupModal}
-			animationType="slide"
-			transparent={true}
-			onRequestClose={handleCloseModal} // Handle back button on Android
-		>
-			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-				<View style={{ backgroundColor: 'white', margin: 20, borderRadius: 10, padding: 20 }}>
-				<Ionicons name="close" size={24} color="black" onPress={handleCloseModal}/>
-					<CreateGroupModal onClose={handleCloseModal} />
-				</View>
-			</View>
-		</Modal>
+			onClose={handleCloseModal}
+		/>
   </View>
   );
 }
