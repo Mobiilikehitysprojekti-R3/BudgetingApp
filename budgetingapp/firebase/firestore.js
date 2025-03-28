@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, arrayUnion, where, query } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -11,8 +11,8 @@ onAuthStateChanged(auth, () => {
         console.log("User logged in:", user.uid);
         
         // Call functions only after the user is logged in
-        //updateUserIncome(50000);
-        //updateUserBudget(10000);
+        updateUserIncome(50000);
+        updateUserBudget(10000);
         getUserData();
     } else {
         console.error("No user logged in.");
@@ -28,7 +28,7 @@ const updateUserIncome = async (income) => {
       return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), {
+            await updateDoc(doc(db, "users", user.uid), {
                 income: income, // Add or update the "income" field
             }, {merge: true});
             console.log("Income field added/updated!");
@@ -48,7 +48,7 @@ const updateUserBudget = async (budget) => {
         return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), {
+            await updateDoc(doc(db, "users", user.uid), {
                 budget: budget, // Add or update the "budget" field
             }, {merge: true});
             console.log("Budget field added/updated!");
@@ -266,40 +266,20 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!groupName.trim()) {
       return alert("Enter a valid group name")
     }
-
-    //Ensure the owner is in the members list
-    const allMembers = [...selectedMembers]
-
-    //Check if owner is already in the list; if not add them
-    if (!selectedMembers.some(member => member.uid === user.uid)) {
-        allMembers.push({
-            uid: user.uid,
-            phone: user.phone || "",
-            name: user.displayName || "Unknown",
-        })
-    }
   
     // Prepare group data
     const newGroup = {
         name: groupName,
         owner: user.uid, // Set the creator as the owner
-        members: allMembers, //Store all members
+        members: selectedMembers.map((user) => ({
+            uid: user.uid, // Store user ID
+            phone: user.phone, // Store phone number
+            name: user.dbName, // Store name from database
+        })),
     }
     
     try {
-        //Create the group and get the generated groupId
-        const groupRef = await addDoc(collection(db, "groups"), newGroup)
-        const groupId = groupRef.id
-
-        //Update each user's groupsId field to include the new groupId
-        const updatePromises = allMembers.map((member) =>
-            updateDoc(doc(db, "users", member.uid), {
-                groupsId: arrayUnion(groupId),
-            })
-        )
-
-        await Promise.all(updatePromises)
-
+        await addDoc(collection(db, "groups"), newGroup)
         alert("Group Created!")
     } catch (error) {
         console.error("Error creating group:", error)
@@ -351,46 +331,6 @@ const matchContactsToUsers = async (contacts) => {
       .filter(Boolean)
 }
 
-//Function to fetch the logged-in user's groups
-const fetchUserGroups = async () => {
-    const user = auth.currentUser
-    if (!user) return []
-
-    try {
-        const userRef = doc(db, "users", user.uid)
-        const userSnap = await getDoc(userRef)
-
-        if (!userSnap.exists()) {
-            return []
-        }
-
-        const userData = userSnap.data()
-        const userGroupsId = userData.groupsId || [] //Get the array of group IDs
-
-        if (userGroupsId.length === 0) return []
-
-        //Fetch only the group names using groupsId
-        const groupsRef = collection(db, "groups")
-        const q = query(groupsRef, where("__name__", "in", userGroupsId))
-        const groupsSnap = await getDocs(q)
-
-        //Extract group IDs and names
-        return groupsSnap.docs.map((doc) => ({
-            id: doc.id,     //Group ID
-            name: doc.data().name //Group name
-        }))
-    } catch (error) {
-        console.error("Error fetching groups: ", error)
-        return []
-    }
-}
-
 getUserData();
 
-export { 
-    createGroup, matchContactsToUsers, updateUserIncome, 
-    updateUserBudget, getUserData, updateUserPhone, 
-    updateUserName, updateUserEmail, updateUserPassword, 
-    deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups 
-};
+export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
