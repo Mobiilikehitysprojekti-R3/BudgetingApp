@@ -138,6 +138,24 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 10,
       },
+    /* Modal layout */
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+        width: "85%",
+        backgroundColor: "#FFF",
+        borderRadius: 18,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
 
 })
 

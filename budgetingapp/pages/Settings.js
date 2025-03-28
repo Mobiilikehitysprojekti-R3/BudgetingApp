@@ -5,8 +5,9 @@ import { getDoc, doc } from "firebase/firestore";
 import { signOut } from 'firebase/auth';
 import { 
   updateUserName, updateUserPhone, updateUserEmail, 
-  updateUserPassword, deleteAccount, getUserData 
+  updateUserPassword, deleteAccount
 } from "../firebase/firestore";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from "../styles";
 
 /* 

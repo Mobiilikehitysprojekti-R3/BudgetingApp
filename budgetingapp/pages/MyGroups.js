@@ -47,19 +47,10 @@ export default function MyGroups({ navigation }) {
 			size={30} color="#A984BE" 
 			onPress={() => {setOpenCreateGroupModal(true)}}
 		/>
-		<Modal
+		<CreateGroupModal 
 			visible={openCreateGroupModal}
-			animationType="slide"
-			transparent={true}
-			onRequestClose={handleCloseModal} // Handle back button on Android
-		>
-			<View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-				<View style={{ backgroundColor: 'white', margin: 20, borderRadius: 10, padding: 20 }}>
-				<Ionicons name="close" size={24} color="black" onPress={handleCloseModal}/>
-					<CreateGroupModal onClose={handleCloseModal} />
-				</View>
-			</View>
-		</Modal>
+			onClose={handleCloseModal}
+		/>
   </View>
   );
 }
