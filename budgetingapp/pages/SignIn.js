@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
 import styles from "../styles";
 
@@ -48,7 +48,7 @@ export default function SignIn({ navigation }) {
       <View style={styles.form}>
         <Text style={styles.link}>Email</Text>
         <TextInput
-          placeholder="..."
+          placeholder=""
           value={email}
           onChangeText={setEmail}
           style={styles.formInput}
@@ -56,7 +56,7 @@ export default function SignIn({ navigation }) {
         />
         <Text style={styles.link}>Password</Text>
         <TextInput
-          placeholder="..."
+          placeholder=""
           value={password}
           onChangeText={setPassword}
           style={styles.formInput}
