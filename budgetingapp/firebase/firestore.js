@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, where, query } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -16,7 +16,7 @@ onAuthStateChanged(auth, () => {
         updateRemainingUserBudget(10000);
         getUserData();
     } else {
-        console.error("No user logged in.");
+        //console.error("No user logged in.");
     }
 });
 
@@ -321,16 +321,31 @@ const createGroup = async (groupName, selectedMembers) => {
       return alert("Enter a valid group name")
     }
 
+    // Fetch the owner's details from Firestore
+    const userDocRef = doc(db, "users", user.uid)
+    const userDocSnap = await getDoc(userDocRef)
+
+    let ownerDetails = {
+        uid: user.uid,
+        phone: user.phone || "Unknown",
+        name: user.displayName || "Unknown",
+    }
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        ownerDetails = {
+            uid: user.uid,
+            phone: userData.phone || "Unknown",
+            name: userData.name || user.displayName || "Unknown",
+        };
+    }
+
     //Ensure the owner is in the members list
     const allMembers = [...selectedMembers]
 
     //Check if owner is already in the list; if not add them
     if (!selectedMembers.some(member => member.uid === user.uid)) {
-        allMembers.push({
-            uid: user.uid,
-            phone: user.phone || "",
-            name: user.displayName || "Unknown",
-        })
+        allMembers.push(ownerDetails)
     }
   
     // Prepare group data
@@ -353,8 +368,6 @@ const createGroup = async (groupName, selectedMembers) => {
         )
 
         await Promise.all(updatePromises)
-
-        alert("Group Created!")
     } catch (error) {
         console.error("Error creating group:", error)
         alert("Failed to create group")
