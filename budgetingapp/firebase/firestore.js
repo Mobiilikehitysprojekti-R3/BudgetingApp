@@ -266,12 +266,12 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!groupName.trim()) {
       return alert("Enter a valid group name")
     }
-    
+
     try {
-    // First, add a new group and get its document reference
+    // Add a new group and get its document reference
     const docRef = await addDoc(collection(db, "groups"), {})
 
-    // Get the generated document ID to use as `gid`
+    // Get the generated document ID to use as groupID
     const groupId = docRef.id
   
     // Prepare group data
