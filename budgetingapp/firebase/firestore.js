@@ -427,16 +427,19 @@ const fetchUserGroups = async () => {
         const userRef = doc(db, "users", user.uid)
         const userSnap = await getDoc(userRef)
 
-        if (!userSnap.exists()) {
+        /*if (!userSnap.exists()) {
             return []
-        }
+        }*/
 
         const userData = userSnap.data()
         const userGroupsId = userData.groupsId || [] //Get the array of group IDs
 
         if (userGroupsId.length === 0) return []
 
-        //Fetch only the group names using groupsId
+        let groups = []
+        const batchSize = 10
+
+        /*//Fetch only the group names using groupsId
         const groupsRef = collection(db, "groups")
         const q = query(groupsRef, where("__name__", "in", userGroupsId))
         const groupsSnap = await getDocs(q)
@@ -445,13 +448,25 @@ const fetchUserGroups = async () => {
         return groupsSnap.docs.map((doc) => ({
             id: doc.id,     //Group ID
             name: doc.data().name //Group name
-        }))
+        }))*/
+
+        for (let i = 0; i < userGroupsId.length; i += batchSize) {
+            const batchIds = userGroupsId.slice(i, i + batchSize)
+            const q = query(collection(db, "groups"), where("__name__", "in", batchIds))
+            const groupsSnap = await getDocs(q)
+                
+            groups.push(...groupsSnap.docs.map((doc) => ({
+                id: doc.id,
+                name: doc.data().name,
+            })))
+        }
+    
+        return groups
     } catch (error) {
         console.error("Error fetching groups: ", error)
         return []
     }
 }
-
 
 getUserData();
 
