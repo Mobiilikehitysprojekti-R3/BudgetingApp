@@ -21,8 +21,10 @@ export default function MyGroups({ navigation }) {
     navigation.navigate('Group', { groupId }); // Navigate to Group page
   };
 
-	const handleCloseModal = () => {
+	const handleCloseModal = async () => {
     setOpenCreateGroupModal(false)
+	const userGroups = await fetchUserGroups() // Reload the group list
+  	setGroups(userGroups)
   }
 
   return (
