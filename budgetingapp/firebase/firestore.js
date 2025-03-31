@@ -385,6 +385,15 @@ const fetchUserGroups = async () => {
     }
 }
 
+const fetchGroupById = async (groupId) => {
+    const groupDoc = await firestore.collection('groups').doc(groupId).get();
+    if (groupDoc.exists) {
+      return { id: groupDoc.id, ...groupDoc.data() }; // Returns group data
+    } else {
+      throw new Error('Group not found');
+    }
+  };
+
 getUserData();
 
 export { 
@@ -392,5 +401,5 @@ export {
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups 
+    fetchUserGroups, fetchGroupById
 };

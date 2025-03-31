@@ -1,30 +1,34 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import styles from '../styles';
+// Group.js
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { fetchGroupById } from '../firebase/firestore'; // Assume this function fetches group data by ID
 
-export default function Group({ navigation, uid }) {
-    const [budgets] = useState([]);
+const Group = ({ route }) => {
+  const { groupId } = route.params; // Get the groupId from the route parameters
+  const [group, setGroup] = useState(null);
 
-    const handleBudgetPress = (groupId) => {
-        navigation.navigate('SharedBudget', { groupId }); // Navigate to groups budget page
+  useEffect(() => {
+    const loadGroup = async () => {
+      const groupData = await fetchGroupById(groupId); // Fetch group data
+      setGroup(groupData);
     };
+    loadGroup();
+  }, [groupId]);
 
+  if (!group) {
     return (
-      <View style={styles.container}> 
-          <Text style={styles.title}>{item.name}</Text>
-          <FlatList
-              data={budgets}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => handleBudgetPress(item.id)} style={styles.buttonTwo}>
-                      <Text style={styles.buttonText}>{item.name}</Text>
-                  </TouchableOpacity>
-              )}     //lists all existing groups that user belongs to      
-            // navigate to NoGroups page to create new group
-          />
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("NoGroups")}> 
-                <Text style={styles.buttonText}>Create Group</Text> 
-            </TouchableOpacity>
+      <View style={styles.container}>
+        <Text>Loading...</Text>
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{group.name}</Text>
+      <Text >{group.description}</Text>
+    </View>
   );
-}
+};
+
+export default Group;
