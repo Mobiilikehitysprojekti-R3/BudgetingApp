@@ -11,8 +11,8 @@ onAuthStateChanged(auth, () => {
         console.log("User logged in:", user.uid);
         
         // Call functions only after the user is logged in
-        //updateUserIncome(50000);
-        //updateUserBudget(10000);
+        updateUserIncome(50000);
+        updateUserBudget(10000);
         getUserData();
     } else {
         //console.error("No user logged in.");
