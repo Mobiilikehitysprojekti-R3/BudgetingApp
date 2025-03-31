@@ -281,7 +281,6 @@ const createGroup = async (groupName, selectedMembers) => {
   
     // Prepare group data
     const newGroup = {
-        gid: groupId,
         name: groupName,
         owner: user.uid, // Set the creator as the owner
         members: allMembers, //Store all members
