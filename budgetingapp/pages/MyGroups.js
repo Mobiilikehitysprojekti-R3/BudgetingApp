@@ -22,10 +22,10 @@ export default function MyGroups({ navigation }) {
   };
 
 	const handleCloseModal = async () => {
-    setOpenCreateGroupModal(false)
-	const userGroups = await fetchUserGroups() // Reload the group list
-  	setGroups(userGroups)
-  }
+    	setOpenCreateGroupModal(false)
+		const userGroups = await fetchUserGroups() // Reload the group list
+  		setGroups(userGroups)
+  	}
 
   return (
   <View style={styles.container}>
