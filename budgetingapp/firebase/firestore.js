@@ -15,7 +15,7 @@ onAuthStateChanged(auth, () => {
         //updateUserBudget(10000);
         getUserData();
     } else {
-        console.error("No user logged in.");
+        //console.error("No user logged in.");
     }
 });
 
@@ -314,8 +314,6 @@ const createGroup = async (groupName, selectedMembers) => {
         )
 
         await Promise.all(updatePromises)
-
-        alert("Group Created!")
     } catch (error) {
         console.error("Error creating group:", error)
         alert("Failed to create group")
