@@ -41,6 +41,8 @@ export default function SignUp({ navigation }) {
         phone,
         uid: user.uid, // User ID
         groupsId: [],
+        budget: {},
+        remainingBudget: 0,
       })
 
       // Empty all input fields after a successful registration
