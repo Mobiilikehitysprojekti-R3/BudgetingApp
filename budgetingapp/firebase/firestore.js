@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -12,7 +12,8 @@ onAuthStateChanged(auth, () => {
         
         // Call functions only after the user is logged in
         updateUserIncome(50000);
-        updateUserBudget(10000);
+        //updateUserBudget();
+        updateRemainingUserBudget(10000);
         getUserData();
     } else {
         console.error("No user logged in.");
@@ -39,7 +40,8 @@ const updateUserIncome = async (income) => {
     }
   };
 
-// Function to create a budget field and update it to Firestore
+// Function to create a budget field and update it to Firestore 
+// Luultavasti turha, koska budjetti on jo luotu ja se on tallennettu Firestoreen
 const updateUserBudget = async (budget) => {
     const user = auth.currentUser;
 
@@ -53,6 +55,25 @@ const updateUserBudget = async (budget) => {
             }, {merge: true});
             console.log("Budget field added/updated!");
             console.log("User budget:", budget);
+            } catch (error) {
+            console.error("Error updating user data:", error);
+            }
+    }
+};
+
+const updateRemainingUserBudget = async (remainingBudget) => {
+    const user = auth.currentUser;
+
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    } else {
+        try {
+            await updateDoc(doc(db, "users", user.uid), {
+                remainingBudget: remainingBudget, // Add or update the "budget" field
+            }, {merge: true});
+            console.log("remainingBudget field added/updated!");
+            console.log("Remaining User budget:", remainingBudget);
             } catch (error) {
             console.error("Error updating user data:", error);
             }
@@ -239,10 +260,10 @@ const addBudgetField = async (field, value) => {
     const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
     // add new field and update remaining budget
     try {
-        await setDoc(userRef, {
-            [safeField]: value,
+        await updateDoc(userRef, {
+            [`budget.${safeField}`]: value,
             remainingBudget: currentRemaining - value
-        }, { merge: true });
+          });          
 
         console.log("Firestore update successful:", {
             [safeField]: value,
@@ -252,6 +273,39 @@ const addBudgetField = async (field, value) => {
         return { success: true, remainingBudget: currentRemaining - value };
     } catch (error) {
         console.error("Error adding budget field:", error);
+        return { error: "Failed to update budget." };
+    }
+};
+
+// delete a budget field and add to remaining budget
+const deleteBudgetField = async (field) => {
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+    // get user document
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+
+    // delete field and update remaining budget
+    try {
+        const fieldValue = data.budget?.[field] ?? 0;
+
+        await updateDoc(userRef, {
+        [`budget.${field}`]: deleteField(),
+        remainingBudget: currentRemaining + fieldValue
+        });
+
+        console.log("Firestore update successful:", {
+            [field]: deleteField(),
+            remainingBudget: currentRemaining + data[field]
+        });
+
+        return { success: true, remainingBudget: currentRemaining + fieldValue };
+    } catch (error) {
+        console.error("Error deleting budget field:", error);
         return { error: "Failed to update budget." };
     }
 };
@@ -333,4 +387,4 @@ const matchContactsToUsers = async (contacts) => {
 
 getUserData();
 
-export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField };
+export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField, deleteBudgetField };
