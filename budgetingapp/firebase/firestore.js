@@ -267,16 +267,31 @@ const createGroup = async (groupName, selectedMembers) => {
       return alert("Enter a valid group name")
     }
 
+    // Fetch the owner's details from Firestore
+    const userDocRef = doc(db, "users", user.uid)
+    const userDocSnap = await getDoc(userDocRef)
+
+    let ownerDetails = {
+        uid: user.uid,
+        phone: user.phone || "Unknown",
+        name: user.displayName || "Unknown",
+    }
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        ownerDetails = {
+            uid: user.uid,
+            phone: userData.phone || "Unknown",
+            name: userData.name || user.displayName || "Unknown",
+        };
+    }
+
     //Ensure the owner is in the members list
     const allMembers = [...selectedMembers]
 
     //Check if owner is already in the list; if not add them
     if (!selectedMembers.some(member => member.uid === user.uid)) {
-        allMembers.push({
-            uid: user.uid,
-            phone: user.phone || "",
-            name: user.displayName || "Unknown",
-        })
+        allMembers.push(ownerDetails)
     }
   
     // Prepare group data
