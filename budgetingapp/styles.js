@@ -68,6 +68,17 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginVertical: 10,
     },
+    /* Buttons in the my groups page */
+    buttonThree: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#A984BE",
+        width: "100%",
+        height: "40",
+        borderRadius: 18,
+        marginVertical: 10,
+    },
     buttonForm: {
         alignItems: "center",
         justifyContent: "center",
@@ -102,11 +113,48 @@ const styles = StyleSheet.create({
         height: 150,
         borderRadius: 75,
     },
+    /* My groups page groups list*/
     list:{
         width: "80%",
         padding: 20,
         borderRadius: 18,
         marginBottom: 10,
+    },
+    inputActive: {
+        backgroundColor: '#ffffff',
+        color: '#000000', // Black text color for active fields
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+      },
+      inputInactive: {
+        backgroundColor: '#f0f0f0',
+        color: '#aaaaaa', // Greyed out text color
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+      },
+    /* Modal layout */
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+        width: "85%",
+        backgroundColor: "#FFF",
+        borderRadius: 18,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
 
 })

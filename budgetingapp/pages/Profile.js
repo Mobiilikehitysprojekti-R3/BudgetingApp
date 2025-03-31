@@ -1,15 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity, View, Text, Image, Alert } from "react-native";
 import  Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import Feather from '@expo/vector-icons/Feather';
 import styles from "../styles";
+import { fetchUserGroups } from "../firebase/firestore";
 
 export default function Profile({ navigation }) {
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [image, setImage] = useState(null);
-    const defaultAvatar = require("../assets/hacker.png");
+  const [image, setImage] = useState(null);
+  const defaultAvatar = require("../assets/hacker.png");
+  const [userGroups, setUserGroups] = useState([]);
+
+  // Fetch the user's groups using the fetchUserGroups function from firestore.js
+  const getUserGroups = async () => {
+    const groups = await fetchUserGroups();
+    setUserGroups(groups);
+  };
+
+  useEffect(() => {
+    getUserGroups();
+  }, []);
+
+  // Function to handle pressing "My Groups"
+  const handleMyGroupsPress = () => {
+    console.log("User's Groups:", userGroups);
+
+    if (!userGroups || userGroups.length === 0) {
+      navigation.navigate("NoGroups");  // Navigate to NoGroups
+    } else {
+      navigation.navigate("MyGroups", { groups: userGroups });  // Navigate to MyGroups
+    }
+  };
     
     const pickImage = async () => {
         //Requesting permission to use gallery
@@ -90,14 +111,10 @@ export default function Profile({ navigation }) {
                    My Budget 
                 </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyGroups")}>
+            <TouchableOpacity style={styles.buttonOne} onPress={handleMyGroupsPress}>
                 <Text style={styles.buttonText}>
                    My Groups 
                 </Text>
-            </TouchableOpacity>
-            { /* FOR TESTING */ }
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("NoGroups")}>
-                <Text style={styles.buttonText}>Create Group</Text>
             </TouchableOpacity>
         </View>
     )

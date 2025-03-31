@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import styles from '../styles';
 import CreateGroupModal from '../components/CreateGroupModal';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -21,24 +21,15 @@ export default function NoGroups () {
 
       <TouchableOpacity 
         style={styles.buttonOne} 
-        onPress={() => {setOpenCreateGroupModal(true)}}>
+        onPress={() => setOpenCreateGroupModal(true)}>
       	<Text style={styles.buttonText}>Create group</Text>
 				<Ionicons name="add" size={20} color="white" style={styles.iconStyle} />
       </TouchableOpacity>
 
-      <Modal
+      <CreateGroupModal 
         visible={openCreateGroupModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCloseModal} // Handle back button on Android
-      >
-      <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-        <View style={{ backgroundColor: 'white', margin: 20, borderRadius: 10, padding: 20 }}>
-				<Ionicons name="close" size={24} color="black" onPress={handleCloseModal}/>
-          <CreateGroupModal onPress={handleCloseModal} />
-        </View>
-      </View>
-      </Modal>
+        onClose={handleCloseModal}
+      />
       </View>
     );
   };
