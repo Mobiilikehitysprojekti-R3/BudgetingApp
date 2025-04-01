@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, Button, Alert, TextInput, Modal, ScrollView, TouchableOpacity } from 'react-native';
 import { auth, db } from '../firebase/config';
 import { getDoc, doc } from "firebase/firestore";
 import { signOut } from 'firebase/auth';
-import { 
-  updateUserName, updateUserPhone, updateUserEmail, 
-  updateUserPassword, deleteAccount
-} from "../firebase/firestore";
+import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, deleteAccount } from "../firebase/firestore";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from "../styles";
 
@@ -61,6 +58,7 @@ export default function Settings({ navigation }) {
       Alert.alert("Profile updated successfully!")
       setIsEditing(false)
       setIsPasswordModalVisible(false)
+      setCurrentPassword("")
 
     } catch (error) {
       Alert.alert("Error", error.message)
@@ -93,41 +91,51 @@ export default function Settings({ navigation }) {
       [
         { text: "Cancel" },
         { text: "Delete", onPress: async () => {
-    
-          const user = auth.currentUser ;
+        const user = auth.currentUser ;
   
-          if (user) {
-            try {
-              await deleteAccount (user);
-              Alert.alert("Account  deleted successfully");
-
-              // Reset navigation
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'SignIn' }],
-              })
-            } catch (error) {
-              Alert.alert("Error", error.message);
-            }}
-          }
+        if (user) {
+          try {
+            await deleteAccount (user);
+            Alert.alert("Account  deleted successfully");
+            // Reset navigation
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'SignIn' }],
+            })
+          } catch (error) {
+            Alert.alert("Error", error.message);
+        }}
+        }
         }
       ]
     )
   }
-
   //Style for "locked" fields
   const inputStyle = isEditing ? styles.inputActive : styles.inputInactive
 
   return (
-    <View style={styles.container}>
+  <ScrollView style={styles.scrollView}>
+    <View style={styles.settingsContainer}>
       <Text style={styles.title}>Settings</Text>
-      <View style={styles.form}>
+      <View style={styles.settingsForm}>
         <Text style={styles.link}>Profile settings</Text>
         {!isEditing ? (
-          <Button title="Edit" onPress={() => setIsEditing(true)} />
+          <Ionicons 
+            name="pencil" 
+            size={20} 
+            color="#4F4F4F" 
+            onPress={() => setIsEditing(true)}
+          />
         ) : (
-          <Button title="Save" onPress={() => setIsPasswordModalVisible(true)} />
+          <Ionicons 
+            name="save" 
+            size={20} 
+            color="#4F4F4F" 
+            onPress={() => setIsPasswordModalVisible(true)}  
+          />
         )}
+      </View>
+      <View style={styles.settingsFormTwo}>
         <TextInput 
           placeholder="Name" value={name} 
           onChangeText={setName} editable={isEditing} 
@@ -143,37 +151,54 @@ export default function Settings({ navigation }) {
           onChangeText={setEmail} editable={isEditing} 
           style={inputStyle} keyboardType="email-address" 
         />
+      </View>
+      <View style={styles.settingsForm}>
+        <Text style={styles.link}>Change Password</Text>
+      </View>
+      <View style={styles.settingsFormTwo}>
         <TextInput 
           placeholder="New Password" value={newPassword} 
           onChangeText={setNewPassword} editable={isEditing} 
           style={inputStyle} secureTextEntry 
         />
       </View>
-      {/* Password verification pop-up */}
+        {/* Password verification pop-up */}
       <Modal visible={isPasswordModalVisible} transparent animationType="slide">
-        <View>
-          <View style={styles.form}>
-            <Text>Enter current password to confirm changes:</Text>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}> 
+            <Ionicons 
+              name="close" 
+              size={24} 
+              color="#4F4F4F" 
+              onPress={() => {
+                setIsPasswordModalVisible(false)
+                setCurrentPassword("")
+              }}
+            />        
+            <Text style={{ fontSize: 16, marginBottom: 10}}>Enter current password to confirm changes:</Text>
             <TextInput 
               placeholder="Current Password" 
               value={currentPassword} 
               onChangeText={setCurrentPassword} 
               secureTextEntry 
-              style={styles.input} 
+              style={inputStyle} 
             />
-            <Button title="Confirm" onPress={handleSave} />
-            <Button title="Cancel" onPress={() => {
-              setIsPasswordModalVisible(false);
-              setCurrentPassword("");
-            }} />
+            <TouchableOpacity style={styles.buttonForm} onPress={handleSave}>
+              <Text style={styles.buttonTextMiddle}>Confirm</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <View>
-        <Button title="Logout" onPress={handleLogout} />
-        <Button title="Delete Account" onPress={handleDeleteUser} />
+      {/*Sign Out Button */}
+      <TouchableOpacity style={styles.settingsButton} onPress={handleLogout}>
+        <Text style={styles.buttonTextMiddle}>Sign Out</Text>
+      </TouchableOpacity>
+      {/*Delete Account Section */}
+      <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteUser}>
+        <Text style={styles.deleteText}>Delete Account</Text>
+        <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+      </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView> 
   );
 };
