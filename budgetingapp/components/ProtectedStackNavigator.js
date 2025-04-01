@@ -21,7 +21,10 @@ import Group from '../pages/Group';
 const Stack = createStackNavigator()
 
 export default function ProtectedStackNavigator() {
-  // Use the AuthContext to access the current user information
+  /*
+    Use the AuthContext to access the current
+    user information
+  */
   const { user } = useContext(AuthContext)
   const navigation = useNavigation()
 

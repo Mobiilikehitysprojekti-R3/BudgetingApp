@@ -28,7 +28,10 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  // Provide the user data to all components wrapped within the AuthProvider
+  /*
+    Provide the user data to all components wrapped
+    within the AuthProvider
+  */
   return (
     <AuthContext.Provider value={{ user }}>
       {children}

@@ -1,60 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { getRemainingBudget, addBudgetField } from '../firebase/firestore';
-import { onAuthStateChanged } from "firebase/auth";
-import  { auth } from '../firebase/config';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { addBudgetField, deleteBudgetField } from '../firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
+import BudgetPieChart from '../components/BudgetPieChart';
+
 
 export default function MyBudget() {
   const [fieldName, setFieldName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
   const [remainingBudget, setRemainingBudget] = useState(null);
   const [message, setMessage] = useState('');
+  const [budgetFields, setBudgetFields] = useState({});
+
+  const fetchUserBudgetData = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+
+      setRemainingBudget(data.remainingBudget ?? 0);
+
+      const validBudget = {};
+      for (const [key, value] of Object.entries(data.budget || {})) {
+        if (typeof value === 'number' && isFinite(value) && value > 0) {
+          validBudget[key] = value;
+        }
+      }
+      setBudgetFields(validBudget);
+    }
+  };
 
   useEffect(() => {
-    const fetchBudget = async () => {
-      const budget = await getRemainingBudget();
-      setRemainingBudget(budget);
-    };
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          console.log("User is logged in:", user.uid);
-        } else {
-          console.warn("No user is logged in.");
-        }
-      });
-    fetchBudget();
+      if (user) {
+        console.log('User is logged in:', user.uid);
+        fetchUserBudgetData();
+      } else {
+        console.warn('No user is logged in.');
+      }
+    });
     return unsubscribe;
   }, []);
 
   const handleAddField = async () => {
-    if (!fieldName || !fieldValue) {
-      Alert.alert("Please fill in both fields");
-      return;
-    }
-
     const value = parseFloat(fieldValue);
-    if (isNaN(value) || value <= 0) {
-      Alert.alert("Invalid amount");
+    if (!fieldName || isNaN(value) || value <= 0) {
+      Alert.alert('Please enter a valid name and amount');
       return;
     }
-
-    console.log("Field:", fieldName, "Value:", fieldValue);
 
     const result = await addBudgetField(fieldName, value);
-
     if (result.error) {
-      Alert.alert("Error", result.error);
+      Alert.alert('Error', result.error);
     } else {
-      setRemainingBudget( result.remainingBudget);
-      console.log("Remaining budget:", result.remainingBudget);
-      setMessage(`Added "${fieldName}" with value $${value}`);
       setFieldName('');
       setFieldValue('');
+      setMessage(`Added "${fieldName}" with value $${value}`);
+      fetchUserBudgetData(); // Refresh list and budget
+    }
+  };
+
+  const handleDeleteField = async (field) => {
+    const confirm = await new Promise((resolve) =>
+      Alert.alert('Delete Field', `Are you sure you want to delete "${field}"?`, [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+      ])
+    );
+
+    if (!confirm) return;
+
+    const result = await deleteBudgetField(field);
+    if (result.error) {
+      Alert.alert('Error', result.error);
+    } else {
+      setMessage(`Deleted "${field}"`);
+      fetchUserBudgetData(); // Refresh after deletion
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>My Budget</Text>
 
       <TextInput
@@ -78,21 +119,39 @@ export default function MyBudget() {
       {remainingBudget !== null && (
         <Text style={styles.remaining}>Remaining Budget: ${remainingBudget}</Text>
       )}
-    </View>
+
+      <BudgetPieChart data={budgetFields} />
+
+      <Text style={styles.subheading}>Your Budget Fields:</Text>
+      {Object.entries(budgetFields).map(([field, value]) => (
+        <View key={field} style={styles.budgetItem}>
+          <Text style={styles.budgetText}>
+            {field}: ${value}
+          </Text>
+          <TouchableOpacity onPress={() => handleDeleteField(field)}>
+            <Text style={styles.deleteButton}>❌</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 24,
-    justifyContent: 'center',
     backgroundColor: '#fff',
   },
   heading: {
     fontSize: 22,
     marginBottom: 16,
     fontWeight: '600',
+  },
+  subheading: {
+    fontSize: 18,
+    marginTop: 24,
+    marginBottom: 12,
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,
@@ -111,5 +170,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'blue',
+  },
+  budgetItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  budgetText: {
+    fontSize: 16,
+  },
+  deleteButton: {
+    fontSize: 18,
+    color: 'red',
+    paddingHorizontal: 8,
   },
 });

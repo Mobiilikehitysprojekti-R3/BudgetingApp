@@ -87,26 +87,33 @@ export default function Settings({ navigation }) {
 
   // Function to handle user account deletion
   const handleDeleteUser  = async () => {
-    const user = auth.currentUser ;
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel" },
+        { text: "Delete", onPress: async () => {
+    
+          const user = auth.currentUser ;
   
-    if (user) {
-      try {
-        await deleteAccount (user);
-        Alert.alert("User  deleted successfully");
+          if (user) {
+            try {
+              await deleteAccount (user);
+              Alert.alert("Account  deleted successfully");
 
-        // Reset navigation
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'SignIn' }],
-        });
-        //navigation.navigate("SignIn"); // Navigate back to SignIn screen
-      } catch (error) {
-        Alert.alert("Error", error.message);
-      }
-    } else {
-      Alert.alert("Error", "No user is currently signed in.");
-    }
-  };
+              // Reset navigation
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'SignIn' }],
+              })
+            } catch (error) {
+              Alert.alert("Error", error.message);
+            }}
+          }
+        }
+      ]
+    )
+  }
 
   //Style for "locked" fields
   const inputStyle = isEditing ? styles.inputActive : styles.inputInactive
@@ -165,7 +172,7 @@ export default function Settings({ navigation }) {
 
       <View>
         <Button title="Logout" onPress={handleLogout} />
-        <Button title="Delete Account" onPress={handleDeleteUser } />
+        <Button title="Delete Account" onPress={handleDeleteUser} />
       </View>
     </View>
   );

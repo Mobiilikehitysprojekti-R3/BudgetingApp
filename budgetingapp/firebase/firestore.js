@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, where, query } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc, where } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -11,11 +11,12 @@ onAuthStateChanged(auth, () => {
         console.log("User logged in:", user.uid);
         
         // Call functions only after the user is logged in
-        //updateUserIncome(50000);
-        //updateUserBudget(10000);
+        updateUserIncome(50000);
+        //updateUserBudget();
+        updateRemainingUserBudget(10000);
         getUserData();
     } else {
-        console.error("No user logged in.");
+        //console.error("No user logged in.");
     }
 });
 
@@ -28,7 +29,7 @@ const updateUserIncome = async (income) => {
       return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), {
+            await updateDoc(doc(db, "users", user.uid), {
                 income: income, // Add or update the "income" field
             }, {merge: true});
             console.log("Income field added/updated!");
@@ -39,7 +40,8 @@ const updateUserIncome = async (income) => {
     }
   };
 
-// Function to create a budget field and update it to Firestore
+// Function to create a budget field and update it to Firestore 
+// Luultavasti turha, koska budjetti on jo luotu ja se on tallennettu Firestoreen
 const updateUserBudget = async (budget) => {
     const user = auth.currentUser;
 
@@ -48,11 +50,30 @@ const updateUserBudget = async (budget) => {
         return;
     } else {
         try {
-            await setDoc(doc(db, "users", user.uid), {
+            await updateDoc(doc(db, "users", user.uid), {
                 budget: budget, // Add or update the "budget" field
             }, {merge: true});
             console.log("Budget field added/updated!");
             console.log("User budget:", budget);
+            } catch (error) {
+            console.error("Error updating user data:", error);
+            }
+    }
+};
+
+const updateRemainingUserBudget = async (remainingBudget) => {
+    const user = auth.currentUser;
+
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    } else {
+        try {
+            await updateDoc(doc(db, "users", user.uid), {
+                remainingBudget: remainingBudget, // Add or update the "budget" field
+            }, {merge: true});
+            console.log("remainingBudget field added/updated!");
+            console.log("Remaining User budget:", remainingBudget);
             } catch (error) {
             console.error("Error updating user data:", error);
             }
@@ -239,10 +260,10 @@ const addBudgetField = async (field, value) => {
     const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
     // add new field and update remaining budget
     try {
-        await setDoc(userRef, {
-            [safeField]: value,
+        await updateDoc(userRef, {
+            [`budget.${safeField}`]: value,
             remainingBudget: currentRemaining - value
-        }, { merge: true });
+          });          
 
         console.log("Firestore update successful:", {
             [safeField]: value,
@@ -252,6 +273,39 @@ const addBudgetField = async (field, value) => {
         return { success: true, remainingBudget: currentRemaining - value };
     } catch (error) {
         console.error("Error adding budget field:", error);
+        return { error: "Failed to update budget." };
+    }
+};
+
+// delete a budget field and add to remaining budget
+const deleteBudgetField = async (field) => {
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+    // get user document
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+
+    // delete field and update remaining budget
+    try {
+        const fieldValue = data.budget?.[field] ?? 0;
+
+        await updateDoc(userRef, {
+        [`budget.${field}`]: deleteField(),
+        remainingBudget: currentRemaining + fieldValue
+        });
+
+        console.log("Firestore update successful:", {
+            [field]: deleteField(),
+            remainingBudget: currentRemaining + data[field]
+        });
+
+        return { success: true, remainingBudget: currentRemaining + fieldValue };
+    } catch (error) {
+        console.error("Error deleting budget field:", error);
         return { error: "Failed to update budget." };
     }
 };
@@ -267,16 +321,31 @@ const createGroup = async (groupName, selectedMembers) => {
       return alert("Enter a valid group name")
     }
 
+    // Fetch the owner's details from Firestore
+    const userDocRef = doc(db, "users", user.uid)
+    const userDocSnap = await getDoc(userDocRef)
+
+    let ownerDetails = {
+        uid: user.uid,
+        phone: user.phone || "Unknown",
+        name: user.displayName || "Unknown",
+    }
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        ownerDetails = {
+            uid: user.uid,
+            phone: userData.phone || "Unknown",
+            name: userData.name || user.displayName || "Unknown",
+        };
+    }
+
     //Ensure the owner is in the members list
     const allMembers = [...selectedMembers]
 
     //Check if owner is already in the list; if not add them
     if (!selectedMembers.some(member => member.uid === user.uid)) {
-        allMembers.push({
-            uid: user.uid,
-            phone: user.phone || "",
-            name: user.displayName || "Unknown",
-        })
+        allMembers.push(ownerDetails)
     }
   
     // Prepare group data
@@ -299,8 +368,6 @@ const createGroup = async (groupName, selectedMembers) => {
         )
 
         await Promise.all(updatePromises)
-
-        alert("Group Created!")
     } catch (error) {
         console.error("Error creating group:", error)
         alert("Failed to create group")
