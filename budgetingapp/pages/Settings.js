@@ -70,14 +70,11 @@ export default function Settings({ navigation }) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      Alert.alert("Logged out successfully");
-
       // Reset navigation after logout
       navigation.reset({
         index: 0,
         routes: [{ name: 'SignIn' }],
       });
-      //navigation.navigate("SignIn"); // Navigate back to SignIn screen
     } catch (error) {
       Alert.alert("Error", error.message);
     }
