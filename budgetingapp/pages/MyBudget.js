@@ -9,12 +9,12 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { addBudgetField, deleteBudgetField } from '../firebase/firestore';
+import { addBudgetField, deleteBudgetField, shareBudgetWithGroup } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
-
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function MyBudget() {
   const [fieldName, setFieldName] = useState('');
@@ -22,11 +22,13 @@ export default function MyBudget() {
   const [remainingBudget, setRemainingBudget] = useState(null);
   const [message, setMessage] = useState('');
   const [budgetFields, setBudgetFields] = useState({});
+  const [groupId, setGroupId] = useState('')
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
+    try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
 
@@ -43,13 +45,16 @@ export default function MyBudget() {
       }
       setBudgetFields(validBudget);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching budget data:', error);
+  }
+};
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log('User is logged in:', user.uid);
-        fetchUserBudgetData();
+        fetchUserBudgetData(user);
       } else {
         console.warn('No user is logged in.');
       }
@@ -94,8 +99,23 @@ export default function MyBudget() {
     }
   };
 
+  const handleShareBudget = async () => {
+    const result = await shareBudgetWithGroup(groupId)
+   
+    if (result.error) {
+      Alert.alert('Error', result.error)
+    } else {
+      Alert.alert('Success', 'Budget shared successfully!')
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity onPress={handleShareBudget}>
+      <Ionicons
+      name="share-outline" size={24} color="#4F4F4F"
+      /></TouchableOpacity>
+
       <Text style={styles.heading}>My Budget</Text>
 
       <TextInput
