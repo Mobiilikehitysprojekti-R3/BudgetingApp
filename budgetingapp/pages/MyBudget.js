@@ -13,6 +13,8 @@ import { addBudgetField, deleteBudgetField } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import BudgetPieChart from '../components/BudgetPieChart';
+
 
 export default function MyBudget() {
   const [fieldName, setFieldName] = useState('');
@@ -117,6 +119,8 @@ export default function MyBudget() {
       {remainingBudget !== null && (
         <Text style={styles.remaining}>Remaining Budget: ${remainingBudget}</Text>
       )}
+
+      <BudgetPieChart data={budgetFields} />
 
       <Text style={styles.subheading}>Your Budget Fields:</Text>
       {Object.entries(budgetFields).map(([field, value]) => (
