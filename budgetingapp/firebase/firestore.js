@@ -392,7 +392,20 @@ const fetchGroupById = async (groupId) => {
     } else {
       throw new Error('Group not found');
     }
-  };
+  }
+
+const createBudget = async ({ name, groupId }) => {
+    try {
+        const newBudgetRef = await firestore.collection('budgets').add({
+            name,
+            groupId,
+        });
+        return newBudgetRef.id; // Returns the ID of the newly created budget
+    } catch (error) {
+        console.error("Error creating budget: ", error);
+        throw new Error("Could not create budget");
+    }
+}
 
 getUserData();
 
@@ -401,5 +414,5 @@ export {
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups, fetchGroupById
+    fetchUserGroups, fetchGroupById, createBudget
 };
