@@ -1,6 +1,6 @@
 import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot, where } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { getDoc, where } from "firebase/firestore";
+import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
 
 // Listen for authentication state changes
@@ -647,5 +647,5 @@ export {
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById,
     deleteBudgetField, unshareBudgetFromGroup,
-    createBudget, deleteBudgetField, fetchGroupBudgets
+    createBudget, fetchGroupBudgets
 };
