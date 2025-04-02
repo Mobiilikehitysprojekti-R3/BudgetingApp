@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot, where } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -532,10 +532,6 @@ const fetchUserGroups = async () => {
         const userRef = doc(db, "users", user.uid)
         const userSnap = await getDoc(userRef)
 
-        /*if (!userSnap.exists()) {
-            return []
-        }*/
-
         const userData = userSnap.data()
         const userGroupsId = userData.groupsId || [] //Get the array of group IDs
 
@@ -543,17 +539,6 @@ const fetchUserGroups = async () => {
 
         let groups = []
         const batchSize = 10
-
-        /*//Fetch only the group names using groupsId
-        const groupsRef = collection(db, "groups")
-        const q = query(groupsRef, where("__name__", "in", userGroupsId))
-        const groupsSnap = await getDocs(q)
-
-        //Extract group IDs and names
-        return groupsSnap.docs.map((doc) => ({
-            id: doc.id,     //Group ID
-            name: doc.data().name //Group name
-        }))*/
 
         for (let i = 0; i < userGroupsId.length; i += batchSize) {
             const batchIds = userGroupsId.slice(i, i + batchSize)
@@ -612,6 +597,37 @@ const createGroupBudget = async ({ budgetName, groupId }) => {
     }
 }
 
+const fetchGroupBudgets = async (groupId) => {
+    if (!groupId) {
+        console.error("fetchGroupBudgets called with undefined groupId.");
+        return [];
+    }
+
+    try {
+        console.log("Querying Firestore for budgets with groupId:", groupId);
+        const budgetsRef = collection(db, "groupBudget");
+        const q = query(budgetsRef, where("groupId", "==", groupId));
+        const budgetsSnap = await getDocs(q);
+
+
+        if (budgetsSnap.empty) {
+            console.warn("No budgets found for groupId:", groupId);
+        }
+
+        const budgets = budgetsSnap.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name,
+            budget: doc.data().budget,
+        }));
+        
+        console.log("Fetched budgets:", budgets);
+        return budgets;
+    } catch (error) {
+        console.error("Error fetching group budgets: ", error);
+        return [];
+    }
+};
+
 getUserData();
 
 export {
@@ -621,5 +637,5 @@ export {
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById, createGroupBudget,
-    deleteBudgetField
+    deleteBudgetField, fetchGroupBudgets
 };
