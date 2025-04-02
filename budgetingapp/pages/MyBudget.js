@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   Button,
-  StyleSheet,
   Alert,
   ScrollView,
   TouchableOpacity, FlatList, Modal
@@ -15,8 +14,21 @@ import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
+import styles from "../styles";
+
+/* 
+    The MyBudget component allows users to manage and track their budget.
+    
+    Users can:
+    - Add new budget fields with names and amounts (e.g. groceries, rent, etc.).
+    - View their remaining budget.
+    - Delete budget fields.
+    - Share their budget details with groups they belong to.
+*/
 
 export default function MyBudget() {
+  const navigation = useNavigation()
   const [fieldName, setFieldName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
   const [remainingBudget, setRemainingBudget] = useState(null);
@@ -25,6 +37,17 @@ export default function MyBudget() {
   //const [groupId, setGroupId] = useState('')
   const [groups, setGroups] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'My Budget',
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginRight: 15 }}>
+          <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
+        </TouchableOpacity>
+      ),
+    })
+  }, [navigation])
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
@@ -125,18 +148,14 @@ export default function MyBudget() {
   }
   
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-    
-    <TouchableOpacity onPress={() => setModalVisible(true)}>
-        <Ionicons name="share-outline" size={24} color="#4F4F4F" />
-    </TouchableOpacity>
+    <ScrollView style={styles.scrollView}>
 
-      <Text style={styles.heading}>My Budget</Text>
+    <Text style={styles.titleDark}>My Budget</Text>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Share Budget With</Text>
+            <Text style={styles.title2}>Share Budget With</Text>
             <FlatList
               data={groups}
               keyExtractor={(item) => item.id}
@@ -147,20 +166,23 @@ export default function MyBudget() {
                   <Text style={styles.groupText}>{item.name}</Text>
                 </TouchableOpacity>
               )}/>
-            <Button title="Close" onPress={() => setModalVisible(false)} />
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
+                <Text style={styles.buttonTextMiddle}>Close</Text>
+              </TouchableOpacity>
+            
           </View>
         </View>
       </Modal>
 
       <TextInput
-        style={styles.input}
+        style={styles.inputActive}
         placeholder="New field name (e.g. groceries)"
         value={fieldName}
         onChangeText={setFieldName}
       />
 
       <TextInput
-        style={styles.input}
+        style={styles.inputActive}
         placeholder="Amount"
         value={fieldValue}
         onChangeText={setFieldValue}
@@ -176,7 +198,7 @@ export default function MyBudget() {
 
       <BudgetPieChart data={budgetFields} />
 
-      <Text style={styles.subheading}>Your Budget Fields:</Text>
+      <Text style={styles.title2}>Your Budget Fields:</Text>
       {Object.entries(budgetFields).map(([field, value]) => (
         <View key={field} style={styles.budgetItem}>
           <Text style={styles.budgetText}>
@@ -190,79 +212,3 @@ export default function MyBudget() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-  heading: {
-    fontSize: 22,
-    marginBottom: 16,
-    fontWeight: '600',
-  },
-  subheading: {
-    fontSize: 18,
-    marginTop: 24,
-    marginBottom: 12,
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#aaa',
-    padding: 10,
-    marginBottom: 12,
-    borderRadius: 6,
-  },
-  message: {
-    marginTop: 16,
-    fontSize: 16,
-    color: 'green',
-  },
-  remaining: {
-    marginTop: 12,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'blue',
-  },
-  budgetItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  budgetText: {
-    fontSize: 16,
-  },
-  deleteButton: {
-    fontSize: 18,
-    color: 'red',
-    paddingHorizontal: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  groupItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  groupText: {
-    fontSize: 16,
-  },
-});
