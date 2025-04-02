@@ -1,73 +1,77 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets } from '../firebase/firestore';
-import CreateBudgetModal from '../components/CreateBudgetModal.js';
-import styles from "../styles.js"
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { fetchGroupById, fetchSharedBudgets } from '../firebase/firestore';
+import styles from "../styles.js";
 
-export default function Group({ route }) {
-    const { groupId } = route.params; // Gets the groupId from the route parameters
-    const [group, setGroup] = useState(null);
-    const [groupBudgets, setGroupBudgets] = useState([]); // State to hold group budgets
-    const [openCreateBudgetModal, setOpenCreateBudgetModal] = useState(false)
-    //const [isModalVisible, setModalVisible] = useState(false);
+export default function Group({ route, navigation }) {
+    const { groupId } = route.params
+    const [group, setGroup] = useState(null)
+    const [sharedBudgets, setSharedBudgets] = useState([])
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const loadGroup = async () => {
-            console.log("Fetching group data for groupId:", groupId);
-            const groupData = await fetchGroupById(groupId); // Fetches group data
-            console.log("Fetched group data:", groupData);
-            setGroup(groupData);
-        };
+        const loadGroupData = async () => {
+            try {
+                const groupData = await fetchGroupById(groupId)
+                setGroup(groupData)
+            } catch (error) {
+                console.error('Error fetching group:', error)
+            }
+        }
 
-        const loadGroupBudgets = async () => {
-            console.log("Fetching budgets for groupId:", groupId);
-            const budgets = await fetchGroupBudgets(groupId); // Fetches group budgets
-            console.log("Fetched budgets:", budgets);
-            setGroupBudgets(budgets);
-        };
+        const loadSharedBudgetsData = async () => {
+            try {
+                const budgets = await fetchSharedBudgets(groupId)
+                setSharedBudgets(budgets)
+            } catch (error) {
+                console.error('Error fetching shared budgets:', error)
+            }
+        }
 
-        loadGroup();
-        loadGroupBudgets();
+        const loadData = async () => {
+            await Promise.all([loadGroupData(), loadSharedBudgetsData()])
+            setLoading(false)
+        }
+
+        loadData();
     }, [groupId]);
 
-    const handleCloseModal = () => {
-        setOpenCreateBudgetModal(false);
-        loadGroupBudgets(); // Refresh budgets after closing the modal
-    };
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                <Text>Loading group data...</Text>
+            </View>
+        )
+    }
 
     if (!group) {
         return (
             <View style={styles.container}>
-                <Text>Loading...</Text>
+                <Text>Error loading group data.</Text>
             </View>
-        );
+        )
     }
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{group.name}</Text>
-            {groupBudgets.length === 0 ? (
-            <Text>No budgets available.</Text>
-        ) : (
-
-            <FlatList
-                data={groupBudgets}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
-                        <Text>{item.name}</Text>
-                    </TouchableOpacity>
-
-                )}
-            />
+            <Text style={styles.subtitle}>Shared Budgets:</Text>
+            {sharedBudgets.length === 0 ? (
+                <Text style={styles.noBudgetsText}>No shared budgets available.</Text>
+            ) : (
+                <FlatList
+                    data={sharedBudgets}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('BudgetDetails', { budgetId: item.id })}
+                            style={styles.listItem}>
+                            <Text style={styles.budgetName}>View Budget {item.id}</Text>
+                        </TouchableOpacity>
+                    )}
+                />
             )}
-            <Button title="Create New Budget" onPress={() => setOpenCreateBudgetModal(true)} />
-            
-            <CreateBudgetModal 
-                visible={openCreateBudgetModal}
-                onClose={handleCloseModal}
-                groupId={groupId}
-            />
         </View>
-    );
-};
+    )
+}

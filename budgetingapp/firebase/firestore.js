@@ -20,6 +20,22 @@ onAuthStateChanged(auth, () => {
     }
 });
 
+export const fetchBudgetById = async (budgetId) => {
+    try {
+        const budgetRef = doc(db, "sharedBudgets", budgetId)
+        const budgetSnap = await getDoc(budgetRef)
+        if (budgetSnap.exists()) {
+            return budgetSnap.data()
+        } else {
+            console.error("No such budget!")
+            return null
+        }
+    } catch (error) {
+        console.error("Error fetching budget:", error)
+        return null
+    }
+}
+
 // Listen for changes to the user's budget in the database
 const listenToUserBudgetChanges = () => {
     const user = auth.currentUser
@@ -96,33 +112,6 @@ const shareBudgetWithGroup = async (groupId) => {
         console.log("Budget shared successfully!")
     } catch (error) {
         console.error("Error sharing budget:", error)
-    }
-}
-
-// Undo share budget
-const unshareBudgetFromGroup = async (groupId) => {
-    const user = auth.currentUser
-
-    try {
-        // Reference to the shared budget collection
-        const sharedBudgetsRef = collection(db, "sharedBudgets")
-        
-        // Query to find the shared budget document
-        const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            console.error("No shared budget found for this group.")
-            return
-        }
-
-        // Delete all matching shared budget documents
-        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref))
-        await Promise.all(deletePromises)
-
-        console.log("Budget unshared successfully!")
-    } catch (error) {
-        console.error("Error unsharing budget:", error)
     }
 }
 
@@ -584,6 +573,76 @@ const fetchUserGroups = async () => {
     }
 }
 
+const fetchGroupById = async (groupId) => {
+      try {
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (!groupSnap.exists()) {
+            console.error("Group not found:", groupId);
+            return null;
+        }
+
+        console.log("Fetched group:", groupSnap.data());
+        return { id: groupSnap.id, ...groupSnap.data() };
+    } catch (error) {
+        console.error("Error fetching group:", error);
+        return null;
+    }
+  }
+
+const createGroupBudget = async ({ budgetName, groupId }) => {
+    if (!budgetName.trim()) {
+        return alert("Enter a valid budget name")
+    }
+    try {
+    const groupBudgetRef = collection(db, "groupBudget")
+    //const q = query(groupBudgetRef, where("groupId", "==", groupId))
+    const newBudget = await addDoc(groupBudgetRef, {
+        name: budgetName,
+        groupId: groupId,
+        budget: null,
+    });
+
+        console.log("Budget created with ID:", newBudget.id);
+        return newBudget.id;
+    } catch (error) {
+        console.error("Error creating budget:", error);
+        return null;
+    }
+}
+
+const fetchGroupBudgets = async (groupId) => {
+    if (!groupId) {
+        console.error("fetchGroupBudgets called with undefined groupId.");
+        return [];
+    }
+
+    try {
+        console.log("Querying Firestore for budgets with groupId:", groupId);
+        const budgetsRef = collection(db, "groupBudget");
+        const q = query(budgetsRef, where("groupId", "==", groupId));
+        const budgetsSnap = await getDocs(q);
+
+
+        if (budgetsSnap.empty) {
+            console.warn("No budgets found for groupId:", groupId);
+        }
+
+        const budgets = budgetsSnap.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name,
+            budget: doc.data().budget,
+        }));
+        
+        console.log("Fetched budgets:", budgets);
+        return budgets;
+    } catch (error) {
+        console.error("Error fetching group budgets: ", error);
+        return [];
+    }
+};
+
 getUserData();
 
 export {
@@ -592,7 +651,6 @@ export {
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups, fetchGroupById,
-    deleteBudgetField, unshareBudgetFromGroup,
-    createGroupBudget, fetchGroupBudgets
+    fetchUserGroups, fetchGroupById, createGroupBudget,
+    deleteBudgetField, fetchGroupBudgets
 };
