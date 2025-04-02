@@ -20,7 +20,37 @@ onAuthStateChanged(auth, () => {
     }
 });
 
-export const fetchBudgetById = async (budgetId) => {
+const deleteSharedBudget = async (groupId) => {
+    const user = auth.currentUser;
+
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
+
+    try {
+        // Find the shared budget where the userId matches the logged-in user
+        const sharedBudgetsRef = collection(db, "sharedBudgets");
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            console.error("No shared budget found for this user in the group.");
+            return;
+        }
+
+        // Delete all matching budget documents (should usually be just one)
+        const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+        console.log("Shared budget deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting shared budget:", error);
+    }
+};
+
+// Fetches shared budget by Id
+const fetchBudgetById = async (budgetId) => {
     try {
         const budgetRef = doc(db, "sharedBudgets", budgetId)
         const budgetSnap = await getDoc(budgetRef)
@@ -101,11 +131,14 @@ const shareBudgetWithGroup = async (groupId) => {
 
     // Get user's current budget
     const userBudget = userSnap.data().budget
+    const userData = userSnap.data()
+    const userName = userData.name || "Unknown User"
 
     // Create a new shared budget document
     try {
         await setDoc(doc(sharedBudgetsRef), {
             userId: user.uid,
+            userName: userName,
             groupId: groupId,
             budget: userBudget,
         })
@@ -652,5 +685,6 @@ export {
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById, createGroupBudget,
-    deleteBudgetField, fetchGroupBudgets
+    deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
+    deleteSharedBudget
 };

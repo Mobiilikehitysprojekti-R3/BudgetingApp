@@ -15,6 +15,18 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         color: "#A984BE"
     },
+    /* Dark title */
+    titleDark: {
+        fontSize: 24,
+        marginBottom: 20,
+        color: "#4F4F4F"
+    },
+    /* A smaller title */
+    subtitle: {
+        fontSize: 18,
+        marginBottom: 10,
+        color: "#4F4F4F"
+    },
     /* Sign in and sign up "forms" */
     form: {
         backgroundColor: "#F5F5F5",
@@ -70,6 +82,7 @@ const styles = StyleSheet.create({
     },
     /* Buttons in the my groups page */
     buttonThree: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -197,6 +210,44 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginRight: 5,
         textDecorationLine: "underline",
+    },
+    /* A delete icon "X" for a touchable */
+    deleteIconForTouchable: {
+        marginRight: 5, 
+        padding: 5,
+        borderRadius: 18,
+    },
+    /* TEMPORARY styling for MyBudget page */
+    message: {
+        marginTop: 16,
+        fontSize: 16,
+        color: 'green',
+    },
+    remaining: {
+        marginTop: 12,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'blue',
+    },
+    budgetItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    deleteButton: {
+        fontSize: 18,
+        color: 'red',
+        paddingHorizontal: 8,
+    },
+    groupItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    groupText: {
+        fontSize: 16,
     },
 })
 

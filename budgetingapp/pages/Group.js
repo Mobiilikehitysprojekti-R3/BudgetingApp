@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets } from '../firebase/firestore';
+import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
+import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../firebase/config.js';
 
 export default function Group({ route, navigation }) {
     const { groupId } = route.params; // Gets the groupId from the route parameters
@@ -11,6 +13,17 @@ export default function Group({ route, navigation }) {
     const [sharedBudgets, setSharedBudgets] = useState([])
     const [openCreateBudgetModal, setOpenCreateBudgetModal] = useState(false)
     //const [isModalVisible, setModalVisible] = useState(false);
+    
+    const loadGroupBudgets = async () => {
+        console.log("Fetching budgets for groupId:", groupId);
+        try {
+            const budgets = await fetchGroupBudgets(groupId); // Fetches group budgets
+            setGroupBudgets(budgets);
+            console.log("Fetched budgets:", budgets);
+        } catch (error) {
+            console.error('Error fetching budgets:', error)
+        }  
+    };
 
     useEffect(() => {
         const loadGroupData = async () => {
@@ -22,17 +35,6 @@ export default function Group({ route, navigation }) {
             } catch (error) {
                 console.error('Error fetching group:', error)
             }
-        };
-
-        const loadGroupBudgets = async () => {
-            console.log("Fetching budgets for groupId:", groupId);
-            try {
-                const budgets = await fetchGroupBudgets(groupId); // Fetches group budgets
-                setGroupBudgets(budgets);
-                console.log("Fetched budgets:", budgets);
-            } catch (error) {
-                console.error('Error fetching budgets:', error)
-            }  
         };
 
         const loadSharedBudgetsData = async () => {
@@ -49,8 +51,18 @@ export default function Group({ route, navigation }) {
             setLoading(false)
         }
 
-        loadData();
+        loadData()
     }, [groupId]);
+
+    const handleDeleteSharedBudget = async (budgetId) => {
+        try {
+            await deleteSharedBudget(budgetId)
+            const updatedBudgets = await fetchSharedBudgets(groupId)
+            setSharedBudgets(updatedBudgets)
+        } catch (error) {
+            console.error("Error deleting budget:", error)
+        }
+    }    
 
     const handleCloseModal = () => {
         setOpenCreateBudgetModal(false);
@@ -67,7 +79,7 @@ export default function Group({ route, navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{group.name}</Text>
+            <Text style={styles.titleDark}>{group.name}</Text>
 
             <Text style={styles.subtitle}>Shared Budgets:</Text>
             {sharedBudgets.length === 0 ? (
@@ -77,14 +89,23 @@ export default function Group({ route, navigation }) {
                     data={sharedBudgets}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('BudgetDetails', { budgetId: item.id })}
-                            style={styles.listItem}>
-                            <Text style={styles.budgetName}>View Budget {item.id}</Text>
+                        <View style={styles.listItem}>
+                        <TouchableOpacity style={styles.buttonThree}
+                            onPress={() => navigation.navigate('BudgetDetails', { budgetId: item.id })}>
+                            <Text style={styles.buttonText}>View {item.userName}'s Budget</Text>
+                            {item.userId === auth.currentUser?.uid && (
+                                    <TouchableOpacity 
+                                        onPress={() => handleDeleteSharedBudget(item.groupId)}
+                                        style={styles.deleteIconForTouchable}>
+                                        <Ionicons name="close-outline" size={24} color="white" />
+                                    </TouchableOpacity>
+                            )}
                         </TouchableOpacity>
+                        </View>
                     )}
                 />
             )}
+
             {groupBudgets.length === 0 ? (
             <Text>No budgets available.</Text>
         ) : (

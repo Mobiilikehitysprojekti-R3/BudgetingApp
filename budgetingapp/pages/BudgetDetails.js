@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text } from 'react-native';
 import { fetchBudgetById } from '../firebase/firestore'; 
 import styles from "../styles.js";
 
 export default function BudgetDetails({ route }) {
     const { budgetId } = route.params
     const [budget, setBudget] = useState(null)
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const loadBudgetData = async () => {
@@ -15,8 +14,6 @@ export default function BudgetDetails({ route }) {
                 setBudget(budgetData)
             } catch (error) {
                 console.error('Error fetching budget:', error)
-            } finally {
-                setLoading(false)
             }
         }
 
