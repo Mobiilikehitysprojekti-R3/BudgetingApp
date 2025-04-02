@@ -7,14 +7,14 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  TouchableOpacity,
+  TouchableOpacity, FlatList, Modal
 } from 'react-native';
-import { addBudgetField, deleteBudgetField } from '../firebase/firestore';
+import { addBudgetField, deleteBudgetField, shareBudgetWithGroup, fetchUserGroups } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
-
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function MyBudget() {
   const [fieldName, setFieldName] = useState('');
@@ -22,11 +22,15 @@ export default function MyBudget() {
   const [remainingBudget, setRemainingBudget] = useState(null);
   const [message, setMessage] = useState('');
   const [budgetFields, setBudgetFields] = useState({});
+  //const [groupId, setGroupId] = useState('')
+  const [groups, setGroups] = useState([])
+  const [modalVisible, setModalVisible] = useState(false)
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
+    try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
 
@@ -43,13 +47,16 @@ export default function MyBudget() {
       }
       setBudgetFields(validBudget);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching budget data:', error);
+  }
+};
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log('User is logged in:', user.uid);
-        fetchUserBudgetData();
+        fetchUserBudgetData(user);
       } else {
         console.warn('No user is logged in.');
       }
@@ -63,7 +70,7 @@ export default function MyBudget() {
       Alert.alert('Please enter a valid name and amount');
       return;
     }
-
+    
     const result = await addBudgetField(fieldName, value);
     if (result.error) {
       Alert.alert('Error', result.error);
@@ -94,9 +101,56 @@ export default function MyBudget() {
     }
   };
 
+  useEffect(() => {
+    const loadGroups = async () => {
+      const userGroups = await fetchUserGroups()
+      setGroups(userGroups)
+    }
+    loadGroups()
+  }, [])
+
+  const handleShareBudget = async (groupId) => {
+    setModalVisible(false)
+    if (!groupId) {
+      Alert.alert('Error', 'Please select a group to share with.')
+      return
+    }
+
+    const result = await shareBudgetWithGroup(groupId)
+    if (result.error) {
+      Alert.alert('Error', result.error)
+    } else {
+      Alert.alert('Success', 'Budget shared successfully!')
+    }
+  }
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
+    
+    <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <Ionicons name="share-outline" size={24} color="#4F4F4F" />
+    </TouchableOpacity>
+
       <Text style={styles.heading}>My Budget</Text>
+
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Share Budget With</Text>
+            <FlatList
+              data={groups}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.groupItem}
+                  onPress={() => handleShareBudget(item.id)}>
+                  <Text style={styles.groupText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}/>
+            <Button title="Close" onPress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
 
       <TextInput
         style={styles.input}
@@ -185,5 +239,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'red',
     paddingHorizontal: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  groupItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  groupText: {
+    fontSize: 16,
   },
 });

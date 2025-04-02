@@ -1,16 +1,16 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, where, query } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
 
-//const db = getFirestore();
-
+// Listen for authentication state changes
 onAuthStateChanged(auth, () => {
     const user = auth.currentUser;
     if (user) {
         console.log("User logged in:", user.uid);
-        
+        listenToUserBudgetChanges()
         // Call functions only after the user is logged in
+
         updateUserIncome(50000);
         //updateUserBudget();
         updateRemainingUserBudget(10000);
@@ -19,6 +19,111 @@ onAuthStateChanged(auth, () => {
         //console.error("No user logged in.");
     }
 });
+
+// Listen for changes to the user's budget in the database
+const listenToUserBudgetChanges = () => {
+    const user = auth.currentUser
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    const userRef = doc(db, "users", user.uid)
+
+    // Set up a real-time listener for changes to the user's document
+    onSnapshot(userRef, async (doc) => {
+        if (doc.exists()) {
+            const updatedBudget = doc.data().budget // Get updated budget value
+
+            const sharedBudgetsRef = collection(db, "sharedBudgets")
+
+            // Query shared budgets where the user is the owner
+            const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+            const querySnapshot = await getDocs(q)
+
+            // Update all shared budgets with the new budget value
+            const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+                return updateDoc(sharedBudgetDoc.ref, {
+                    budget: updatedBudget,
+                })
+            })
+
+            // Wait for all updates to complete
+            await Promise.all(updatePromises)
+            console.log("Shared budgets updated successfully!")
+        }
+    })
+}
+
+// Share the user's budget with a group
+const shareBudgetWithGroup = async (groupId) => {
+    const user = auth.currentUser
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    // Check if the user has already shared their budget with this group
+    const sharedBudgetsRef = collection(db, "sharedBudgets")
+    const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
+    const querySnapshot = await getDocs(q)
+
+    if (!querySnapshot.empty) {
+        console.error("Budget already shared with this group.")
+        return
+    }
+
+    // Get the user's budget
+    const userRef = doc(db, "users", user.uid)
+    const userSnap = await getDoc(userRef)
+    if (!userSnap.exists()) {
+        console.error("User document not found.")
+        return
+    }
+
+    // Get user's current budget
+    const userBudget = userSnap.data().budget
+
+    // Create a new shared budget document
+    try {
+        await setDoc(doc(sharedBudgetsRef), {
+            userId: user.uid,
+            groupId: groupId,
+            budget: userBudget,
+        })
+        console.log("Budget shared successfully!")
+    } catch (error) {
+        console.error("Error sharing budget:", error)
+    }
+}
+
+// Fetch all shared budgets for a given group
+const fetchSharedBudgets = async (groupId) => {
+
+    if (!groupId) {
+        console.error("Group ID is required.")
+        return []
+    }
+
+    try {
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("groupId", "==", groupId))
+        const querySnapshot = await getDocs(q)
+
+        // Map over the documents and return an array of shared budgets
+        const sharedBudgets = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }))
+
+        return sharedBudgets // Return the fetched budgets
+    } catch (error) {
+        console.error("Error fetching shared budgets:", error)
+        return []
+    }
+}
 
 // Function to create an income field and update it to Firestore
 const updateUserIncome = async (income) => {
@@ -320,7 +425,7 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!groupName.trim()) {
       return alert("Enter a valid group name")
     }
-
+    
     // Fetch the owner's details from Firestore
     const userDocRef = doc(db, "users", user.uid)
     const userDocSnap = await getDoc(userDocRef)
@@ -427,16 +532,19 @@ const fetchUserGroups = async () => {
         const userRef = doc(db, "users", user.uid)
         const userSnap = await getDoc(userRef)
 
-        if (!userSnap.exists()) {
+        /*if (!userSnap.exists()) {
             return []
-        }
+        }*/
 
         const userData = userSnap.data()
         const userGroupsId = userData.groupsId || [] //Get the array of group IDs
 
         if (userGroupsId.length === 0) return []
 
-        //Fetch only the group names using groupsId
+        let groups = []
+        const batchSize = 10
+
+        /*//Fetch only the group names using groupsId
         const groupsRef = collection(db, "groups")
         const q = query(groupsRef, where("__name__", "in", userGroupsId))
         const groupsSnap = await getDocs(q)
@@ -445,7 +553,20 @@ const fetchUserGroups = async () => {
         return groupsSnap.docs.map((doc) => ({
             id: doc.id,     //Group ID
             name: doc.data().name //Group name
-        }))
+        }))*/
+
+        for (let i = 0; i < userGroupsId.length; i += batchSize) {
+            const batchIds = userGroupsId.slice(i, i + batchSize)
+            const q = query(collection(db, "groups"), where("__name__", "in", batchIds))
+            const groupsSnap = await getDocs(q)
+                
+            groups.push(...groupsSnap.docs.map((doc) => ({
+                id: doc.id,
+                name: doc.data().name,
+            })))
+        }
+    
+        return groups
     } catch (error) {
         console.error("Error fetching groups: ", error)
         return []
@@ -493,10 +614,12 @@ const createGroupBudget = async ({ budgetName, groupId }) => {
 
 getUserData();
 
-export { 
+export {
+    fetchSharedBudgets, shareBudgetWithGroup,
     createGroup, matchContactsToUsers, updateUserIncome, 
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups, fetchGroupById, createGroupBudget
+    fetchUserGroups, fetchGroupById, createGroupBudget,
+    deleteBudgetField
 };
