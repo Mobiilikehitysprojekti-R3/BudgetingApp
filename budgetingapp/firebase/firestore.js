@@ -99,6 +99,33 @@ const shareBudgetWithGroup = async (groupId) => {
     }
 }
 
+// Undo share budget
+const unshareBudgetFromGroup = async (groupId) => {
+    const user = auth.currentUser
+
+    try {
+        // Reference to the shared budget collection
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        
+        // Query to find the shared budget document
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            console.error("No shared budget found for this group.")
+            return
+        }
+
+        // Delete all matching shared budget documents
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref))
+        await Promise.all(deletePromises)
+
+        console.log("Budget unshared successfully!")
+    } catch (error) {
+        console.error("Error unsharing budget:", error)
+    }
+}
+
 // Fetch all shared budgets for a given group
 const fetchSharedBudgets = async (groupId) => {
 
@@ -513,7 +540,6 @@ const matchContactsToUsers = async (contacts) => {
             return {
                 id: contact.id,
                 uid: matchedUser.uid,
-                contactName: contact.name, // Contact name from phone
                 dbName: matchedUser.dbName, // Name from database
                 phone: phoneNumber,
             }
@@ -604,5 +630,5 @@ export {
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById, createBudget,
-    deleteBudgetField
+    deleteBudgetField, unshareBudgetFromGroup
 };
