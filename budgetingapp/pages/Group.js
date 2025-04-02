@@ -1,30 +1,40 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import styles from '../styles';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet } from 'react-native';
+import { fetchGroupById } from '../firebase/firestore';
+import CreateBudgetModal from '../components/CreateBudgetModal'; 
 
-export default function Group({ navigation }) {
-    const [budgets] = useState([]);
+const Group = ({ route }) => {
+    const { groupId } = route.params; // Gets the groupId from the route parameters
+    const [group, setGroup] = useState(null);
+    const [isModalVisible, setModalVisible] = useState(false);
 
-    const handleBudgetPress = (groupId) => {
-        navigation.navigate('SharedBudget', { groupId }); // Navigate to groups budget page
-    };
+    useEffect(() => {
+        const loadGroup = async () => {
+            const groupData = await fetchGroupById(groupId); // Fetches group data
+            setGroup(groupData);
+        };
+        loadGroup();
+    }, [groupId]);
+
+    if (!group) {
+        return (
+            <View style={styles.container}>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
 
     return (
-      <View style={styles.container}> 
-          <Text style={styles.title}>{item.name}</Text>
-          <FlatList
-              data={budgets}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => handleBudgetPress(item.id)} style={styles.buttonTwo}>
-                      <Text style={styles.buttonText}>{item.name}</Text>
-                  </TouchableOpacity>
-              )}     //lists all existing groups that user belongs to      
-            // navigate to NoGroups page to create new group
-          />
-            <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("NoGroups")}> 
-                <Text style={styles.buttonText}>Create Group</Text> 
-            </TouchableOpacity>
-      </View>
-  );
-}
+        <View style={styles.container}>
+            <Text style={styles.title}>{group.name}</Text>
+            <Button title="Create New Budget" onPress={() => setModalVisible(true)} />
+            <CreateBudgetModal 
+                visible={isModalVisible} 
+                onClose={() => setModalVisible(false)} 
+                groupId={groupId} // Pass the groupId to the modal
+            />
+        </View>
+    );
+};
+
+export default Group;
