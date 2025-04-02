@@ -540,7 +540,7 @@ const matchContactsToUsers = async (contacts) => {
             return {
                 id: contact.id,
                 uid: matchedUser.uid,
-                dbName: matchedUser.dbName, // Name from database
+                dbName: matchedUser.dbName,
                 phone: phoneNumber,
             }
         }
