@@ -7,11 +7,10 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity, FlatList, Modal
 } from 'react-native';
 import { addBudgetField, deleteBudgetField, shareBudgetWithGroup, fetchUserGroups } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Picker } from '@react-native-picker/picker';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
@@ -25,7 +24,7 @@ export default function MyBudget() {
   const [budgetFields, setBudgetFields] = useState({});
   //const [groupId, setGroupId] = useState('')
   const [groups, setGroups] = useState([])
-  const [selectedGroup, setSelectedGroup] = useState('')
+  const [modalVisible, setModalVisible] = useState(false)
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
@@ -71,7 +70,7 @@ export default function MyBudget() {
       Alert.alert('Please enter a valid name and amount');
       return;
     }
-
+    
     const result = await addBudgetField(fieldName, value);
     if (result.error) {
       Alert.alert('Error', result.error);
@@ -106,46 +105,52 @@ export default function MyBudget() {
     const loadGroups = async () => {
       const userGroups = await fetchUserGroups()
       setGroups(userGroups)
-      if (userGroups.length > 0) {
-        setSelectedGroup(userGroups[0].id)
-      }
     }
     loadGroups()
   }, [])
 
-  const handleShareBudget = async () => {
-    if (!selectedGroup) {
+  const handleShareBudget = async (groupId) => {
+    setModalVisible(false)
+    if (!groupId) {
       Alert.alert('Error', 'Please select a group to share with.')
       return
     }
 
-    const result = await shareBudgetWithGroup(selectedGroup)
-
+    const result = await shareBudgetWithGroup(groupId)
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
       Alert.alert('Success', 'Budget shared successfully!')
     }
   }
-
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
-    <Picker
-      selectedValue={selectedGroup}
-      onValueChange={(itemValue) => setSelectedGroup(itemValue)}
-      style={styles.picker}>
-        {groups.map((group) => (
-          <Picker.Item key={group.id} label={group.name} value={group.id} />
-        ))}
-    </Picker>
-
-      <TouchableOpacity onPress={handleShareBudget}>
-      <Ionicons
-      name="share-outline" size={24} color="#4F4F4F"
-      /></TouchableOpacity>
+    
+    <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <Ionicons name="share-outline" size={24} color="#4F4F4F" />
+    </TouchableOpacity>
 
       <Text style={styles.heading}>My Budget</Text>
+
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Share Budget With</Text>
+            <FlatList
+              data={groups}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.groupItem}
+                  onPress={() => handleShareBudget(item.id)}>
+                  <Text style={styles.groupText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}/>
+            <Button title="Close" onPress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
 
       <TextInput
         style={styles.input}
@@ -234,5 +239,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'red',
     paddingHorizontal: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  groupItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  groupText: {
+    fontSize: 16,
   },
 });

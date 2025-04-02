@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, where, query } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc, where } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -11,9 +11,9 @@ onAuthStateChanged(auth, () => {
         listenToUserBudgetChanges()
         // Call functions only after the user is logged in
 
-        //updateUserIncome(50000);
+        updateUserIncome(50000);
         //updateUserBudget();
-        //updateRemainingUserBudget(10000);
+        updateRemainingUserBudget(10000);
         getUserData();
     } else {
         //console.error("No user logged in.");
@@ -598,10 +598,11 @@ const createBudget = async ({ name, groupId }) => {
 getUserData();
 
 export {
-    fetchSharedBudgets,
+    fetchSharedBudgets, shareBudgetWithGroup,
     createGroup, matchContactsToUsers, updateUserIncome, 
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups, fetchGroupById, createBudget
+    fetchUserGroups, fetchGroupById, createBudget,
+    deleteBudgetField
 };
