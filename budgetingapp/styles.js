@@ -156,7 +156,48 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
     },
-
+    scrollView: {
+        flex: 1,
+        padding: 16,
+    },
+    settingsContainer: {
+        paddingTop: 40,
+        alignItems: "center",
+    },
+    settingsForm: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginVertical: 1,
+        width: "90%",
+    },
+    settingsFormTwo: {
+        //flexDirection: "row",
+        //justifyContent: "space-between",
+        //alignItems: "center",
+        marginVertical: 16,
+        width: "90%",
+    },
+    settingsButton: {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#A984BE",
+        width: "90%",
+        height: "40",
+        borderRadius: 18,
+        marginVertical: 10,
+    },
+    deleteContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 5,
+    },
+    deleteText: {
+        color: "red",
+        fontSize: 14,
+        marginRight: 5,
+        textDecorationLine: "underline",
+    },
 })
 
 export default styles;

@@ -14,7 +14,7 @@ import styles from "../styles";
     Firestore is used to check which contacts are already in the database.
 */
 
-export default function CreateGroupModal({ visible, onClose, navigation }) {
+export default function CreateGroupModal({ visible, onClose }) {
   const [contacts, setContacts] = useState([])
   const [matchedUsers, setMatchedUsers] = useState([])
   const [groupName, setGroupName] = useState("")
@@ -91,8 +91,8 @@ export default function CreateGroupModal({ visible, onClose, navigation }) {
           )}
           />
           <TouchableOpacity style={styles.buttonForm} onPress={handleCreateGroup}>
-          <Text style={styles.buttonTextMiddle}>Create group</Text>
-        </TouchableOpacity>
+            <Text style={styles.buttonTextMiddle}>Create group</Text>
+          </TouchableOpacity>
         </View>
       </View>
       </TouchableWithoutFeedback>
