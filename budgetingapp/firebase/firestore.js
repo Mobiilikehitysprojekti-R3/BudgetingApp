@@ -1,5 +1,5 @@
 import { getFirestore, doc, setDoc, updateDoc, getDoc,
-    deleteDoc, collection, getDocs, onSnapshot, query,
+    deleteDoc, collection, getDocs, addDoc, onSnapshot, query,
     where, deleteField, arrayUnion } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider,
     reauthenticateWithCredential, updatePassword } from "firebase/auth";
@@ -427,7 +427,7 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!groupName.trim()) {
       return alert("Enter a valid group name")
     }
-
+    
     // Fetch the owner's details from Firestore
     const userDocRef = doc(db, "users", user.uid)
     const userDocSnap = await getDoc(userDocRef)

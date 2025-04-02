@@ -7,10 +7,11 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  TouchableOpacity,
+  TouchableOpacity
 } from 'react-native';
-import { addBudgetField, deleteBudgetField, shareBudgetWithGroup } from '../firebase/firestore';
+import { addBudgetField, deleteBudgetField, shareBudgetWithGroup, fetchUserGroups } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { Picker } from '@react-native-picker/picker';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
@@ -22,7 +23,9 @@ export default function MyBudget() {
   const [remainingBudget, setRemainingBudget] = useState(null);
   const [message, setMessage] = useState('');
   const [budgetFields, setBudgetFields] = useState({});
-  const [groupId, setGroupId] = useState('')
+  //const [groupId, setGroupId] = useState('')
+  const [groups, setGroups] = useState([])
+  const [selectedGroup, setSelectedGroup] = useState('')
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
@@ -99,9 +102,25 @@ export default function MyBudget() {
     }
   };
 
+  useEffect(() => {
+    const loadGroups = async () => {
+      const userGroups = await fetchUserGroups()
+      setGroups(userGroups)
+      if (userGroups.length > 0) {
+        setSelectedGroup(userGroups[0].id)
+      }
+    }
+    loadGroups()
+  }, [])
+
   const handleShareBudget = async () => {
-    const result = await shareBudgetWithGroup(groupId)
-   
+    if (!selectedGroup) {
+      Alert.alert('Error', 'Please select a group to share with.')
+      return
+    }
+
+    const result = await shareBudgetWithGroup(selectedGroup)
+
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
@@ -111,6 +130,16 @@ export default function MyBudget() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+
+    <Picker
+      selectedValue={selectedGroup}
+      onValueChange={(itemValue) => setSelectedGroup(itemValue)}
+      style={styles.picker}>
+        {groups.map((group) => (
+          <Picker.Item key={group.id} label={group.name} value={group.id} />
+        ))}
+    </Picker>
+
       <TouchableOpacity onPress={handleShareBudget}>
       <Ionicons
       name="share-outline" size={24} color="#4F4F4F"
