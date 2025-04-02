@@ -584,8 +584,6 @@ const fetchUserGroups = async () => {
     }
 }
 
-
-
 getUserData();
 
 export {
