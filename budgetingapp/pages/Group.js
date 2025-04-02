@@ -3,6 +3,7 @@ import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-nat
 import { fetchGroupById, fetchGroupBudgets } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function Group({ route }) {
     const { groupId } = route.params; // Gets the groupId from the route parameters
@@ -46,6 +47,7 @@ export default function Group({ route }) {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{group.name}</Text>
+            <View style={styles.list}>
             {groupBudgets.length === 0 ? (
             <Text>No budgets available.</Text>
         ) : (
@@ -54,14 +56,23 @@ export default function Group({ route }) {
                 data={groupBudgets}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.button} onPress={() => {}}>
-                        <Text>{item.name}</Text>
+                    <TouchableOpacity style={styles.buttonThree} onPress={() => {}}>
+                        <Text style={styles.buttonText}>{item.name}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="white" style={styles.iconStyle} />
                     </TouchableOpacity>
 
                 )}
             />
             )}
-            <Button title="Create New Budget" onPress={() => setOpenCreateBudgetModal(true)} />
+            </View>
+
+            <Ionicons 
+            name="add-circle-outline" 
+            size={30} 
+            color="#A984BE" 
+            onPress={() => setOpenCreateBudgetModal(true)}
+            />
+
             
             <CreateBudgetModal 
                 visible={openCreateBudgetModal}
