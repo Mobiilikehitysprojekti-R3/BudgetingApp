@@ -18,6 +18,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import styles from "../styles";
 
+/* 
+    The MyBudget component allows users to manage and track their budget.
+    
+    Users can:
+    - Add new budget fields with names and amounts (e.g. groceries, rent, etc.).
+    - View their remaining budget.
+    - Delete budget fields.
+    - Share their budget details with groups they belong to.
+*/
+
 export default function MyBudget() {
   const navigation = useNavigation()
   const [fieldName, setFieldName] = useState('');
@@ -142,7 +152,7 @@ export default function MyBudget() {
     <ScrollView style={styles.scrollView}>
 
     <Text style={styles.titleDark}>My Budget</Text>
-    
+
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

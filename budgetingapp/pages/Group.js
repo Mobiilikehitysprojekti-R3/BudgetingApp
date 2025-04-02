@@ -6,6 +6,16 @@ import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../firebase/config.js';
 
+/* 
+    The Group component allows users to view and manage budgets within a specific group.
+    
+    Users can:
+    - See details of a group including its name and associated budgets.
+    - View shared budgets by other group members and view details of those budgets.
+    - Delete their own shared budgets from the group.
+    - Create new budgets for the group.
+*/
+
 export default function Group({ route, navigation }) {
     const { groupId } = route.params; // Gets the groupId from the route parameters
     const [group, setGroup] = useState(null);

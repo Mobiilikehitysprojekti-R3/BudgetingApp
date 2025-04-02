@@ -3,6 +3,13 @@ import { View, Text } from 'react-native';
 import { fetchBudgetById } from '../firebase/firestore'; 
 import styles from "../styles.js";
 
+/* 
+    The BudgetDetails component displays information abouta specific
+    budget based on the provided budgetId.
+
+    Currently used to display shared budgets for a group.
+*/
+
 export default function BudgetDetails({ route }) {
     const { budgetId } = route.params
     const [budget, setBudget] = useState(null)

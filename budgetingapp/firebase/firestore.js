@@ -20,34 +20,41 @@ onAuthStateChanged(auth, () => {
     }
 });
 
+// Delete a shared budget in a specific group
 const deleteSharedBudget = async (groupId) => {
-    const user = auth.currentUser;
+    const user = auth.currentUser
 
     if (!user) {
-        console.error("No user logged in.");
-        return;
+        console.error("No user logged in.")
+        return
     }
 
     try {
         // Find the shared budget where the userId matches the logged-in user
-        const sharedBudgetsRef = collection(db, "sharedBudgets");
-        const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId));
-        const querySnapshot = await getDocs(q);
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+
+        // Create a query to find the shared budget document where:
+        // - The userId matches the logged-in user
+        // - The groupId matches the provided groupId
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
+
+        // Execute the query and get the matching documents
+        const querySnapshot = await getDocs(q)
 
         if (querySnapshot.empty) {
-            console.error("No shared budget found for this user in the group.");
-            return;
+            console.error("No shared budget found for this user in the group.")
+            return
         }
 
         // Delete all matching budget documents (should usually be just one)
-        const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
+        const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref))
+        await Promise.all(deletePromises)
 
-        console.log("Shared budget deleted successfully!");
+        console.log("Shared budget deleted successfully!")
     } catch (error) {
-        console.error("Error deleting shared budget:", error);
+        console.error("Error deleting shared budget:", error)
     }
-};
+}
 
 // Fetches shared budget by Id
 const fetchBudgetById = async (budgetId) => {
@@ -501,12 +508,15 @@ const createGroup = async (groupName, selectedMembers) => {
     if (!selectedMembers.some(member => member.uid === user.uid)) {
         allMembers.push(ownerDetails)
     }
+
+    // Remove contactName before saving to Firestore
+    const filteredMembers = allMembers.map(({ contactName, ...rest }) => rest)
   
     // Prepare group data
     const newGroup = {
         name: groupName,
         owner: user.uid, // Set the creator as the owner
-        members: allMembers, //Store all members
+        members: filteredMembers, //Store all members
     }
     
     try {
@@ -515,7 +525,7 @@ const createGroup = async (groupName, selectedMembers) => {
         const groupId = groupRef.id
 
         //Update each user's groupsId field to include the new groupId
-        const updatePromises = allMembers.map((member) =>
+        const updatePromises = filteredMembers.map((member) =>
             updateDoc(doc(db, "users", member.uid), {
                 groupsId: arrayUnion(groupId),
             })
@@ -562,6 +572,7 @@ const matchContactsToUsers = async (contacts) => {
             return {
                 id: contact.id,
                 uid: matchedUser.uid,
+                contactName: contact.name,
                 dbName: matchedUser.dbName,
                 phone: phoneNumber,
             }
