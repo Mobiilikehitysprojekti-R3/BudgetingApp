@@ -1,6 +1,6 @@
 import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, where, query } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { getDoc } from "firebase/firestore";
+import { getDoc, where } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
 
 //const db = getFirestore();
@@ -383,7 +383,7 @@ const normalizePhoneNumber = (number) => {
     }
     return formatted
 }
-
+ 
 // Fetch all registered users from database
 const getRegisteredUsers = async () => {
     const usersRef = collection(db, "users")
@@ -452,7 +452,34 @@ const fetchUserGroups = async () => {
     }
 }
 
+const fetchGroupById = async (groupId) => {
+    const groupDoc = await firestore.collection('groups').doc(groupId).get();
+    if (groupDoc.exists) {
+      return { id: groupDoc.id, ...groupDoc.data() }; // Returns group data
+    } else {
+      throw new Error('Group not found');
+    }
+  }
+
+const createBudget = async ({ name, groupId }) => {
+    try {
+        const newBudgetRef = await firestore.collection('budgets').add({
+            name,
+            groupId,
+        });
+        return newBudgetRef.id; // Returns the ID of the newly created budget
+    } catch (error) {
+        console.error("Error creating budget: ", error);
+        throw new Error("Could not create budget");
+    }
+}
 
 getUserData();
 
-export { createGroup, matchContactsToUsers, updateUserIncome, updateUserBudget, getUserData, updateUserPhone, updateUserName, updateUserEmail, updateUserPassword, deleteAccount, getRemainingBudget, addBudgetField, deleteBudgetField, fetchUserGroups };
+export { 
+    createGroup, matchContactsToUsers, updateUserIncome, 
+    updateUserBudget, getUserData, updateUserPhone, 
+    updateUserName, updateUserEmail, updateUserPassword, 
+    deleteAccount, getRemainingBudget, addBudgetField, 
+    fetchUserGroups, fetchGroupById, createBudget
+};
