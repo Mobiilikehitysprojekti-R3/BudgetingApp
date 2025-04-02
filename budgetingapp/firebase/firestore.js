@@ -584,75 +584,7 @@ const fetchUserGroups = async () => {
     }
 }
 
-const fetchGroupById = async (groupId) => {
-    try {
-      const groupRef = doc(db, "groups", groupId);
-      const groupSnap = await getDoc(groupRef);
 
-      if (!groupSnap.exists()) {
-          console.error("Group not found:", groupId);
-          return null;
-      }
-
-      console.log("Fetched group:", groupSnap.data());
-      return { id: groupSnap.id, ...groupSnap.data() };
-  } catch (error) {
-      console.error("Error fetching group:", error);
-      return null;
-  }
-}
-
-const createGroupBudget = async ({ budgetName, groupId }) => {
-  if (!budgetName.trim()) {
-      return alert("Enter a valid budget name")
-  }
-  try {
-  const groupBudgetRef = collection(db, "groupBudget")
-  //const q = query(groupBudgetRef, where("groupId", "==", groupId))
-  const newBudget = await addDoc(groupBudgetRef, {
-      name: budgetName,
-      groupId: groupId,
-      budget: null,
-  });
-
-      console.log("Budget created with ID:", newBudget.id);
-      return newBudget.id;
-  } catch (error) {
-      console.error("Error creating budget:", error);
-      return null;
-  }
-}
-
-const fetchGroupBudgets = async (groupId) => {
-  if (!groupId) {
-      console.error("fetchGroupBudgets called with undefined groupId.");
-      return [];
-  }
-
-  try {
-      console.log("Querying Firestore for budgets with groupId:", groupId);
-      const budgetsRef = collection(db, "groupBudget");
-      const q = query(budgetsRef, where("groupId", "==", groupId));
-      const budgetsSnap = await getDocs(q);
-
-
-      if (budgetsSnap.empty) {
-          console.warn("No budgets found for groupId:", groupId);
-      }
-
-      const budgets = budgetsSnap.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name,
-          budget: doc.data().budget,
-      }));
-      
-      console.log("Fetched budgets:", budgets);
-      return budgets;
-  } catch (error) {
-      console.error("Error fetching group budgets: ", error);
-      return [];
-  }
-};
 
 getUserData();
 
