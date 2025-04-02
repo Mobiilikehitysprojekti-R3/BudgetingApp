@@ -585,13 +585,22 @@ const fetchUserGroups = async () => {
 }
 
 const fetchGroupById = async (groupId) => {
-    const groupDoc = await firestore.collection('groups').doc(groupId).get();
-    if (groupDoc.exists) {
-      return { id: groupDoc.id, ...groupDoc.data() }; // Returns group data
-    } else {
-      throw new Error('Group not found');
-    }
+    try {
+      const groupRef = doc(db, "groups", groupId);
+      const groupSnap = await getDoc(groupRef);
+
+      if (!groupSnap.exists()) {
+          console.error("Group not found:", groupId);
+          return null;
+      }
+
+      console.log("Fetched group:", groupSnap.data());
+      return { id: groupSnap.id, ...groupSnap.data() };
+  } catch (error) {
+      console.error("Error fetching group:", error);
+      return null;
   }
+}
 
 const createBudget = async ({ name, groupId }) => {
     try {
