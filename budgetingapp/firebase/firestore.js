@@ -1,6 +1,6 @@
 import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { getDoc, where } from "firebase/firestore";
+import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
 
 // Listen for authentication state changes
@@ -574,24 +574,41 @@ const fetchUserGroups = async () => {
 }
 
 const fetchGroupById = async (groupId) => {
-    const groupDoc = await firestore.collection('groups').doc(groupId).get();
-    if (groupDoc.exists) {
-      return { id: groupDoc.id, ...groupDoc.data() }; // Returns group data
-    } else {
-      throw new Error('Group not found');
+      try {
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (!groupSnap.exists()) {
+            console.error("Group not found:", groupId);
+            return null;
+        }
+
+        console.log("Fetched group:", groupSnap.data());
+        return { id: groupSnap.id, ...groupSnap.data() };
+    } catch (error) {
+        console.error("Error fetching group:", error);
+        return null;
     }
   }
 
-const createBudget = async ({ name, groupId }) => {
+const createGroupBudget = async ({ budgetName, groupId }) => {
+    if (!budgetName.trim()) {
+        return alert("Enter a valid budget name")
+    }
     try {
-        const newBudgetRef = await firestore.collection('budgets').add({
-            name,
-            groupId,
-        });
-        return newBudgetRef.id; // Returns the ID of the newly created budget
+    const groupBudgetRef = collection(db, "groupBudget")
+    //const q = query(groupBudgetRef, where("groupId", "==", groupId))
+    const newBudget = await addDoc(groupBudgetRef, {
+        name: budgetName,
+        groupId: groupId,
+        budget: null,
+    });
+
+        console.log("Budget created with ID:", newBudget.id);
+        return newBudget.id;
     } catch (error) {
-        console.error("Error creating budget: ", error);
-        throw new Error("Could not create budget");
+        console.error("Error creating budget:", error);
+        return null;
     }
 }
 
@@ -603,6 +620,6 @@ export {
     updateUserBudget, getUserData, updateUserPhone, 
     updateUserName, updateUserEmail, updateUserPassword, 
     deleteAccount, getRemainingBudget, addBudgetField, 
-    fetchUserGroups, fetchGroupById, createBudget,
+    fetchUserGroups, fetchGroupById, createGroupBudget,
     deleteBudgetField
 };
