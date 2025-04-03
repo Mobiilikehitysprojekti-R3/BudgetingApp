@@ -71,7 +71,15 @@ export default function Group({ route, navigation }) {
     } catch (error) {
       console.error("Error deleting budget:", error)
     }
-  }    
+  }   
+  
+  const handleOpenCreateBudgetModal = () => {
+    if (group?.owner === auth.currentUser?.uid) {
+      setOpenCreateBudgetModal(true)
+    } else {
+      alert("Only the group owner can create a budget.")
+    }
+  }
 
   const handleCloseModal = () => {
     setOpenCreateBudgetModal(false);
@@ -139,7 +147,7 @@ export default function Group({ route, navigation }) {
       <Ionicons 
         name="add-circle-outline" 
         size={30} color="#A984BE" 
-        onPress={() => setOpenCreateBudgetModal(true)}
+        onPress={handleOpenCreateBudgetModal}
       />
       
       <CreateBudgetModal 

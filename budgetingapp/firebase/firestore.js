@@ -723,12 +723,9 @@ const fetchGroupById = async (groupId) => {
   }
 
 const createGroupBudget = async ({ budgetName, groupId }) => {
-    if (!budgetName.trim()) {
-        return alert("Enter a valid budget name")
-    }
     try {
+    //Get the group's info
     const groupBudgetRef = collection(db, "groupBudget")
-    //const q = query(groupBudgetRef, where("groupId", "==", groupId))
     const newBudget = await addDoc(groupBudgetRef, {
         name: budgetName,
         groupId: groupId,
