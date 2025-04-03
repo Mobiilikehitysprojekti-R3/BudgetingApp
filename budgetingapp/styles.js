@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     link: {
         color: "#A984BE",
         fontSize: 16,
+        marginBottom: 5,
     },
     /* Input fields in forms */
     formInput: {
@@ -185,9 +186,6 @@ const styles = StyleSheet.create({
         width: "90%",
     },
     settingsFormTwo: {
-        //flexDirection: "row",
-        //justifyContent: "space-between",
-        //alignItems: "center",
         marginVertical: 16,
         width: "90%",
     },
@@ -248,6 +246,26 @@ const styles = StyleSheet.create({
     },
     groupText: {
         fontSize: 16,
+    },
+    chatContainer: {
+        position: 'absolute',
+        bottom: 80, // Slightly above the bottom edge for better spacing
+        right: 25, // Aligns the icon to the bottom-right corner
+        backgroundColor: 'white',
+        borderRadius: 25,
+        padding: 10,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    /* Footer */
+    footer: {
+        backgroundColor: "#A984BE",
+        height: 50,
+        width: "100%",
+        position: "absolute",
+        bottom: 0,
     },
 })
 
