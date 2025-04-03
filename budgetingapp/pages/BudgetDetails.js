@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { fetchBudgetById } from '../firebase/firestore'; 
+import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 
 /* 
@@ -36,19 +37,26 @@ export default function BudgetDetails({ route }) {
     }
 
     return (
-      <View style={styles.container}>
-      <Text style={styles.title}>Budget Details</Text>
+        <ScrollView style={styles.scrollView}>
+        <View>
+            <Text style={styles.title}>Budget Details</Text>
   
-      {budget.budget && typeof budget.budget === 'object' ? (
-          Object.entries(budget.budget).map(([category, amount]) => (
-              <Text key={category} style={styles.budgetAmount}>
-                  {category}: ${amount}
-              </Text>
-          ))
-      ) : (
-          <Text style={styles.budgetAmount}>No budget data available.</Text>
-      )}
-  </View>
-  
+            {budget.budget && typeof budget.budget === 'object' ? (
+                <>
+                    <BudgetPieChart data={budget.budget} />
+                    
+                    {Object.entries(budget.budget).map(([category, amount]) => (
+                        <View key={category} style={styles.budgetItem}>
+                            <Text style={styles.budgetText}>
+                                {category}: ${amount}
+                            </Text>
+                        </View>
+                    ))}
+                </>
+        ) : (
+            <Text style={styles.budgetAmount}>No budget data available.</Text>
+        )}
+        </View>
+    </ScrollView>
     )
 }
