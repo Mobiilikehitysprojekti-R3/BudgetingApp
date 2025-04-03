@@ -23,7 +23,9 @@ export default function Settings({ navigation }) {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [isEditing, setIsEditing] = useState(false)
+  const [isPasswordEditing, setIsPasswordEditing] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
   //Fetch user data
   useEffect(() => {
@@ -44,22 +46,28 @@ export default function Settings({ navigation }) {
   }, [])
 
   const handleSave = async () => {
-    // Edit profile details (requires password verification)
     if (!currentPassword) {
       Alert.alert("Please enter your current password to verify.")
       return
     }
     try {
-      if (name) await updateUserName(name, currentPassword)
-      if (phone) await updateUserPhone(phone, currentPassword)
-      if (email) await updateUserEmail(email, currentPassword)
-      if (newPassword) await updateUserPassword(currentPassword, newPassword)
+      if (isUpdatingPassword) {
+        await updateUserPassword(currentPassword, newPassword)
+        Alert.alert("Password updated successfully!")
+        setIsPasswordEditing(false)
+        setIsPasswordModalVisible(false)
+        setCurrentPassword("")
+        setNewPassword("")
+      } else {
+        if (name) await updateUserName(name, currentPassword)
+        if (phone) await updateUserPhone(phone, currentPassword)
+        if (email) await updateUserEmail(email, currentPassword)
 
-      Alert.alert("Profile updated successfully!")
-      setIsEditing(false)
-      setIsPasswordModalVisible(false)
-      setCurrentPassword("")
-
+        Alert.alert("Profile updated successfully!")
+        setIsEditing(false)
+        setIsPasswordModalVisible(false)
+        setCurrentPassword("")
+      }
     } catch (error) {
       Alert.alert("Error", error.message)
       setCurrentPassword("")
@@ -109,6 +117,7 @@ export default function Settings({ navigation }) {
   }
   //Style for "locked" fields
   const inputStyle = isEditing ? styles.inputActive : styles.inputInactive
+  const passwordInputStyle = isPasswordEditing ? styles.inputActive : styles.inputInactive
 
   return (
   <ScrollView style={styles.scrollView}>
@@ -117,48 +126,72 @@ export default function Settings({ navigation }) {
       <View style={styles.settingsForm}>
         <Text style={styles.link}>Profile settings</Text>
         {!isEditing ? (
-          <Ionicons 
-            name="pencil" 
-            size={20} 
-            color="#4F4F4F" 
+          <Ionicons
+            name="pencil"
+            size={20}
+            color="#4F4F4F"
             onPress={() => setIsEditing(true)}
           />
         ) : (
-          <Ionicons 
-            name="save" 
-            size={20} 
-            color="#4F4F4F" 
-            onPress={() => setIsPasswordModalVisible(true)}  
+          <Ionicons
+            name="save"
+            size={20}
+            color="#4F4F4F"
+            onPress={() => {
+              setIsUpdatingPassword(false);
+              setIsPasswordModalVisible(true);
+            }}
           />
         )}
       </View>
       <View style={styles.settingsFormTwo}>
         <TextInput 
-          placeholder="Name" value={name} 
-          onChangeText={setName} editable={isEditing} 
-          style={inputStyle} 
+          placeholder="Name" value={name}
+          onChangeText={setName} editable={isEditing}
+          style={inputStyle}
         />
         <TextInput 
-          placeholder="Phone" value={phone} 
-          onChangeText={setPhone} editable={isEditing} 
-          style={inputStyle} keyboardType="phone-pad" 
+          placeholder="Phone" value={phone}
+          onChangeText={setPhone} editable={isEditing}
+          style={inputStyle} keyboardType="phone-pad"
         />
         <TextInput 
-          placeholder="Email" value={email} 
-          onChangeText={setEmail} editable={isEditing} 
-          style={inputStyle} keyboardType="email-address" 
+          placeholder="Email" value={email}
+          onChangeText={setEmail} editable={isEditing}
+          style={inputStyle} keyboardType="email-address"
         />
       </View>
       <View style={styles.settingsForm}>
-        <Text style={styles.link}>Change Password</Text>
-      </View>
-      <View style={styles.settingsFormTwo}>
-        <TextInput 
-          placeholder="New Password" value={newPassword} 
-          onChangeText={setNewPassword} editable={isEditing} 
-          style={inputStyle} secureTextEntry 
-        />
-      </View>
+          <Text style={styles.link}>Change Password</Text>
+          {!isPasswordEditing ? (
+            <Ionicons
+              name="pencil"
+              size={20}
+              color="#4F4F4F"
+              onPress={() => setIsPasswordEditing(true)}
+            />
+          ) : (
+            <Ionicons
+              name="save"
+              size={20}
+              color="#4F4F4F"
+              onPress={() => {
+                setIsUpdatingPassword(true);
+                setIsPasswordModalVisible(true);
+              }}
+            />
+          )}
+        </View>
+        <View style={styles.settingsFormTwo}>
+          <TextInput 
+            placeholder="New Password" 
+            value={newPassword} 
+            onChangeText={setNewPassword} 
+            editable={isPasswordEditing} 
+            style={passwordInputStyle} 
+            secureTextEntry
+          />
+        </View>
         {/* Password verification pop-up */}
       <Modal visible={isPasswordModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
