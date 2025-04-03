@@ -265,7 +265,7 @@ const updateUserName = async (name, currentPassword) => {
     }
 
     // Create credential for re-authentication
-    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
 
     try {
         await reauthenticateWithCredential(user, credential)
@@ -275,6 +275,51 @@ const updateUserName = async (name, currentPassword) => {
             name: name
         }, {merge: true})
         console.log("User name updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        // Update all shared budgets with new name
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userName: name
+            })
+        })
+
+        await Promise.all(updatePromises)
+        //console.log("Updated name in shared budgets.")
+
+        const groupsRef = collection(db, "groups")
+        const groupSnapshot = await getDocs(groupsRef)
+        console.log("Group Snapshot:", groupSnapshot.docs)
+
+        // Update all groups with new name
+        const groupUpdatePromises = groupSnapshot.docs.map((groupDoc) => {
+            const members = groupDoc.data().members
+            //console.log("Members:", members)
+
+            const memberToUpdate = members.find(member => member.uid === user.uid)
+            
+            if (memberToUpdate) {
+                const updatedMembers = members.map(member => {
+                    if (member.uid === user.uid) {
+                        return { ...member, name: name };
+                    }
+                    return member
+                })
+
+                return updateDoc(groupDoc.ref, {
+                    members: updatedMembers
+                })
+            } else {
+                console.log("User is not a member of this group:", groupDoc.id)
+            }
+        })
+
+        await Promise.all(groupUpdatePromises)
+        //console.log("Updated name in groups.")
+        
     } catch (error) {
         console.error("Error updating user name:", error)
     }
@@ -300,6 +345,48 @@ const updateUserPhone = async (phone, currentPassword) => {
             phone: phone
         }, {merge: true})
         console.log("User phone updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userPhone: phone
+            })
+        })
+
+        await Promise.all(updatePromises)
+        console.log("Updated phone number in shared budgets.")
+
+        const groupsRef = collection(db, "groups")
+        const groupSnapshot = await getDocs(groupsRef)
+        //console.log("Group Snapshot:", groupSnapshot.docs)
+
+        const groupUpdatePromises = groupSnapshot.docs.map((groupDoc) => {
+            const members = groupDoc.data().members
+
+            const memberToUpdate = members.find(member => member.uid === user.uid)
+
+            if (memberToUpdate) {
+                const updatedMembers = members.map(member => {
+                    if (member.uid === user.uid) {
+                        return { ...member, phone: phone };
+                    }
+                    return member
+                })
+
+                return updateDoc(groupDoc.ref, {
+                    members: updatedMembers
+                })
+            } else {
+                console.log("User is not a member of this group:", groupDoc.id)
+            }
+        })
+
+        await Promise.all(groupUpdatePromises)
+        console.log("Updated phone number in groups.")
+
     } catch (error) {
         console.error("Error updating user phone:", error)
     }
