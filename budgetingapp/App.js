@@ -5,6 +5,7 @@ import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedStackNavigator from './components/ProtectedStackNavigator';
+import Footer from './components/Footer';
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,7 @@ export default function App() {
           {/* Protected Routes */}
           <Stack.Screen name="Protected" component={ProtectedStackNavigator} options={{ headerShown: false }} />
         </Stack.Navigator>
+        <Footer />
       </NavigationContainer>
     </AuthProvider>
   )
