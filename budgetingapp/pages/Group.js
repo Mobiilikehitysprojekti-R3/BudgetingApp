@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
+import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
@@ -74,6 +74,16 @@ export default function Group({ route, navigation }) {
         }
     }    
 
+    const handleDeleteGroupPress = async () => {
+        try {
+            await deleteGroup(groupId);
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error deleting group:", error);
+            Alert.alert("Error", "Failed to delete group.");
+        }
+    };
+
     const handleCloseModal = () => {
         setOpenCreateBudgetModal(false);
         loadGroupBudgets(); // Refresh budgets after closing the modal
@@ -133,13 +143,27 @@ export default function Group({ route, navigation }) {
                 )}
              />
             )}
-            <Button title="Create New Budget" onPress={() => setOpenCreateBudgetModal(true)} />
-            
+
+            </View>
+
+            <Ionicons 
+            name="add-circle-outline" 
+            size={30} 
+            color="#A984BE" 
+            onPress={() => setOpenCreateBudgetModal(true)}
+            />
+
             <CreateBudgetModal 
                 visible={openCreateBudgetModal}
                 onClose={handleCloseModal}
                 groupId={groupId}
             />
+
+            {group.owner === auth.currentUser?.uid && (
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteGroupPress}>
+                    <Text style={styles.deleteButtonText}>Delete Group</Text>
+                </TouchableOpacity>
+             )}
         </View>
     );
 };
