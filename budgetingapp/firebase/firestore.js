@@ -265,7 +265,7 @@ const updateUserName = async (name, currentPassword) => {
     }
 
     // Create credential for re-authentication
-    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
 
     try {
         await reauthenticateWithCredential(user, credential)
@@ -275,6 +275,21 @@ const updateUserName = async (name, currentPassword) => {
             name: name
         }, {merge: true})
         console.log("User name updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        // Update all shared budgets that have this user's old name
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userName: name
+            })
+        })
+
+        await Promise.all(updatePromises)
+        console.log("Updated name in shared budgets.")
+        
     } catch (error) {
         console.error("Error updating user name:", error)
     }
@@ -300,6 +315,20 @@ const updateUserPhone = async (phone, currentPassword) => {
             phone: phone
         }, {merge: true})
         console.log("User phone updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userPhone: phone
+            })
+        })
+
+        await Promise.all(updatePromises)
+        console.log("Updated phone number in shared budgets.")
+        
     } catch (error) {
         console.error("Error updating user phone:", error)
     }
