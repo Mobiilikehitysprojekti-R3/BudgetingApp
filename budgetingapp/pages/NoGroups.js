@@ -3,12 +3,19 @@ import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import styles from '../styles';
 import CreateGroupModal from '../components/CreateGroupModal';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { fetchUserGroups } from '../firebase/firestore';
 
-export default function NoGroups () {
+export default function NoGroups ({ navigation }) {
   const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
 	
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     setOpenCreateGroupModal(false)
+
+    const userGroups = await fetchUserGroups()
+    // Navigate to MyGroups if a group is created
+    if (userGroups.length > 0) {
+      navigation.navigate('MyGroups')
+    }
   }
   
   return (
