@@ -4,7 +4,10 @@ import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudg
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '../firebase/config.js';
+import { auth, db } from '../firebase/config.js';
+import ChatModal from '../components/ChatModal.js';
+import { sendMessage, listenToMessages, markMessagesAsRead } from '../firebase/firestore'
+
 
 /* 
   The Group component allows users to view and manage budgets within a specific group.
@@ -22,6 +25,9 @@ export default function Group({ route, navigation }) {
   const [groupBudgets, setGroupBudgets] = useState([]); // State to hold group budgets
   const [sharedBudgets, setSharedBudgets] = useState([])
   const [openCreateBudgetModal, setOpenCreateBudgetModal] = useState(false)
+  const [chatVisible, setChatVisible] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [messages, setMessages] = useState([]);
     
   const loadGroupBudgets = async () => {
     console.log("Fetching budgets for groupId:", groupId);
@@ -80,6 +86,23 @@ export default function Group({ route, navigation }) {
       alert("Only the group owner can create a budget.")
     }
   }
+
+  useEffect(() => {
+    if (!groupId) return;
+  
+    const unsubscribe = listenToMessages(groupId, (msgs) => {
+      setMessages(msgs);
+      countUnreadMessages(msgs); // Count unread messages
+    });
+  
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, [groupId]);
+  
+  // Function to count unread messages
+  const countUnreadMessages = (msgs) => {
+    const unreadMessages = msgs.filter(msg => !msg.readBy.includes(auth.currentUser.uid));
+    setUnreadCount(unreadMessages.length);
+  };
 
   const handleCloseModal = () => {
     setOpenCreateBudgetModal(false);
@@ -157,10 +180,20 @@ export default function Group({ route, navigation }) {
       />
 
       {/* Chatbox */}
-      <View style={styles.chatContainer}>
+      <TouchableOpacity style={styles.chatContainer} onPress={() => setChatVisible(true)}>
         <Ionicons name="chatbox-ellipses-outline" size={40} color="#4F4F4F" />
-      </View>
+        {unreadCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{unreadCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
 
+      <ChatModal
+        visible={chatVisible}
+        onClose={() => setChatVisible(false)}
+        groupId={group.id} // Make sure `group.id` is passed correctly
+      />
     </View>
     );
 };
