@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
+import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
@@ -79,6 +79,16 @@ export default function Group({ route, navigation }) {
     }
   }   
   
+  const handleDeleteGroupPress = async () => {
+    try {
+        await deleteGroup(groupId);
+        navigation.goBack();
+    } catch (error) {
+        console.error("Error deleting group:", error);
+        Alert.alert("Error", "Failed to delete group.");
+    }
+};
+
   const handleOpenCreateBudgetModal = () => {
     if (group?.owner === auth.currentUser?.uid) {
       setOpenCreateBudgetModal(true)
@@ -163,8 +173,8 @@ export default function Group({ route, navigation }) {
         </TouchableOpacity>
 
         )}
-      />
-      )}
+       />
+     )}
       </View>
 
       <Ionicons 
@@ -178,6 +188,14 @@ export default function Group({ route, navigation }) {
         onClose={handleCloseModal}
         groupId={groupId}
       />
+
+                  
+      {group.owner === auth.currentUser?.uid && (
+                <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
+                    <Text style={styles.deleteText}>Delete Group</Text>
+                            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+                </TouchableOpacity>
+             )}
 
       {/* Chatbox */}
       <TouchableOpacity style={styles.chatContainer} onPress={() => setChatVisible(true)}>
