@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot, where } from "firebase/firestore"; 
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, deleteField, arrayUnion, query, onSnapshot, where, serverTimestamp, orderBy } from "firebase/firestore"; 
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { getDoc } from "firebase/firestore";
 import { auth, db, deleteUser } from "./config";
@@ -265,7 +265,7 @@ const updateUserName = async (name, currentPassword) => {
     }
 
     // Create credential for re-authentication
-    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    const credential = EmailAuthProvider.credential(user.email, currentPassword)
 
     try {
         await reauthenticateWithCredential(user, credential)
@@ -275,6 +275,51 @@ const updateUserName = async (name, currentPassword) => {
             name: name
         }, {merge: true})
         console.log("User name updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        // Update all shared budgets with new name
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userName: name
+            })
+        })
+
+        await Promise.all(updatePromises)
+        //console.log("Updated name in shared budgets.")
+
+        const groupsRef = collection(db, "groups")
+        const groupSnapshot = await getDocs(groupsRef)
+        console.log("Group Snapshot:", groupSnapshot.docs)
+
+        // Update all groups with new name
+        const groupUpdatePromises = groupSnapshot.docs.map((groupDoc) => {
+            const members = groupDoc.data().members
+            //console.log("Members:", members)
+
+            const memberToUpdate = members.find(member => member.uid === user.uid)
+            
+            if (memberToUpdate) {
+                const updatedMembers = members.map(member => {
+                    if (member.uid === user.uid) {
+                        return { ...member, name: name };
+                    }
+                    return member
+                })
+
+                return updateDoc(groupDoc.ref, {
+                    members: updatedMembers
+                })
+            } else {
+                console.log("User is not a member of this group:", groupDoc.id)
+            }
+        })
+
+        await Promise.all(groupUpdatePromises)
+        //console.log("Updated name in groups.")
+        
     } catch (error) {
         console.error("Error updating user name:", error)
     }
@@ -300,6 +345,48 @@ const updateUserPhone = async (phone, currentPassword) => {
             phone: phone
         }, {merge: true})
         console.log("User phone updated!")
+
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
+
+        const updatePromises = querySnapshot.docs.map((sharedBudgetDoc) => {
+            return updateDoc(sharedBudgetDoc.ref, {
+                userPhone: phone
+            })
+        })
+
+        await Promise.all(updatePromises)
+        console.log("Updated phone number in shared budgets.")
+
+        const groupsRef = collection(db, "groups")
+        const groupSnapshot = await getDocs(groupsRef)
+        //console.log("Group Snapshot:", groupSnapshot.docs)
+
+        const groupUpdatePromises = groupSnapshot.docs.map((groupDoc) => {
+            const members = groupDoc.data().members
+
+            const memberToUpdate = members.find(member => member.uid === user.uid)
+
+            if (memberToUpdate) {
+                const updatedMembers = members.map(member => {
+                    if (member.uid === user.uid) {
+                        return { ...member, phone: phone };
+                    }
+                    return member
+                })
+
+                return updateDoc(groupDoc.ref, {
+                    members: updatedMembers
+                })
+            } else {
+                console.log("User is not a member of this group:", groupDoc.id)
+            }
+        })
+
+        await Promise.all(groupUpdatePromises)
+        console.log("Updated phone number in groups.")
+
     } catch (error) {
         console.error("Error updating user phone:", error)
     }
@@ -636,12 +723,9 @@ const fetchGroupById = async (groupId) => {
   }
 
 const createGroupBudget = async ({ budgetName, groupId }) => {
-    if (!budgetName.trim()) {
-        return alert("Enter a valid budget name")
-    }
     try {
+    //Get the group's info
     const groupBudgetRef = collection(db, "groupBudget")
-    //const q = query(groupBudgetRef, where("groupId", "==", groupId))
     const newBudget = await addDoc(groupBudgetRef, {
         name: budgetName,
         groupId: groupId,
@@ -687,34 +771,78 @@ const fetchGroupBudgets = async (groupId) => {
     }
 };
 
-const deleteGroup = async (groupId) => {
-    const user = auth.currentUser;
-    if (!user) {
-        console.error("No user logged in.");
-        return;
+/* Message functions */
+const sendMessage = async (groupId, text) => {
+  const currentUser = auth.currentUser//Get logged-in user
+  //Stop if user is not logged-in or message is empty
+  if (!currentUser || !text.trim()) return
+  try {
+    //Fetch info from users collection(name and phone)
+    const userDocRef = doc(db, "users", currentUser.uid)
+    const userSnap = await getDoc(userDocRef)
+    //Use either custom 'name' from DB or fallback to firebase displayName
+    const userData = userSnap.exists() ? userSnap.data() : {}
+    const senderId = currentUser.uid
+    const senderName = userData.name || currentUser.displayName || "Unknown"
+    //Message object fields
+    const message = {
+      text: text.trim(),
+      senderId: senderId,
+      senderName: senderName,
+      timestamp: serverTimestamp(),
+      type: "text",
+      readBy: [senderId],
     }
+    //Get reference to the group's chat subcollection
+    //Firestore path: messages/{groupId}/chats
+    const messagesRef = collection(db, "messages", groupId, "chats")
+    //Add messages to firestore
+    await addDoc(messagesRef, message)
+  } catch (error) {
+    console.error("Error sending message: ", error)
+  }
+}
 
-    try {
-        const groupRef = doc(db, "groups", groupId);
-        const groupSnap = await getDoc(groupRef);
+const listenToMessages = (groupId, callback) => {
+  const messagesRef = collection(db, "messages", groupId, "chats")
+  const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"))
 
-        if (!groupSnap.exists()) {
-            console.error("Group does not exist.");
-            return;
-        }
+  //Real-time listener
+  const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+    const messages = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    callback(messages) //Update state in UI
+  })
+  return unsubscribe //Call this to stop listening
+}
 
-        const groupData = groupSnap.data();
-        if (groupData.owner !== user.uid) {
-            console.error("User is not the owner of the group.");
-            return;
-        }
+const markMessagesAsRead = async (groupId) => {
+  const user = auth.currentUser
+  if (!user) return
 
-        await deleteDoc(groupRef);
-        console.log("Group deleted successfully!");
-    } catch (error) {
-        console.error("Error deleting group:", error.message);
-    }
-};
+  try {
+    const messagesRef = collection(db, "messages", groupId, "chats")
+    //Find messages NOT read by this user
+    const q = query(messagesRef, where("readBy", "not-in", [user.uid]))
+
+    const snapshot = await getDocs(q)
+    const unreadMessages = snapshot.docs.filter(
+      (doc) => !doc.data().readBy?.includes(user.uid)
+    )
+    const updatePromises = unreadMessages.map((doc) => {
+      return updateDoc(doc.ref, {
+        readBy: arrayUnion(user.uid),
+        isRead: true,
+      })
+    })
+    
+    await Promise.all(updatePromises)
+  } catch (error) {
+    console.error("Error marking messages as read: ", error)
+  }
+}
 
 getUserData();
 
@@ -726,5 +854,6 @@ export {
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById, createGroupBudget,
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
-    deleteSharedBudget, deleteGroup
+    deleteSharedBudget, sendMessage, listenToMessages,
+    markMessagesAsRead
 };

@@ -30,7 +30,7 @@ export default function MyGroups({ navigation }) {
   return (
   <View style={styles.container}>
 		<Text style={styles.title}>MY GROUPS</Text>
-		<View style={styles.list}>
+	<View style={styles.list}>
     <FlatList
       data={groups}
       keyExtractor={(item) => item.id.toString()}
