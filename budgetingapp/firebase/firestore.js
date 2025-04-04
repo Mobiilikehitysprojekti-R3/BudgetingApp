@@ -771,6 +771,34 @@ const fetchGroupBudgets = async (groupId) => {
     }
 };
 
+const deleteGroup = async (groupId) => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
+
+    try {
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (!groupSnap.exists()) {
+            console.error("Group does not exist.");
+            return;
+        }
+
+        const groupData = groupSnap.data();
+        if (groupData.owner !== user.uid) {
+            console.error("User is not the owner of the group.");
+            return;
+        }
+
+        await deleteDoc(groupRef);
+        console.log("Group deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting group:", error.message);
+    }
+};
 /* Message functions */
 const sendMessage = async (groupId, text) => {
   const currentUser = auth.currentUser//Get logged-in user
@@ -854,6 +882,6 @@ export {
     deleteAccount, getRemainingBudget, addBudgetField, 
     fetchUserGroups, fetchGroupById, createGroupBudget,
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
-    deleteSharedBudget, sendMessage, listenToMessages,
+    deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead
 };
