@@ -704,7 +704,7 @@ const deleteGroup = async (groupId) => {
         }
 
         const groupData = groupSnap.data();
-        if (groupData.ownerId !== user.uid) {
+        if (groupData.owner !== user.uid) {
             console.error("User is not the owner of the group.");
             return;
         }

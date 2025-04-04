@@ -5,6 +5,7 @@ import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../firebase/config.js';
+import { ScrollView } from 'react-native-gesture-handler';
 
 /* 
     The Group component allows users to view and manage budgets within a specific group.
@@ -159,9 +160,11 @@ export default function Group({ route, navigation }) {
                 groupId={groupId}
             />
 
+            
             {group.owner === auth.currentUser?.uid && (
-                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteGroupPress}>
-                    <Text style={styles.deleteButtonText}>Delete Group</Text>
+                <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
+                    <Text style={styles.deleteText}>Delete Group</Text>
+                            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
                 </TouchableOpacity>
              )}
         </View>
