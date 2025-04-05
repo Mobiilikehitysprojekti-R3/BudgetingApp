@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { fetchBudgetById } from '../firebase/firestore'; 
+import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 
 /* 
-    The BudgetDetails component displays information abouta specific
-    budget based on the provided budgetId.
-
-    Currently used to display shared budgets for a group.
+    The BudgetDetails component displays information about a specific
+    shared budget based on the provided budgetId. No onr can add or delete
+    fields from this page.
 */
 
 export default function BudgetDetails({ route }) {
@@ -36,19 +36,26 @@ export default function BudgetDetails({ route }) {
     }
 
     return (
-      <View style={styles.container}>
-      <Text style={styles.title}>Budget Details</Text>
+        <ScrollView style={styles.scrollView}>
+        <View>
+            <Text style={styles.title}>Budget Details</Text>
   
-      {budget.budget && typeof budget.budget === 'object' ? (
-          Object.entries(budget.budget).map(([category, amount]) => (
-              <Text key={category} style={styles.budgetAmount}>
-                  {category}: ${amount}
-              </Text>
-          ))
-      ) : (
-          <Text style={styles.budgetAmount}>No budget data available.</Text>
-      )}
-  </View>
-  
+            {budget.budget && typeof budget.budget === 'object' ? (
+                <>
+                    <BudgetPieChart data={budget.budget} />
+                    
+                    {Object.entries(budget.budget).map(([category, amount]) => (
+                        <View key={category} style={styles.budgetItem}>
+                            <Text style={styles.budgetText}>
+                                {category}: ${amount}
+                            </Text>
+                        </View>
+                    ))}
+                </>
+        ) : (
+            <Text style={styles.budgetAmount}>No budget data available.</Text>
+        )}
+        </View>
+    </ScrollView>
     )
 }

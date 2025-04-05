@@ -167,7 +167,7 @@ export default function Group({ route, navigation }) {
         data={groupBudgets}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-        <TouchableOpacity style={styles.buttonThree} onPress={() => {}}>
+        <TouchableOpacity style={styles.buttonThree} onPress={() => navigation.navigate('GroupBudget', { budgetId: item.id })}>
           <Text style={styles.buttonText}>{item.name}</Text>
           <Ionicons name="chevron-forward" size={20} color="white" style={styles.iconStyle} />
         </TouchableOpacity>

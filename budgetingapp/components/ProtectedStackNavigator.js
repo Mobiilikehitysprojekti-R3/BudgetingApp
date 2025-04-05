@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import MyGroups from '../pages/MyGroups';
 import Group from '../pages/Group';
 import BudgetDetails from '../pages/BudgetDetails';
+import GroupBudget from '../pages/GroupBudget';
 
 /* 
     The ProtectedStackNavigator component handles navigation for authenticated users.
@@ -53,6 +54,7 @@ export default function ProtectedStackNavigator() {
       <Stack.Screen name="MyGroups" component={MyGroups} />
       <Stack.Screen name="Group" component={Group} />
       <Stack.Screen name="BudgetDetails" component={BudgetDetails} />
+      <Stack.Screen name="GroupBudget" component={GroupBudget} />
     </Stack.Navigator>
   )
 }
