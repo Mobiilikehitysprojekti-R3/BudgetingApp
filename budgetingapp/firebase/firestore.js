@@ -89,7 +89,27 @@ const fetchGroupBudgetById = async (budgetId) => {
     }
 }
 
-// Add an expense field to a group
+// Set initial budget for the group
+const setGroupBudget = async (groupId, budgetValue) => {
+    if (!auth.currentUser) return { error: "Not authenticated." }
+
+    const groupBudgetRef = doc(db, 'groupBudget', groupId)
+    const groupBudgetSnap = await getDoc(groupBudgetRef)
+    if (!groupBudgetSnap.exists()) return { error: "Group not found." }
+
+    try {
+        await updateDoc(groupBudgetRef, {
+            remainingBudget: budgetValue,
+            budget: {}
+        })
+        return { success: true }
+    } catch (err) {
+        console.error("Error setting group budget:", err)
+        return { error: "Failed to set group budget." }
+    }
+}
+
+// Add an expense field to a group (subtract from the overall budget)
 const addGroupBudgetField = async (groupId, field, value) => {
     if (!auth.currentUser) return { error: "Not authenticated." }
 
@@ -97,11 +117,16 @@ const addGroupBudgetField = async (groupId, field, value) => {
     const groupBudgetSnap = await getDoc(groupBudgetRef)
     if (!groupBudgetSnap.exists()) return { error: "Group not found." }
 
+    const currentBudget = groupBudgetSnap.data().remainingBudget
+    const newRemainingBudget = currentBudget - value
+
     const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_")
 
     try {
+        // Update the expense field and remaining budget
         await updateDoc(groupBudgetRef, {
-            [`budget.${safeField}`]: value
+            [`budget.${safeField}`]: value,
+            remainingBudget: newRemainingBudget
         })
         return { success: true }
     } catch (err) {
@@ -110,17 +135,24 @@ const addGroupBudgetField = async (groupId, field, value) => {
     }
 }
 
-// Delete an expense field from a group
+// Delete an expense field from a group (add back to the overall budget)
 const deleteGroupBudgetField = async (groupId, field) => {
-    if (!auth.currentUser) return { error: "Not authenticated." }
+    if (!auth.currentUser) return { error: "Not authenticated." };
 
-    const groupBudgetRef = doc(db, 'groupBudget', groupId)
-    const groupBudgetSnap = await getDoc(groupBudgetRef)
+    const groupBudgetRef = doc(db, 'groupBudget', groupId);
+    const groupBudgetSnap = await getDoc(groupBudgetRef);
     if (!groupBudgetSnap.exists()) return { error: "Group not found." }
 
+    const currentBudget = groupBudgetSnap.data().remainingBudget
+    const expenseValue = groupBudgetSnap.data().budget[field]
+
+    const newRemainingBudget = currentBudget + expenseValue
+
     try {
+        // Delete the expense field and update the remaining budget
         await updateDoc(groupBudgetRef, {
-            [`budget.${field}`]: deleteField()
+            [`budget.${field}`]: deleteField(),
+            remainingBudget: newRemainingBudget
         })
         return { success: true }
     } catch (err) {
@@ -940,5 +972,5 @@ export {
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
-    addGroupBudgetField,
+    addGroupBudgetField, setGroupBudget
 };
