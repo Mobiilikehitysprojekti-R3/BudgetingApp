@@ -5,10 +5,9 @@ import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 
 /* 
-    The BudgetDetails component displays information abouta specific
-    budget based on the provided budgetId.
-
-    Currently used to display shared budgets for a group.
+    The BudgetDetails component displays information about a specific
+    shared budget based on the provided budgetId. No onr can add or delete
+    fields from this page.
 */
 
 export default function BudgetDetails({ route }) {

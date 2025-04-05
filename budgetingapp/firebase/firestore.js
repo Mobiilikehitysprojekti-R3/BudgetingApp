@@ -73,6 +73,62 @@ const fetchBudgetById = async (budgetId) => {
     }
 }
 
+const fetchGroupBudgetById = async (budgetId) => {
+    try {
+        const budgetRef = doc(db, "groupBudget", budgetId)
+        const budgetSnap = await getDoc(budgetRef)
+        if (budgetSnap.exists()) {
+            return budgetSnap.data()
+        } else {
+            console.error("No such budget!")
+            return null
+        }
+    } catch (error) {
+        console.error("Error fetching budget:", error)
+        return null
+    }
+}
+
+// Add an expense field to a group
+const addGroupBudgetField = async (groupId, field, value) => {
+    if (!auth.currentUser) return { error: "Not authenticated." }
+
+    const groupBudgetRef = doc(db, 'groupBudget', groupId)
+    const groupBudgetSnap = await getDoc(groupBudgetRef)
+    if (!groupBudgetSnap.exists()) return { error: "Group not found." }
+
+    const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_")
+
+    try {
+        await updateDoc(groupBudgetRef, {
+            [`budget.${safeField}`]: value
+        })
+        return { success: true }
+    } catch (err) {
+        console.error("Error adding group expense:", err)
+        return { error: "Failed to update group budget." }
+    }
+}
+
+// Delete an expense field from a group
+const deleteGroupBudgetField = async (groupId, field) => {
+    if (!auth.currentUser) return { error: "Not authenticated." }
+
+    const groupBudgetRef = doc(db, 'groupBudget', groupId)
+    const groupBudgetSnap = await getDoc(groupBudgetRef)
+    if (!groupBudgetSnap.exists()) return { error: "Group not found." }
+
+    try {
+        await updateDoc(groupBudgetRef, {
+            [`budget.${field}`]: deleteField()
+        })
+        return { success: true }
+    } catch (err) {
+        console.error("Error deleting group expense:", err)
+        return { error: "Failed to delete group expense." }
+    }
+}
+
 // Listen for changes to the user's budget in the database
 const listenToUserBudgetChanges = () => {
     const user = auth.currentUser
@@ -729,7 +785,7 @@ const createGroupBudget = async ({ budgetName, groupId }) => {
     const newBudget = await addDoc(groupBudgetRef, {
         name: budgetName,
         groupId: groupId,
-        budget: null,
+        budget: {},
     });
 
         console.log("Budget created with ID:", newBudget.id);
@@ -883,5 +939,6 @@ export {
     fetchUserGroups, fetchGroupById, createGroupBudget,
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
-    markMessagesAsRead
+    markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
+    addGroupBudgetField,
 };
