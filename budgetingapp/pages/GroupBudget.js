@@ -36,7 +36,7 @@ export default function GroupBudget({ route }) {
       setInitialBudget('')
       loadGroupBudget()
     }
-  };
+  }
 
   // Handle adding an expense field
   const handleAddField = async () => {

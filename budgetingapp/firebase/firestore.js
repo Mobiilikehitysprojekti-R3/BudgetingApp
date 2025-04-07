@@ -92,7 +92,7 @@ const fetchGroupBudgetById = async (budgetId) => {
 // Set initial budget for the group
 const setGroupBudget = async (groupId, budgetValue) => {
     if (!auth.currentUser) return { error: "Not authenticated." }
-
+    
     const groupBudgetRef = doc(db, 'groupBudget', groupId)
     const groupBudgetSnap = await getDoc(groupBudgetRef)
     if (!groupBudgetSnap.exists()) return { error: "Group not found." }
@@ -773,7 +773,7 @@ const fetchUserGroups = async () => {
 
         let groups = []
         const batchSize = 10
-
+        
         for (let i = 0; i < userGroupsId.length; i += batchSize) {
             const batchIds = userGroupsId.slice(i, i + batchSize)
             const q = query(collection(db, "groups"), where("__name__", "in", batchIds))
