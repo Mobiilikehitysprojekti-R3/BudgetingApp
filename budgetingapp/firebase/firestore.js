@@ -731,7 +731,7 @@ const getRegisteredUsers = async () => {
     return snapshot.docs.map((doc) => ({
         uid: doc.id, // Get user ID
         phone: normalizePhoneNumber(doc.data().phone),
-        dbName: doc.data().name, // Get name from database
+        name: doc.data().name, // Get name from database
     }))
 }
 
@@ -748,7 +748,7 @@ const matchContactsToUsers = async (contacts) => {
                 id: contact.id,
                 uid: matchedUser.uid,
                 contactName: contact.name,
-                dbName: matchedUser.dbName,
+                name: matchedUser.name,
                 phone: phoneNumber,
             }
         }
@@ -959,6 +959,41 @@ const markMessagesAsRead = async (groupId) => {
     console.error("Error marking messages as read: ", error)
   }
 }
+//Fetch for group members
+const getUserByGroupId = async (groupId) => {
+    try {
+        console.log("Fetching group data for groupId:", groupId)
+
+        const groupRef = doc(db, "groups", groupId)
+
+        const groupSnap = await getDoc(groupRef)
+
+        if (!groupSnap.exists()) {
+            console.error("No group found for groupId:", groupId)
+            return null
+        }
+
+        const groupData = groupSnap.data()
+        console.log("Fetched group data:", groupData)
+
+        if (!groupData.members || !Array.isArray(groupData.members)) {
+            console.error("No valid members array found for group:", groupId)
+            return null
+          }
+        
+          const members = groupData.members.map((member, index) => {
+            console.log(`Fetched member ${index + 1}:`, member)
+            return { ...member }
+          })
+      
+          console.log("Fetched group members:", members)
+
+        return members
+    } catch (error) {
+        console.error("Error fetching group members:", error)
+        return null
+    }
+}
 
 getUserData();
 
@@ -972,5 +1007,5 @@ export {
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
-    addGroupBudgetField, setGroupBudget
+    addGroupBudgetField, setGroupBudget, getUserByGroupId
 };
