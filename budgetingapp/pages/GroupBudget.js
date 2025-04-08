@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
-import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget } from '../firebase/firestore';
+import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget, deleteBudget } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
+import { Ionicons } from '@expo/vector-icons';
 
-export default function GroupBudget({ route }) {
+export default function GroupBudget({ route, navigation }) {
   const { budgetId } = route.params
   const [groupBudget, setGroupBudgetState] = useState(null)
   const [fieldName, setFieldName] = useState('')
   const [fieldValue, setFieldValue] = useState('')
   const [initialBudget, setInitialBudget] = useState('')
+  const [group, setGroup] = useState(null);
 
   // Load group budget data
   const loadGroupBudget = async () => {
@@ -75,6 +77,30 @@ export default function GroupBudget({ route }) {
     }
   }
 
+  const handleDeleteBudgetPress = async () => {
+    //confirmation alert
+    const confirm = await new Promise((resolve) =>
+        Alert.alert('Delete Budget', `Are you sure you want to delete this budget?`, [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+        ])
+    );
+
+    // If the user confirmed the deletion, proceed with deleting the budget
+    if (confirm) {
+        try {
+            await deleteBudget(budgetId); // Make sure budgetId is defined
+            navigation.navigate('MyGroups', { screen: 'Group', params: { budgetDeleted: true } });
+        } catch (error) {
+            console.error("Error deleting budget:", error);
+            Alert.alert("Error", "Failed to delete budget.");
+        }
+    } else {
+        console.log("Budget deletion canceled.");
+    }
+};
+
+
   useEffect(() => {
     loadGroupBudget()
   }, [budgetId])
@@ -137,6 +163,14 @@ export default function GroupBudget({ route }) {
           </TouchableOpacity>
         </View>
       ))}
+
+
+                  <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteBudgetPress}>
+                      <Text style={styles.deleteText}>Delete budget</Text>
+                              <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+                  </TouchableOpacity>
+              
+
     </ScrollView>
   )
 }

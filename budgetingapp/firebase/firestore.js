@@ -880,7 +880,20 @@ const deleteGroup = async (groupId) => {
             console.error("User is not the owner of the group.");
             return;
         }
+        // Fetches all budgets associated with the group
+        const groupBudgetRef = collection(db, "groupBudget");
+        const groupBudgetQuery = query(groupBudgetRef, where("groupId", "==", groupId));
+        const groupBudgetSnap = await getDocs(groupBudgetQuery);
 
+        // Deletes each budget
+        const batch = writeBatch(db); 
+        groupBudgetSnap.forEach((groupBudgetDoc) => {
+            batch.delete(doc(db, "groupbudget", groupBudgetDoc.id));
+        });
+
+        // Commits the delete
+        await batch.commit();
+        console.log("All budgets deleted successfully!");
         await deleteDoc(groupRef);
         console.log("Group deleted successfully!");
     } catch (error) {
@@ -960,6 +973,29 @@ const markMessagesAsRead = async (groupId) => {
   }
 }
 
+const deleteBudget = async (budgetId) => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
+
+    try {
+        const groupBudgetRef = doc(db, "groupBudget", budgetId);
+        const groupBudgetSnap = await getDoc(groupBudgetRef);
+
+        if (!groupBudgetSnap.exists()) {
+            console.error("Group budget does not exist.");
+            return;
+        }
+
+        await deleteDoc(groupBudgetRef);
+        console.log("Budget deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting budget:", error.message);
+    }
+};
+
 getUserData();
 
 export {
@@ -972,5 +1008,5 @@ export {
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
-    addGroupBudgetField, setGroupBudget
+    addGroupBudgetField, setGroupBudget, deleteBudget
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Modal, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, Button, Modal, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../firebase/config.js';
 import ChatModal from '../components/ChatModal.js';
 import { sendMessage, listenToMessages, markMessagesAsRead } from '../firebase/firestore'
-
+import { useFocusEffect } from '@react-navigation/native';
 
 /* 
   The Group component allows users to view and manage budgets within a specific group.
@@ -69,6 +69,17 @@ export default function Group({ route, navigation }) {
     loadData()
   }, [groupId]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadGroupBudgets(); // for refreshing group budgets 
+
+      // Clears the budgetDeleted parameter after using it
+      if (route.params?.budgetDeleted) {
+        navigation.setParams({ budgetDeleted: undefined });
+      }
+    }, [route.params?.budgetDeleted]) // Dependency array includes budgetDeleted
+  );
+
   const handleDeleteSharedBudget = async (budgetId) => {
     try {
       await deleteSharedBudget(budgetId)
@@ -79,10 +90,21 @@ export default function Group({ route, navigation }) {
     }
   }   
   
-  const handleDeleteGroupPress = async () => {
+const handleDeleteGroupPress = async () => {
+    // Confirmation alert
+    const confirm = await new Promise((resolve) =>
+        Alert.alert('Delete group', `Are you sure you want to delete this group?`, [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+        ])
+    );
+
+    // Check if the user confirmed the deletion
+    if (!confirm) return; // Exit if the user did not confirm
+
     try {
         await deleteGroup(groupId);
-        navigation.goBack();
+        navigation.navigate('MyGroups')
     } catch (error) {
         console.error("Error deleting group:", error);
         Alert.alert("Error", "Failed to delete group.");
