@@ -965,7 +965,6 @@ const getUserByGroupId = async (groupId) => {
         console.log("Fetching group data for groupId:", groupId)
 
         const groupRef = doc(db, "groups", groupId)
-
         const groupSnap = await getDoc(groupRef)
 
         if (!groupSnap.exists()) {
@@ -974,25 +973,61 @@ const getUserByGroupId = async (groupId) => {
         }
 
         const groupData = groupSnap.data()
-        console.log("Fetched group data:", groupData)
+        //console.log("Fetched group data:", groupData)
 
         if (!groupData.members || !Array.isArray(groupData.members)) {
             console.error("No valid members array found for group:", groupId)
             return null
           }
         
-          const members = groupData.members.map((member, index) => {
-            console.log(`Fetched member ${index + 1}:`, member)
-            return { ...member }
-          })
+          const members = groupData.members.map((member) => ({ ...member }))
       
           console.log("Fetched group members:", members)
 
-        return members
+        return {
+            members: groupData.members,
+            ownerId: groupData.owner,
+        }
     } catch (error) {
         console.error("Error fetching group members:", error)
         return null
     }
+}
+
+const removeMemberFromGroup = async (groupId, memberUid) => {
+    const groupRef = doc(db, "groups", groupId)
+    const groupSnap = await getDoc(groupRef)
+
+    if (!groupSnap.exists()) throw new Error("Group not found")
+    
+    const groupData = groupSnap.data()
+    //Prevent removing the owner
+    if (groupData.owner === memberUid) {
+        throw new Error("The owner cannot remove themselves from the group.")
+    }
+    //Remove the full member object from the group's members array
+    const updatedMembers = groupData.members.filter(
+        (member) => member.uid !== memberUid
+    )
+
+    //Update group document
+    await updateDoc(groupRef, {
+        members: updatedMembers
+    })
+
+    //Remove groupId from the user's document in users collection
+    const userRef = doc(db, "users", memberUid)
+    const userSnap = await getDoc(userRef)
+
+    if (userSnap.exists()) {
+        const userData = userSnap.data()
+        const updatedGroups = (userData.groupsId || []).filter(id => id !== groupId)
+
+        await updateDoc(userRef, {
+            groupsId: updatedGroups
+        })
+    }
+
 }
 
 getUserData();
@@ -1007,5 +1042,6 @@ export {
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
-    addGroupBudgetField, setGroupBudget, getUserByGroupId
+    addGroupBudgetField, setGroupBudget, getUserByGroupId,
+    removeMemberFromGroup
 };

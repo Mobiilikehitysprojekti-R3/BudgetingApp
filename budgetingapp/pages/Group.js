@@ -199,11 +199,11 @@ export default function Group({ route, navigation }) {
 
                   
       {group.owner === auth.currentUser?.uid && (
-                <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
-                    <Text style={styles.deleteText}>Delete Group</Text>
-                            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
-                </TouchableOpacity>
-             )}
+        <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
+          <Text style={styles.deleteText}>Delete Group</Text>
+            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+        </TouchableOpacity>
+      )}
 
       {/* Chatbox */}
       <TouchableOpacity style={styles.chatContainer} onPress={() => setChatVisible(true)}>
