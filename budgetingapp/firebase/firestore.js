@@ -92,7 +92,7 @@ const fetchGroupBudgetById = async (budgetId) => {
 // Set initial budget for the group
 const setGroupBudget = async (groupId, budgetValue) => {
     if (!auth.currentUser) return { error: "Not authenticated." }
-
+    
     const groupBudgetRef = doc(db, 'groupBudget', groupId)
     const groupBudgetSnap = await getDoc(groupBudgetRef)
     if (!groupBudgetSnap.exists()) return { error: "Group not found." }
@@ -540,19 +540,85 @@ const updateUserPassword = async (currentPassword, newPassword) => {
 // Function to delete the user's account and data
 const deleteAccount = async () => {
     const user = auth.currentUser;
-    if (user) {
-        try {
-            // Delete user data from Firestore
-            await deleteDoc(doc(db, "users", user.uid));
-            console.log("User data deleted successfully!");    
-            // Delete user from Firebase Authentication
-            await deleteUser(user);
-            console.log("User deleted successfully!");
-        } catch (error) {
-            console.error("Error deleting user:", error.message);
+
+    if (!user) {
+        console.error("No user logged in.")
+        return
+    }
+
+    try {
+        const userId = user.uid
+
+        // Get the user's groups
+        const userRef = doc(db, "users", userId)
+        const userSnap = await getDoc(userRef)
+        if (!userSnap.exists()) {
+            throw new Error("User document does not exist.")
         }
-    } else {
-        console.error("No user logged in.");
+        const userData = userSnap.data()
+        const userGroupsId = userData.groupsId || []
+
+        // Loop through each group and handle ownership or deletion
+        for (const groupId of userGroupsId) {
+            const groupRef = doc(db, "groups", groupId)
+            const groupSnap = await getDoc(groupRef)
+
+            if (!groupSnap.exists()) continue
+            const groupData = groupSnap.data()
+
+            const updatedMembers = groupData.members.filter(m => m.uid !== userId)
+
+            if (groupData.owner === userId) {
+                if (updatedMembers.length === 0) {
+                    // Only member: delete group
+                    await deleteDoc(groupRef);
+                    console.log(`Deleted group ${groupId} (user was only member)`)
+                } else {
+                    // Transfer ownership to another member
+                    const newOwner = updatedMembers[0];
+                    await updateDoc(groupRef, {
+                        owner: newOwner.uid,
+                        members: updatedMembers
+                    })
+                    console.log(`Transferred ownership of group ${groupId} to ${newOwner.uid}`)
+                }
+            } else {
+                // Remove the user from members array
+                await updateDoc(groupRef, {
+                    members: updatedMembers
+                })
+            }
+
+            // Update the user's presence in group documents
+            const memberRef = doc(db, "users", userId)
+            const memberSnap = await getDoc(memberRef)
+            if (memberSnap.exists()) {
+                const memberData = memberSnap.data()
+                const updatedGroups = (memberData.groupsId || []).filter(id => id !== groupId)
+                await updateDoc(memberRef, {
+                    groupsId: updatedGroups
+                })
+            }
+        }
+
+        // Delete all user's shared budgets
+        const sharedBudgetsRef = collection(db, "sharedBudgets")
+        const q = query(sharedBudgetsRef, where("userId", "==", userId))
+        const sharedBudgetsSnap = await getDocs(q)
+        const deleteSharedBudgets = sharedBudgetsSnap.docs.map(doc => deleteDoc(doc.ref))
+        await Promise.all(deleteSharedBudgets)
+        //console.log("Deleted all shared budgets related to user.")
+
+        // Delete user document
+        await deleteDoc(userRef)
+        //console.log("Deleted user document from Firestore.")
+
+        // Delete user from Firebase Auth
+        await deleteUser(user)
+        //console.log("Deleted user from Firebase Authentication.")
+    
+    } catch (error) {
+        console.error("Error deleting account:", error.message)
     }
 }
 
@@ -773,7 +839,7 @@ const fetchUserGroups = async () => {
 
         let groups = []
         const batchSize = 10
-
+        
         for (let i = 0; i < userGroupsId.length; i += batchSize) {
             const batchIds = userGroupsId.slice(i, i + batchSize)
             const q = query(collection(db, "groups"), where("__name__", "in", batchIds))
