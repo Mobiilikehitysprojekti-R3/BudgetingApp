@@ -86,7 +86,7 @@ export default function CreateGroupModal({ visible, onClose }) {
             renderItem={({ item }) => (
           <Text style={{ fontSize: 16, alignItems: "center", marginTop: 5}} onPress={() => toggleSelection(item)}>
             <Ionicons name="person-sharp" size={16} color="black" />
-            {selectedMembers.includes(item) ? "✔ " : ""} {item.contactName} ({item.dbName})
+            {selectedMembers.includes(item) ? "✔ " : ""} {item.contactName} ({item.name})
           </Text>
           )}
           />
