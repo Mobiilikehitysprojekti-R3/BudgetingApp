@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
         color: 'green',
     },
     remaining: {
-        marginTop: 12,
         fontSize: 18,
         fontWeight: 'bold',
         color: 'blue',
@@ -298,6 +297,27 @@ const styles = StyleSheet.create({
         color: "#4F4F4F",
         marginBottom: 10,
         width: "90%"
+    },
+    /* GroupBudget page */
+    rowContainer: {
+        marginVertical: 10,
+    },
+    editRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6
+    },
+    remainingInputInline: {
+        flex: 1
+    },
+    editInput: {
+        backgroundColor: '#ffffff',
+        color: '#000000',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5
     },
 })
 
