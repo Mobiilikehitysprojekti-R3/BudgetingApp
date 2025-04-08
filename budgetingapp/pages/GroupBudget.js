@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TextInput, Button, Alert, TouchableOpacity } fr
 import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function GroupBudget({ route }) {
   const { budgetId } = route.params
@@ -10,6 +11,8 @@ export default function GroupBudget({ route }) {
   const [fieldName, setFieldName] = useState('')
   const [fieldValue, setFieldValue] = useState('')
   const [initialBudget, setInitialBudget] = useState('')
+  const [isEditingRemaining, setIsEditingRemaining] = useState(false)
+  const [newRemainingValue, setNewRemainingValue] = useState('')
 
   // Load group budget data
   const loadGroupBudget = async () => {
@@ -20,6 +23,24 @@ export default function GroupBudget({ route }) {
       console.error('Error fetching group budget:', error)
     }
   }
+
+  const updateRemainingBudget = async () => {
+    const value = parseFloat(newRemainingValue)
+
+    if (isNaN(value) || value < 0) {
+      Alert.alert('Error', 'Please enter a valid remaining budget.')
+      return
+    }
+  
+    const result = await setGroupBudget(budgetId, value)
+    if (result.error) {
+      Alert.alert('Error', result.error)
+    } else {
+      setIsEditingRemaining(false)
+      setNewRemainingValue('')
+      loadGroupBudget()
+    }
+  }  
 
   // Handle setting the initial budget
   const handleSetInitialBudget = async () => {
@@ -93,19 +114,50 @@ export default function GroupBudget({ route }) {
 
       {groupBudget.remainingBudget === undefined ? (
         <View>
-          <Text style={styles.title}>Set Initial Budget</Text>
+          <Text style={styles.title}>Set Budget</Text>
           <TextInput
             style={styles.inputActive}
-            placeholder="Enter initial budget amount"
+            placeholder="Enter budget amount"
             value={initialBudget}
             onChangeText={setInitialBudget}
             keyboardType="numeric"
           />
-          <Button title="Set Initial Budget" onPress={handleSetInitialBudget} />
+          <Button title="Set Budget" onPress={handleSetInitialBudget} />
         </View>
       ) : (
         <>
-          <Text style={styles.remaining}>Remaining: ${groupBudget.remainingBudget}</Text>
+          <View style={styles.rowContainer}>
+            {isEditingRemaining ? (
+              <View style={styles.editRow}>
+
+              <TextInput
+                style={[styles.editInput, styles.remainingInputInline]}
+                value={newRemainingValue}
+                onChangeText={setNewRemainingValue}
+                keyboardType="numeric"
+                placeholder="Remaining budget"
+              />
+
+              <Button title="Save" onPress={updateRemainingBudget} />
+              <Button title="Cancel" onPress={() => {
+                setIsEditingRemaining(false)
+                setNewRemainingValue('')
+              }}/>
+          </View>
+          ) : (
+            <View style={styles.editRow}>
+            <Text style={styles.remaining}>Remaining: ${groupBudget.remainingBudget}</Text>
+              <Ionicons
+              name="pencil"
+              size={20}
+              color="#4F4F4F"
+              onPress={() => {
+                setIsEditingRemaining(true)
+                setNewRemainingValue(String(groupBudget.remainingBudget))
+              }}/>
+            </View>
+              )}
+          </View>
 
           <TextInput
             style={styles.inputActive}

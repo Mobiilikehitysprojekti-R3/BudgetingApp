@@ -109,31 +109,6 @@ const setGroupBudget = async (groupId, budgetValue) => {
     }
 }
 
-const updateRemainingBudget = async (groupId, newRemainingBudget) => {
-    if (!auth.currentUser) {
-        return { error: "Not authenticated." }
-    }
-
-    const groupBudgetRef = doc(db, 'groupBudget', groupId)
-
-    try {
-        const groupBudgetSnap = await getDoc(groupBudgetRef)
-
-        if (!groupBudgetSnap.exists()) {
-            return { error: "Group not found." }
-        }
-
-        await updateDoc(groupBudgetRef, {
-            remainingBudget: newRemainingBudget
-        })
-
-        return { success: true }
-    } catch (err) {
-        console.error("Error updating remaining budget:", err)
-        return { error: "Failed to update remaining budget." }
-    }
-}
-
 // Add an expense field to a group (subtract from the overall budget)
 const addGroupBudgetField = async (groupId, field, value) => {
     if (!auth.currentUser) return { error: "Not authenticated." }
@@ -1067,6 +1042,6 @@ export {
     deleteBudgetField, fetchGroupBudgets, fetchBudgetById,
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
-    addGroupBudgetField, setGroupBudget, updateRemainingBudget,
-    getUserByGroupId, removeMemberFromGroup
+    addGroupBudgetField, setGroupBudget, getUserByGroupId,
+    removeMemberFromGroup
 };
