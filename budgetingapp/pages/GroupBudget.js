@@ -5,6 +5,14 @@ import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+/*
+  The GroupBudget component allows users to manage a group budget.
+  Users can:
+    - Set an initial group budget
+    - View and edit the the budget
+    - Add and delete expense categories
+*/
+
 export default function GroupBudget({ route }) {
   const { budgetId } = route.params
   const [groupBudget, setGroupBudgetState] = useState(null)
