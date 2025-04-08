@@ -283,7 +283,22 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 12,
         fontWeight: 'bold',
-    }
+    },
+    fakeInput: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: 50,
+        borderColor: "#4F4F4F",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 25,
+        fontSize: 16,
+        backgroundColor: "#fff",
+        color: "#4F4F4F",
+        marginBottom: 10,
+        width: "90%"
+    },
 })
 
 export default styles;
