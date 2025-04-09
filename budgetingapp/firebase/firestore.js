@@ -333,39 +333,40 @@ const updateUserPassword = async (currentPassword, newPassword) => {
         /* FUNCTIONS FOR USERS BUDGET STARTS HERE */
 
 // Add a new budget field and subtract from remaining budget
-const addBudgetField = async (field, value) => {
-  console.log("Current user:", auth.currentUser);
-  const user = auth.currentUser;
-  if (!user) return { error: "No user logged in." };
-  // ger user document
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return { error: "User document not found." };
-
-  const data = userSnap.data();
-  const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
-
-  if (value > currentRemaining) {
-      return { error: "Insufficient remaining budget." };
-  }
-  const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
-  const today = new Date().toISOString().split('T')[0];// format date as YYYY-MM-DD
-  // add new field and update remaining budget
+const addBudgetField = async (fieldName, amount, date = null) => {
   try {
-      await updateDoc(userRef, {
-          [`budget.${safeField}`]: value, date: today,
-          remainingBudget: currentRemaining - value
-        });          
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
 
-      console.log("Firestore update successful:", {
-          [safeField]: value,
-          remainingBudget: currentRemaining - value
-      });
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
 
-      return { success: true, remainingBudget: currentRemaining - value };
+    if (!userSnap.exists()) {
+      throw new Error('User data not found');
+    }
+
+    const userData = userSnap.data();
+    const existingBudget = userData.budget || {};
+
+    const today = date || new Date().toISOString().split('T')[0];
+
+    // Merge new field into existing budget safely
+    const updatedBudget = {
+      ...existingBudget,
+      [fieldName]: {
+        amount,
+        date: today,
+      },
+    };
+
+    await updateDoc(userRef, {
+      budget: updatedBudget,
+    });
+
+    return { success: true };
   } catch (error) {
-      console.error("Error adding budget field:", error);
-      return { error: "Failed to update budget." };
+    console.error('Error adding budget field:', error);
+    return { error: error.message };
   }
 };
 
