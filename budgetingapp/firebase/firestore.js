@@ -345,7 +345,7 @@ const addBudgetField = async (category, expense, amount, date = null) => {
     const currentRemaining = data.remainingBudget ?? 0;
   
     let updateData;
-    
+
     if (typeof amount === "number") {
       category = category.replace(/[^a-zA-Z0-9_]/g, "_");
       expense = expense.replace(/[^a-zA-Z0-9_]/g, "_");
@@ -383,6 +383,7 @@ const addBudgetField = async (category, expense, amount, date = null) => {
 // delete a budget field and add to remaining budget
 const deleteBudgetField = async (categoryOrField, expense = null) => {
   const user = auth.currentUser;
+  
   if (!user) return { error: "No user logged in." };
 
   const userRef = doc(db, "users", user.uid);

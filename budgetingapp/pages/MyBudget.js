@@ -253,7 +253,7 @@ export default function MyBudget() {
           <Picker
             selectedValue={selectedCategory}
             onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            style={styles.picker}
+            
             dropdownIconColor="#4F4F4F"
           >
             {categories.map((cat) => (
@@ -264,7 +264,7 @@ export default function MyBudget() {
 
         <TextInput
           style={styles.inputActive}
-          placeholder="Expense name"
+          placeholder="New field name (e.g. groceries)"
           value={expenseName}
           onChangeText={setExpenseName}
         />
@@ -289,7 +289,7 @@ export default function MyBudget() {
           const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
           return (
             <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-              <Text style={styles.categoryHeading}>{category.toUpperCase()}: ${total}</Text>
+              <Text>{category.toUpperCase()}: ${total}</Text>
             </TouchableOpacity>
           );
         })}
@@ -297,7 +297,7 @@ export default function MyBudget() {
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.title2}>Share Budget With</Text>
+              <Text>Share Budget With</Text>
               <FlatList
                 data={groups}
                 keyExtractor={(item) => item.id}
@@ -321,7 +321,7 @@ export default function MyBudget() {
               <ScrollView style={{ maxHeight: 300 }}>
                 {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
                   <View key={name} style={styles.budgetItem}>
-                    <Text style={styles.budgetText}>{name}: ${value}</Text>
+                    <Text>{name}: ${value}</Text>
                     <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
                       <Text style={styles.deleteButton}>❌</Text>
                     </TouchableOpacity>

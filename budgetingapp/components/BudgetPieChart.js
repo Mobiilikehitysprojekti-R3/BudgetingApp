@@ -4,7 +4,7 @@ import { PieChart } from 'react-native-chart-kit';
 
 const screenWidth = Dimensions.get('window').width;
 
-const BudgetPieChart = ({ data, onSlicePress }) => {
+const BudgetPieChart = ({ data }) => {
   if (!data || typeof data !== 'object') return null;
 
   const chartData = Object.entries(data)
@@ -16,7 +16,6 @@ const BudgetPieChart = ({ data, onSlicePress }) => {
         color: getColor(index),
         legendFontColor: '#333',
         legendFontSize: 14,
-        onPress: () => onSlicePress(category)
       };
     })
     .filter(item => item.population > 0);
@@ -27,7 +26,6 @@ const BudgetPieChart = ({ data, onSlicePress }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Budget Pie Chart</Text>
       <PieChart
         data={chartData}
         width={screenWidth - 32}
@@ -40,7 +38,6 @@ const BudgetPieChart = ({ data, onSlicePress }) => {
         paddingLeft="16"
         center={[0, 0]}
         absolute
-        hasLegend={true}
       />
     </View>
   );
