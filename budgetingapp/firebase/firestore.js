@@ -349,10 +349,11 @@ const addBudgetField = async (field, value) => {
       return { error: "Insufficient remaining budget." };
   }
   const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
+  const today = new Date().toISOString().split('T')[0];// format date as YYYY-MM-DD
   // add new field and update remaining budget
   try {
       await updateDoc(userRef, {
-          [`budget.${safeField}`]: value,
+          [`budget.${safeField}`]: value, date: today,
           remainingBudget: currentRemaining - value
         });          
 

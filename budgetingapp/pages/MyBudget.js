@@ -17,6 +17,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import styles from "../styles";
 
+import { Calendar } from 'react-native-calendars';
+
+import { KeyboardAvoidingView, Platform } from 'react-native';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+
 /* 
     The MyBudget component allows users to manage and track their budget.
     
@@ -37,6 +44,21 @@ export default function MyBudget() {
   //const [groupId, setGroupId] = useState('')
   const [groups, setGroups] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
+
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [markedDates, setMarkedDates] = useState({});
+
+  const [selectedDateBudget, setSelectedDateBudget] = useState(null);
+  const [selectedDateBudgetFields, setSelectedDateBudgetFields] = useState({});
+
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [groupBudget, setGroupBudget] = useState(null)
+
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -64,7 +86,13 @@ export default function MyBudget() {
 
       const validBudget = {};
       for (const [key, value] of Object.entries(data.budget || {})) {
-        if (typeof value === 'number' && isFinite(value) && value > 0) {
+        if (
+          value &&
+          typeof value.amount === 'number' &&
+          isFinite(value.amount) &&
+          value.amount > 0 &&
+          typeof value.date === 'string'
+        ) {
           validBudget[key] = value;
         }
       }
@@ -73,6 +101,18 @@ export default function MyBudget() {
   } catch (error) {
     console.error('Error fetching budget data:', error);
   }
+    const datesWithBudget = Object.keys(data.budget || {}).map(() => {
+      // Use today's date as placeholder unless your data has actual dates per field
+      const today = new Date().toISOString().split('T')[0];
+      return today;
+    });
+
+    const marked = {};
+    datesWithBudget.forEach(date => {
+      marked[date] = { marked: true, dotColor: 'green' };
+    });
+    setMarkedDates(marked);
+  
 };
 
   useEffect(() => {
@@ -148,7 +188,12 @@ export default function MyBudget() {
   }
   
   return (
-    <ScrollView style={styles.scrollView}>
+    <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    style={{ flex: 1 }}
+    keyboardVerticalOffset={100} // adjust this based on your header/nav height
+  >
+    <ScrollView contentContainerStyle={{ paddingBottom: 100 }} style={styles.scrollView}>
 
     <Text style={styles.titleDark}>My Budget</Text>
 
@@ -188,6 +233,62 @@ export default function MyBudget() {
         onChangeText={setFieldValue}
         keyboardType="numeric"
       />
+      
+      <View style={{ marginVertical: 10 }}>
+        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {startDate ? `Start: ${startDate}` : 'Select Start Date'}
+          </Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate ? new Date(startDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
+        )}
+
+        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {endDate ? `End: ${endDate}` : 'Select End Date'}
+          </Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate ? new Date(endDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
+        )}
+      </View>
+
+      <Calendar
+        onDayPress={(day) => {
+          setSelectedDate(day.dateString);
+          console.log("Selected:", day.dateString);
+          // You can filter budgetFields here if needed
+        }}
+        markedDates={{
+          ...markedDates,
+          ...(selectedDate && {
+            [selectedDate]: {
+              selected: true,
+              selectedColor: '#00adf5',
+              marked: markedDates[selectedDate]?.marked,
+              dotColor: markedDates[selectedDate]?.dotColor
+            },
+          })
+        }}
+        style={{ marginBottom: 20 }}
+      />
 
       <Button title="Add Budget Field" onPress={handleAddField} />
 
@@ -199,7 +300,12 @@ export default function MyBudget() {
       <BudgetPieChart data={budgetFields} />
 
       <Text style={styles.title2}>Your Budget Fields:</Text>
-      {Object.entries(budgetFields).map(([field, value]) => (
+      {Object.entries(budgetFields)
+        .filter(([_, val]) => {
+          if (!startDate || !endDate) return true;
+          return val.date >= startDate && val.date <= endDate;
+        })
+        .map(([field, value]) => (
         <View key={field} style={styles.budgetItem}>
           <Text style={styles.budgetText}>
             {field}: ${value}
@@ -210,5 +316,6 @@ export default function MyBudget() {
         </View>
       ))}
     </ScrollView>
+  </KeyboardAvoidingView>
   );
 }
