@@ -4,18 +4,22 @@ import { PieChart } from 'react-native-chart-kit';
 
 const screenWidth = Dimensions.get('window').width;
 
-const BudgetPieChart = ({ data }) => {
+const BudgetPieChart = ({ data, onSlicePress }) => {
   if (!data || typeof data !== 'object') return null;
 
   const chartData = Object.entries(data)
-    .filter(([_, value]) => typeof value === 'number' && value > 0)
-    .map(([label, value], index) => ({
-      name: label,
-      population: value,
-      color: getColor(index),
-      legendFontColor: '#333',
-      legendFontSize: 14,
-    }));
+    .map(([category, expenses], index) => {
+      const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+      return {
+        name: category,
+        population: total,
+        color: getColor(index),
+        legendFontColor: '#333',
+        legendFontSize: 14,
+        onPress: () => onSlicePress(category)
+      };
+    })
+    .filter(item => item.population > 0);
 
   if (chartData.length === 0) {
     return <Text style={styles.empty}>No budget data to show.</Text>;
@@ -36,6 +40,7 @@ const BudgetPieChart = ({ data }) => {
         paddingLeft="16"
         center={[0, 0]}
         absolute
+        hasLegend={true}
       />
     </View>
   );

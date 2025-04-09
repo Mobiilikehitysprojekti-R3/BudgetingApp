@@ -333,9 +333,10 @@ const updateUserPassword = async (currentPassword, newPassword) => {
         /* FUNCTIONS FOR USERS BUDGET STARTS HERE */
 
 // Add a new budget field and subtract from remaining budget
-const addBudgetField = async (field, value) => {
-  console.log("Current user:", auth.currentUser);
+const addBudgetField = async (category, expenseName, value) => {
+  //console.log("Current user:", auth.currentUser);
   const user = auth.currentUser;
+
   if (!user) return { error: "No user logged in." };
   // ger user document
   const userRef = doc(db, "users", user.uid);
@@ -348,16 +349,19 @@ const addBudgetField = async (field, value) => {
   if (value > currentRemaining) {
       return { error: "Insufficient remaining budget." };
   }
-  const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
+
+  const safeCategory = category.replace(/[^a-zA-Z0-9_]/g, "_");
+  const safeExpense = expenseName.replace(/[^a-zA-Z0-9_]/g, "_");
+
   // add new field and update remaining budget
   try {
       await updateDoc(userRef, {
-          [`budget.${safeField}`]: value,
+          [`budget.${safeCategory}.${safeExpense}`]: value,
           remainingBudget: currentRemaining - value
         });          
 
       console.log("Firestore update successful:", {
-          [safeField]: value,
+          [`budget.${safeCategory}.${safeExpense}`]: value,
           remainingBudget: currentRemaining - value
       });
 
@@ -369,9 +373,10 @@ const addBudgetField = async (field, value) => {
 };
 
 // delete a budget field and add to remaining budget
-const deleteBudgetField = async (field) => {
+const deleteBudgetField = async (category, expenseName) => {
   const user = auth.currentUser;
   if (!user) return { error: "No user logged in." };
+
   // get user document
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
@@ -379,19 +384,22 @@ const deleteBudgetField = async (field) => {
 
   const data = userSnap.data();
   const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+  const fieldValue = data.budget?.[category]?.[expenseName] ?? 0;
+
+  if (fieldValue === 0) {
+    return { error: "Expense not found or value is 0." };
+}
 
   // delete field and update remaining budget
   try {
-      const fieldValue = data.budget?.[field] ?? 0;
-
       await updateDoc(userRef, {
-      [`budget.${field}`]: deleteField(),
+      [`budget.${category}.${expenseName}`]: deleteField(),
       remainingBudget: currentRemaining + fieldValue
       });
 
       console.log("Firestore update successful:", {
-          [field]: deleteField(),
-          remainingBudget: currentRemaining + data[field]
+          [`budget.${category}.${expenseName}`]: deleteField(),
+          remainingBudget: currentRemaining + fieldValue
       });
 
       return { success: true, remainingBudget: currentRemaining + fieldValue };

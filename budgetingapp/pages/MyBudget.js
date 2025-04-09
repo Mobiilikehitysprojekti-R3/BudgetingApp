@@ -16,6 +16,7 @@ import BudgetPieChart from '../components/BudgetPieChart';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import styles from "../styles";
+import { Picker } from '@react-native-picker/picker';
 
 /* 
     The MyBudget component allows users to manage and track their budget.
@@ -28,16 +29,22 @@ import styles from "../styles";
 */
 
 export default function MyBudget() {
+  const categories = [
+    'groceries', 'essentials', 'entertainment', 'other'
+  ]
+
   const navigation = useNavigation()
-  const [fieldName, setFieldName] = useState('');
+  const [expenseName, setExpenseName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
   const [remainingBudget, setRemainingBudget] = useState(null);
   const [message, setMessage] = useState('');
   const [budgetFields, setBudgetFields] = useState({});
-  //const [groupId, setGroupId] = useState('')
   const [groups, setGroups] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
-
+  const [selectedCategory, setSelectedCategory] = useState(categories[0])
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+  
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'My Budget',
@@ -48,6 +55,11 @@ export default function MyBudget() {
       ),
     })
   }, [navigation])
+
+  const handleSlicePress = (category) => {
+    setActiveCategory(category);
+    setDetailModalVisible(true);
+  };  
 
   const fetchUserBudgetData = async () => {
     const user = auth.currentUser;
@@ -63,11 +75,16 @@ export default function MyBudget() {
       setRemainingBudget(data.remainingBudget ?? 0);
 
       const validBudget = {};
-      for (const [key, value] of Object.entries(data.budget || {})) {
-        if (typeof value === 'number' && isFinite(value) && value > 0) {
-          validBudget[key] = value;
-        }
+for (const [category, expenses] of Object.entries(data.budget || {})) {
+  if (typeof expenses === 'object') {
+    validBudget[category] = {};
+    for (const [name, amount] of Object.entries(expenses)) {
+      if (typeof amount === 'number' && isFinite(amount) && amount > 0) {
+        validBudget[category][name] = amount;
       }
+    }
+  }
+}
       setBudgetFields(validBudget);
     }
   } catch (error) {
@@ -89,25 +106,25 @@ export default function MyBudget() {
 
   const handleAddField = async () => {
     const value = parseFloat(fieldValue);
-    if (!fieldName || isNaN(value) || value <= 0) {
+    if (!expenseName || isNaN(value) || value <= 0) {
       Alert.alert('Please enter a valid name and amount');
       return;
     }
     
-    const result = await addBudgetField(fieldName, value);
+    const result = await addBudgetField(selectedCategory, expenseName, value);
     if (result.error) {
       Alert.alert('Error', result.error);
     } else {
-      setFieldName('');
+      setExpenseName('');
       setFieldValue('');
-      setMessage(`Added "${fieldName}" with value $${value}`);
+      setMessage(`Added "${expenseName}" to "${selectedCategory}" for $${value}`);
       fetchUserBudgetData(); // Refresh list and budget
     }
   };
 
-  const handleDeleteField = async (field) => {
+  const handleDeleteField = async (category, expense) => {
     const confirm = await new Promise((resolve) =>
-      Alert.alert('Delete Field', `Are you sure you want to delete "${field}"?`, [
+      Alert.alert('Delete Field', `Are you sure you want to delete "${expense}" from "${category}"?`, [
         { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
         { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
       ])
@@ -115,11 +132,11 @@ export default function MyBudget() {
 
     if (!confirm) return;
 
-    const result = await deleteBudgetField(field);
+    const result = await deleteBudgetField(category, expense);
     if (result.error) {
       Alert.alert('Error', result.error);
     } else {
-      setMessage(`Deleted "${field}"`);
+      setMessage(`Deleted "${expense}" from "${category}"`);
       fetchUserBudgetData(); // Refresh after deletion
     }
   };
@@ -174,11 +191,25 @@ export default function MyBudget() {
         </View>
       </Modal>
 
+      <Text style={styles.label}>Select Category</Text>
+      <View style={styles.pickerWrapper}>
+      <Picker
+        selectedValue={selectedCategory}
+        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+        style={styles.picker}
+        dropdownIconColor="#4F4F4F"
+      >
+      {categories.map((cat) => (
+        <Picker.Item key={cat} label={cat} value={cat} />
+      ))}
+      </Picker>
+      </View>
+
       <TextInput
         style={styles.inputActive}
-        placeholder="New field name (e.g. groceries)"
-        value={fieldName}
-        onChangeText={setFieldName}
+        placeholder="Expense name (e.g. chocolate)"
+        value={expenseName}
+        onChangeText={setExpenseName}
       />
 
       <TextInput
@@ -196,19 +227,38 @@ export default function MyBudget() {
         <Text style={styles.remaining}>Remaining Budget: ${remainingBudget}</Text>
       )}
 
-      <BudgetPieChart data={budgetFields} />
+      <BudgetPieChart data={budgetFields} onSlicePress={handleSlicePress} />
 
       <Text style={styles.title2}>Your Budget Fields:</Text>
-      {Object.entries(budgetFields).map(([field, value]) => (
-        <View key={field} style={styles.budgetItem}>
-          <Text style={styles.budgetText}>
-            {field}: ${value}
-          </Text>
-          <TouchableOpacity onPress={() => handleDeleteField(field)}>
-            <Text style={styles.deleteButton}>❌</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+      {Object.entries(budgetFields).map(([category, expenses]) => {
+        const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+        return (
+      <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
+        <Text style={styles.categoryHeading}>{category.toUpperCase()}: ${total}</Text>
+      </TouchableOpacity>
+      );
+  })}
+
+      <Modal visible={detailModalVisible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+          <ScrollView style={{ maxHeight: 300 }}>
+            {activeCategory && budgetFields[activeCategory] && Object.entries(budgetFields[activeCategory]).map(([name, value]) => (
+              <View key={name} style={styles.budgetItem}>
+              <Text style={styles.budgetText}>{name}: ${value}</Text>
+              <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
+                <Text style={styles.deleteButton}>❌</Text>
+              </TouchableOpacity>
+              </View>
+          ))}
+          </ScrollView>
+      <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
+        <Text style={styles.buttonTextMiddle}>Close</Text>
+      </TouchableOpacity>
+      </View>
+    </View>
+    </Modal>
     </ScrollView>
   );
 }

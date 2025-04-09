@@ -319,6 +319,37 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 5
     },
+    pickerWrapper: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#fff'
+      },
+      picker: {
+        height: 50,
+        width: '100%',
+        color: '#333',
+      },
+      label: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+        color: '#444',
+      },      
+      categoryHeading: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+        marginTop: 10,
+      },
+      categorySummary: {
+        padding: 10,
+        backgroundColor: '#eee',
+        borderRadius: 10,
+        marginBottom: 8,
+      },
+      
 })
 
 export default styles;
