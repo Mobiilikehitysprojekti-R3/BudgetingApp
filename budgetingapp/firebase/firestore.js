@@ -333,7 +333,7 @@ const updateUserPassword = async (currentPassword, newPassword) => {
         /* FUNCTIONS FOR USERS BUDGET STARTS HERE */
 
 // Add a new budget field and subtract from remaining budget
-const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => {
+const addBudgetField = async (category, expense, amount, date = null) => {
     const user = auth.currentUser;
     if (!user) return { error: "No user logged in." };
   
@@ -344,17 +344,16 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
     const data = userSnap.data();
     const currentRemaining = data.remainingBudget ?? 0;
   
-    let category, expense, amount, date, updateData;
+    let updateData;
+    
+    if (typeof amount === "number") {
+      category = category.replace(/[^a-zA-Z0-9_]/g, "_");
+      expense = expense.replace(/[^a-zA-Z0-9_]/g, "_");
 
-    if (typeof valueOrDate === "number") {
-      category = categoryOrField.replace(/[^a-zA-Z0-9_]/g, "_");
-      expense = expenseOrAmount.replace(/[^a-zA-Z0-9_]/g, "_");
-      amount = valueOrDate;
-
-      date = new Date().toISOString().split("T")[0];
+      date = date || new Date().toISOString().split("T")[0];
   
       if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
-      
+
       const path = `budget.${category}.${expense}`;
       updateData = {
         [path]: {
@@ -364,15 +363,9 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
         remainingBudget: currentRemaining - amount,
       };
     } else {
-      category = categoryOrField;
-      amount = expenseOrAmount;
-      date = valueOrDate || new Date().toISOString().split("T")[0];
-  
-      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
-  
       updateData = {
         [`budget.${category}`]: {
-          [expenseOrAmount]: { amount, date },
+          [expense]: { amount, date },
           remainingBudget: currentRemaining - amount,
         },
       };
@@ -385,7 +378,7 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
       console.error("Error adding budget field:", error);
       return { error: "Failed to update budget." };
     }
-}; 
+};  
 
 // delete a budget field and add to remaining budget
 const deleteBudgetField = async (categoryOrField, expense = null) => {
