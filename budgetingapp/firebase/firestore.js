@@ -380,7 +380,7 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
       console.error("Error adding budget field:", error);
       return { error: "Failed to update budget." };
     }
-  };
+};
 
 // delete a budget field and add to remaining budget
 const deleteBudgetField = async (categoryOrField, expense = null) => {
@@ -420,7 +420,7 @@ const deleteBudgetField = async (categoryOrField, expense = null) => {
       console.error("Error deleting budget field:", error);
       return { error: "Failed to delete budget field." };
     }
-  };
+};
 
 // Function to create a budget field and update it to Firestore 
 // Luultavasti turha, koska budjetti on jo luotu ja se on tallennettu Firestoreen

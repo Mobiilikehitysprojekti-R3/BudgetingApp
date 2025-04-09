@@ -202,36 +202,6 @@ export default function MyBudget() {
           style={{ marginBottom: 20 }}
         />
 
-        <Text style={styles.label}>Select Category</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={selectedCategory}
-            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            style={styles.picker}
-            dropdownIconColor="#4F4F4F"
-          >
-            {categories.map((cat) => (
-              <Picker.Item key={cat} label={cat} value={cat} />
-            ))}
-          </Picker>
-        </View>
-
-        <TextInput
-          style={styles.inputActive}
-          placeholder="Expense name"
-          value={expenseName}
-          onChangeText={setExpenseName}
-        />
-        <TextInput
-          style={styles.inputActive}
-          placeholder="Amount"
-          value={fieldValue}
-          onChangeText={setFieldValue}
-          keyboardType="numeric"
-        />
-
-        <Button title="Add Budget Field" onPress={handleAddField} />
-
         <View style={{ marginVertical: 10 }}>
           <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
             <Text style={styles.buttonTextMiddle}>
@@ -267,6 +237,36 @@ export default function MyBudget() {
             />
           )}
         </View>
+
+        <Text style={styles.label}>Select Category</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+            style={styles.picker}
+            dropdownIconColor="#4F4F4F"
+          >
+            {categories.map((cat) => (
+              <Picker.Item key={cat} label={cat} value={cat} />
+            ))}
+          </Picker>
+        </View>
+
+        <TextInput
+          style={styles.inputActive}
+          placeholder="Expense name"
+          value={expenseName}
+          onChangeText={setExpenseName}
+        />
+        <TextInput
+          style={styles.inputActive}
+          placeholder="Amount"
+          value={fieldValue}
+          onChangeText={setFieldValue}
+          keyboardType="numeric"
+        />
+
+        <Button title="Add Budget Field" onPress={handleAddField} />
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {remainingBudget !== null && (
