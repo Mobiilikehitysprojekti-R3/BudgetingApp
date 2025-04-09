@@ -333,81 +333,94 @@ const updateUserPassword = async (currentPassword, newPassword) => {
         /* FUNCTIONS FOR USERS BUDGET STARTS HERE */
 
 // Add a new budget field and subtract from remaining budget
-const addBudgetField = async (category, expenseName, value) => {
-  //console.log("Current user:", auth.currentUser);
-  const user = auth.currentUser;
-
-  if (!user) return { error: "No user logged in." };
-  // ger user document
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return { error: "User document not found." };
-
-  const data = userSnap.data();
-  const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
-
-  if (value > currentRemaining) {
-      return { error: "Insufficient remaining budget." };
-  }
-
-  const safeCategory = category.replace(/[^a-zA-Z0-9_]/g, "_");
-  const safeExpense = expenseName.replace(/[^a-zA-Z0-9_]/g, "_");
-
-  // add new field and update remaining budget
-  try {
-      await updateDoc(userRef, {
-          [`budget.${safeCategory}.${safeExpense}`]: value,
-          remainingBudget: currentRemaining - value
-        });          
-
-      console.log("Firestore update successful:", {
-          [`budget.${safeCategory}.${safeExpense}`]: value,
-          remainingBudget: currentRemaining - value
-      });
-
-      return { success: true, remainingBudget: currentRemaining - value };
-  } catch (error) {
+const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => {
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+  
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+  
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? 0;
+  
+    let value, path, updateData;
+  
+    // Check if adding under category/expense style
+    if (typeof valueOrDate === 'number') {
+      const category = categoryOrField.replace(/[^a-zA-Z0-9_]/g, "_");
+      const expense = expenseOrAmount.replace(/[^a-zA-Z0-9_]/g, "_");
+      value = valueOrDate;
+  
+      if (value > currentRemaining) return { error: "Insufficient remaining budget." };
+  
+      path = `budget.${category}.${expense}`;
+      updateData = {
+        [path]: value,
+        remainingBudget: currentRemaining - value,
+      };
+    } else {
+      // Flat structure with date support
+      const field = categoryOrField;
+      const amount = expenseOrAmount;
+      const date = valueOrDate || new Date().toISOString().split("T")[0];
+  
+      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
+  
+      updateData = {
+        [`budget.${field}`]: { amount, date },
+        remainingBudget: currentRemaining - amount,
+      };
+    }
+  
+    try {
+      await updateDoc(userRef, updateData);
+      return { success: true, remainingBudget: updateData.remainingBudget };
+    } catch (error) {
       console.error("Error adding budget field:", error);
       return { error: "Failed to update budget." };
-  }
-};
+    }
+  };
 
 // delete a budget field and add to remaining budget
-const deleteBudgetField = async (category, expenseName) => {
-  const user = auth.currentUser;
-  if (!user) return { error: "No user logged in." };
-
-  // get user document
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return { error: "User document not found." };
-
-  const data = userSnap.data();
-  const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
-  const fieldValue = data.budget?.[category]?.[expenseName] ?? 0;
-
-  if (fieldValue === 0) {
-    return { error: "Expense not found or value is 0." };
-}
-
-  // delete field and update remaining budget
-  try {
+const deleteBudgetField = async (categoryOrField, expense = null) => {
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+  
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+  
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? 0;
+  
+    let value = 0;
+    let path;
+  
+    if (expense !== null) {
+      // Nested category/expense structure
+      path = `budget.${categoryOrField}.${expense}`;
+      value = data.budget?.[categoryOrField]?.[expense] ?? 0;
+    } else {
+      // Flat structure
+      path = `budget.${categoryOrField}`;
+      value = data.budget?.[categoryOrField]?.amount ?? 0;
+    }
+  
+    if (value === 0) return { error: "Expense not found or value is 0." };
+  
+    try {
       await updateDoc(userRef, {
-      [`budget.${category}.${expenseName}`]: deleteField(),
-      remainingBudget: currentRemaining + fieldValue
+        [path]: deleteField(),
+        remainingBudget: currentRemaining + value,
       });
-
-      console.log("Firestore update successful:", {
-          [`budget.${category}.${expenseName}`]: deleteField(),
-          remainingBudget: currentRemaining + fieldValue
-      });
-
-      return { success: true, remainingBudget: currentRemaining + fieldValue };
-  } catch (error) {
+  
+      return { success: true, remainingBudget: currentRemaining + value };
+    } catch (error) {
       console.error("Error deleting budget field:", error);
-      return { error: "Failed to update budget." };
-  }
-};
+      return { error: "Failed to delete budget field." };
+    }
+  };
 
 // Function to create a budget field and update it to Firestore 
 // Luultavasti turha, koska budjetti on jo luotu ja se on tallennettu Firestoreen
