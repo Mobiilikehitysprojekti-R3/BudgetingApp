@@ -344,32 +344,37 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
     const data = userSnap.data();
     const currentRemaining = data.remainingBudget ?? 0;
   
-    let value, path, updateData;
+    let category, expense, amount, date, updateData;
+
+    if (typeof valueOrDate === "number") {
+      category = categoryOrField.replace(/[^a-zA-Z0-9_]/g, "_");
+      expense = expenseOrAmount.replace(/[^a-zA-Z0-9_]/g, "_");
+      amount = valueOrDate;
+
+      date = new Date().toISOString().split("T")[0];
   
-    // Check if adding under category/expense style
-    if (typeof valueOrDate === 'number') {
-      const category = categoryOrField.replace(/[^a-zA-Z0-9_]/g, "_");
-      const expense = expenseOrAmount.replace(/[^a-zA-Z0-9_]/g, "_");
-      value = valueOrDate;
-  
-      if (value > currentRemaining) return { error: "Insufficient remaining budget." };
-  
-      path = `budget.${category}.${expense}`;
+      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
+      
+      const path = `budget.${category}.${expense}`;
       updateData = {
-        [path]: value,
-        remainingBudget: currentRemaining - value,
+        [path]: {
+          amount: amount,
+          date: date,
+        },
+        remainingBudget: currentRemaining - amount,
       };
     } else {
-      // Flat structure with date support
-      const field = categoryOrField;
-      const amount = expenseOrAmount;
-      const date = valueOrDate || new Date().toISOString().split("T")[0];
+      category = categoryOrField;
+      amount = expenseOrAmount;
+      date = valueOrDate || new Date().toISOString().split("T")[0];
   
       if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
   
       updateData = {
-        [`budget.${field}`]: { amount, date },
-        remainingBudget: currentRemaining - amount,
+        [`budget.${category}`]: {
+          [expenseOrAmount]: { amount, date },
+          remainingBudget: currentRemaining - amount,
+        },
       };
     }
   
@@ -380,46 +385,60 @@ const addBudgetField = async (categoryOrField, expenseOrAmount, valueOrDate) => 
       console.error("Error adding budget field:", error);
       return { error: "Failed to update budget." };
     }
-};
+}; 
 
 // delete a budget field and add to remaining budget
 const deleteBudgetField = async (categoryOrField, expense = null) => {
-    const user = auth.currentUser;
-    if (!user) return { error: "No user logged in." };
-  
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) return { error: "User document not found." };
-  
-    const data = userSnap.data();
-    const currentRemaining = data.remainingBudget ?? 0;
-  
-    let value = 0;
-    let path;
-  
+  const user = auth.currentUser;
+  if (!user) return { error: "No user logged in." };
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) return { error: "User document not found." };
+
+  const data = userSnap.data();
+  const currentRemaining = data.remainingBudget ?? 0;
+
+  let value = 0;
+  let path;
+  let categoryPath;
+
+  if (expense !== null) {
+    path = `budget.${categoryOrField}.${expense}`;
+    value = data.budget?.[categoryOrField]?.[expense]?.amount ?? 0;
+    categoryPath = `budget.${categoryOrField}`;
+  } else {
+    path = `budget.${categoryOrField}`;
+    value = data.budget?.[categoryOrField]?.amount ?? 0;
+    categoryPath = `budget.${categoryOrField}`;
+  }
+
+  try {
+    await updateDoc(userRef, {
+      [path]: deleteField(),
+      remainingBudget: currentRemaining + value,
+    });
+
+    // After deletion, check if the category is now empty
+    const updatedUserSnap = await getDoc(userRef);
+    const updatedData = updatedUserSnap.data();
+
+    // If the category has no expenses left, remove the entire category
     if (expense !== null) {
-      // Nested category/expense structure
-      path = `budget.${categoryOrField}.${expense}`;
-      value = data.budget?.[categoryOrField]?.[expense] ?? 0;
-    } else {
-      // Flat structure
-      path = `budget.${categoryOrField}`;
-      value = data.budget?.[categoryOrField]?.amount ?? 0;
+      const isCategoryEmpty = !updatedData.budget?.[categoryOrField] || Object.keys(updatedData.budget?.[categoryOrField]).length === 0;
+      
+      if (isCategoryEmpty) {
+        await updateDoc(userRef, {
+          [categoryPath]: deleteField(),
+        });
+      }
     }
-  
-    if (value === 0) return { error: "Expense not found or value is 0." };
-  
-    try {
-      await updateDoc(userRef, {
-        [path]: deleteField(),
-        remainingBudget: currentRemaining + value,
-      });
-  
-      return { success: true, remainingBudget: currentRemaining + value };
-    } catch (error) {
-      console.error("Error deleting budget field:", error);
-      return { error: "Failed to delete budget field." };
-    }
+
+    return { success: true, remainingBudget: currentRemaining + value };
+  } catch (error) {
+    console.error("Error deleting budget field:", error);
+    return { error: "Failed to delete budget field." };
+  }
 };
 
 // Function to create a budget field and update it to Firestore 

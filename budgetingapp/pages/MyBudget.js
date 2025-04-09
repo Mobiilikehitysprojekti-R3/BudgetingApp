@@ -15,6 +15,16 @@ import { Calendar } from 'react-native-calendars';
 import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 
+/* 
+    The MyBudget component allows users to manage and track their budget.
+    
+    Users can:
+    - Add new budget fields with names and amounts (e.g. groceries, rent, etc.).
+    - View their remaining budget.
+    - Delete budget fields.
+    - Share their budget details with groups they belong to.
+*/
+
 export default function MyBudget() {
   const categories = ['groceries', 'essentials', 'entertainment', 'other'];
 
@@ -148,6 +158,7 @@ export default function MyBudget() {
     } else {
       setMessage(`Deleted "${expense}" from "${category}"`);
       fetchUserBudgetData();
+      setDetailModalVisible(false);
     }
   };
 
@@ -238,7 +249,6 @@ export default function MyBudget() {
           )}
         </View>
 
-        <Text style={styles.label}>Select Category</Text>
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={selectedCategory}
@@ -275,7 +285,6 @@ export default function MyBudget() {
 
         <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
-        <Text style={styles.title2}>Your Budget Fields:</Text>
         {Object.entries(filteredBudget).map(([category, expenses]) => {
           const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
           return (
