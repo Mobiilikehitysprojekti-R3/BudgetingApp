@@ -350,7 +350,7 @@ const addBudgetField = async (category, expense, amount, date = null) => {
       category = category.replace(/[^a-zA-Z0-9_]/g, "_");
       expense = expense.replace(/[^a-zA-Z0-9_]/g, "_");
 
-      date = date || new Date().toISOString().split("T")[0];
+      today = date || new Date().toISOString().split("T")[0];
   
       if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
 
@@ -358,7 +358,7 @@ const addBudgetField = async (category, expense, amount, date = null) => {
       updateData = {
         [path]: {
           amount: amount,
-          date: date,
+          date: today,
         },
         remainingBudget: currentRemaining - amount,
       };
@@ -381,7 +381,7 @@ const addBudgetField = async (category, expense, amount, date = null) => {
 };  
 
 // delete a budget field and add to remaining budget
-const deleteBudgetField = async (categoryOrField, expense = null) => {
+const deleteBudgetField = async (category, expense) => {
   const user = auth.currentUser;
   
   if (!user) return { error: "No user logged in." };
@@ -398,13 +398,13 @@ const deleteBudgetField = async (categoryOrField, expense = null) => {
   let categoryPath;
 
   if (expense !== null) {
-    path = `budget.${categoryOrField}.${expense}`;
-    value = data.budget?.[categoryOrField]?.[expense]?.amount ?? 0;
-    categoryPath = `budget.${categoryOrField}`;
+    path = `budget.${category}.${expense}`;
+    value = data.budget?.[category]?.[expense]?.amount ?? 0;
+    categoryPath = `budget.${category}`;
   } else {
-    path = `budget.${categoryOrField}`;
-    value = data.budget?.[categoryOrField]?.amount ?? 0;
-    categoryPath = `budget.${categoryOrField}`;
+    path = `budget.${category}`;
+    value = data.budget?.[category]?.amount ?? 0;
+    categoryPath = `budget.${category}`;
   }
 
   try {
@@ -419,7 +419,7 @@ const deleteBudgetField = async (categoryOrField, expense = null) => {
 
     // If the category has no expenses left, remove the entire category
     if (expense !== null) {
-      const isCategoryEmpty = !updatedData.budget?.[categoryOrField] || Object.keys(updatedData.budget?.[categoryOrField]).length === 0;
+      const isCategoryEmpty = !updatedData.budget?.[category] || Object.keys(updatedData.budget?.[category]).length === 0;
       
       if (isCategoryEmpty) {
         await updateDoc(userRef, {
