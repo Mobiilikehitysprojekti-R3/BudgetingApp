@@ -8,14 +8,17 @@ const BudgetPieChart = ({ data }) => {
   if (!data || typeof data !== 'object') return null;
 
   const chartData = Object.entries(data)
-    .filter(([_, value]) => typeof value === 'number' && value > 0)
-    .map(([label, value], index) => ({
-      name: label,
-      population: value,
-      color: getColor(index),
-      legendFontColor: '#333',
-      legendFontSize: 14,
-    }));
+    .map(([category, expenses], index) => {
+      const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+      return {
+        name: category,
+        population: total,
+        color: getColor(index),
+        legendFontColor: '#333',
+        legendFontSize: 14,
+      };
+    })
+    .filter(item => item.population > 0);
 
   if (chartData.length === 0) {
     return <Text style={styles.empty}>No budget data to show.</Text>;
@@ -23,7 +26,6 @@ const BudgetPieChart = ({ data }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Budget Pie Chart</Text>
       <PieChart
         data={chartData}
         width={screenWidth - 32}
