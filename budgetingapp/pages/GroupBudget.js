@@ -90,7 +90,7 @@ export default function GroupBudget({ route, navigation }) {
     if (confirm) {
         try {
             await deleteBudget(budgetId); // Make sure budgetId is defined
-            navigation.navigate('MyGroups', { screen: 'Group', params: { budgetDeleted: true } });
+            navigation.navigate('MyGroups');
         } catch (error) {
             console.error("Error deleting budget:", error);
             Alert.alert("Error", "Failed to delete budget.");
