@@ -215,7 +215,23 @@ const styles = StyleSheet.create({
         padding: 5,
         borderRadius: 18,
     },
-    /* TEMPORARY styling for MyBudget page */
+    /*
+        Styling for MyBudget page
+        (Some elements fit GroupBudget as well)
+    */
+    pickerWrapper: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#fff'
+      },
+    categorySummary: {
+        padding: 10,
+        backgroundColor: '#eee',
+        borderRadius: 10,
+        marginBottom: 8,
+    },
     message: {
         marginTop: 16,
         fontSize: 16,
