@@ -96,13 +96,20 @@ export default function GroupBudget({ route }) {
 
     if (!confirm) return
 
-    const result = await deleteGroupBudgetField(budgetId, field)
-    if (result.error) {
-      Alert.alert('Error', result.error)
+    if (confirm) {
+        try {
+            await deleteBudget(budgetId); // Make sure budgetId is defined
+            navigation.navigate('MyGroups');
+        } catch (error) {
+            console.error("Error deleting budget:", error);
+            Alert.alert("Error", "Failed to delete budget.");
+        }
     } else {
-      loadGroupBudget()
+        console.log("Budget deletion canceled.");
     }
-  }
+};
+
+
 
   useEffect(() => {
     loadGroupBudget()

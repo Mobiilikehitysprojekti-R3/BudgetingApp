@@ -992,32 +992,42 @@ const fetchGroupById = async (groupId) => {
 }
 
 const deleteGroup = async (groupId) => {
-  const user = auth.currentUser;
-  if (!user) {
-      console.error("No user logged in.");
-      return;
-  }
+    const user = auth.currentUser ;
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
 
-  try {
-      const groupRef = doc(db, "groups", groupId);
-      const groupSnap = await getDoc(groupRef);
+    try {
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
 
-      if (!groupSnap.exists()) {
-          console.error("Group does not exist.");
-          return;
-      }
+        if (!groupSnap.exists()) {
+            console.error("Group does not exist.");
+            return;
+        }
 
-      const groupData = groupSnap.data();
-      if (groupData.owner !== user.uid) {
-          console.error("User is not the owner of the group.");
-          return;
-      }
+        const groupData = groupSnap.data();
+        if (groupData.owner !== user.uid) {
+            console.error("User  is not the owner of the group.");
+            return;
+        }
 
-      await deleteDoc(groupRef);
-      console.log("Group deleted successfully!");
-  } catch (error) {
-      console.error("Error deleting group:", error.message);
-  }
+        // Fetch all budgets associated with the group
+        const budgetsRef = collection(db, "groupBudget");
+        const q = query(budgetsRef, where("groupId", "==", groupId));
+        const budgetsSnap = await getDocs(q);
+
+        // Delete each budget associated with the group
+        const deleteBudgetPromises = budgetsSnap.docs.map((budgetDoc) => deleteBudget(budgetDoc.id));
+        await Promise.all(deleteBudgetPromises);
+
+        // Now delete the group
+        await deleteDoc(groupRef);
+        console.log("Group and associated budgets deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting group:", error.message);
+    }
 };
 
         /* FUNCTIONS FOR GROUP ENDS HERE */

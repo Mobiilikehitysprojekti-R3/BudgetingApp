@@ -103,13 +103,14 @@ const handleDeleteGroupPress = async () => {
     if (!confirm) return; // Exit if the user did not confirm
 
     try {
-        await deleteGroup(groupId);
-        navigation.navigate('MyGroups')
-    } catch (error) {
-        console.error("Error deleting group:", error);
-        Alert.alert("Error", "Failed to delete group.");
-    }
+      await deleteGroup(groupId);
+      navigation.navigate('MyGroups')
+  } catch (error) {
+      console.error("Error deleting group:", error);
+      Alert.alert("Error", "Failed to delete group.");
+  }
 };
+
 
   const handleOpenCreateBudgetModal = () => {
     if (group?.owner === auth.currentUser?.uid) {
