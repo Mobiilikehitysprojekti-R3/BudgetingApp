@@ -333,71 +333,105 @@ const updateUserPassword = async (currentPassword, newPassword) => {
         /* FUNCTIONS FOR USERS BUDGET STARTS HERE */
 
 // Add a new budget field and subtract from remaining budget
-const addBudgetField = async (field, value) => {
-  console.log("Current user:", auth.currentUser);
-  const user = auth.currentUser;
-  if (!user) return { error: "No user logged in." };
-  // ger user document
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return { error: "User document not found." };
+const addBudgetField = async (category, expense, amount, date = null) => {
+    const user = auth.currentUser;
+    if (!user) return { error: "No user logged in." };
+  
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { error: "User document not found." };
+  
+    const data = userSnap.data();
+    const currentRemaining = data.remainingBudget ?? 0;
+  
+    let updateData;
 
-  const data = userSnap.data();
-  const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+    if (typeof amount === "number") {
+      category = category.replace(/[^a-zA-Z0-9_]/g, "_");
+      expense = expense.replace(/[^a-zA-Z0-9_]/g, "_");
 
-  if (value > currentRemaining) {
-      return { error: "Insufficient remaining budget." };
-  }
-  const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_");
-  // add new field and update remaining budget
-  try {
-      await updateDoc(userRef, {
-          [`budget.${safeField}`]: value,
-          remainingBudget: currentRemaining - value
-        });          
+      today = date || new Date().toISOString().split("T")[0];
+  
+      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
 
-      console.log("Firestore update successful:", {
-          [safeField]: value,
-          remainingBudget: currentRemaining - value
-      });
-
-      return { success: true, remainingBudget: currentRemaining - value };
-  } catch (error) {
+      const path = `budget.${category}.${expense}`;
+      updateData = {
+        [path]: {
+          amount: amount,
+          date: today,
+        },
+        remainingBudget: currentRemaining - amount,
+      };
+    } else {
+      updateData = {
+        [`budget.${category}`]: {
+          [expense]: { amount, date },
+          remainingBudget: currentRemaining - amount,
+        },
+      };
+    }
+  
+    try {
+      await updateDoc(userRef, updateData);
+      return { success: true, remainingBudget: updateData.remainingBudget };
+    } catch (error) {
       console.error("Error adding budget field:", error);
       return { error: "Failed to update budget." };
-  }
-};
+    }
+};  
 
 // delete a budget field and add to remaining budget
-const deleteBudgetField = async (field) => {
+const deleteBudgetField = async (category, expense) => {
   const user = auth.currentUser;
+  
   if (!user) return { error: "No user logged in." };
-  // get user document
+
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   if (!userSnap.exists()) return { error: "User document not found." };
 
   const data = userSnap.data();
-  const currentRemaining = data.remainingBudget ?? data.budget ?? 0;
+  const currentRemaining = data.remainingBudget ?? 0;
 
-  // delete field and update remaining budget
+  let value = 0;
+  let path;
+  let categoryPath;
+
+  if (expense !== null) {
+    path = `budget.${category}.${expense}`;
+    value = data.budget?.[category]?.[expense]?.amount ?? 0;
+    categoryPath = `budget.${category}`;
+  } else {
+    path = `budget.${category}`;
+    value = data.budget?.[category]?.amount ?? 0;
+    categoryPath = `budget.${category}`;
+  }
+
   try {
-      const fieldValue = data.budget?.[field] ?? 0;
+    await updateDoc(userRef, {
+      [path]: deleteField(),
+      remainingBudget: currentRemaining + value,
+    });
 
-      await updateDoc(userRef, {
-      [`budget.${field}`]: deleteField(),
-      remainingBudget: currentRemaining + fieldValue
-      });
+    // After deletion, check if the category is now empty
+    const updatedUserSnap = await getDoc(userRef);
+    const updatedData = updatedUserSnap.data();
 
-      console.log("Firestore update successful:", {
-          [field]: deleteField(),
-          remainingBudget: currentRemaining + data[field]
-      });
+    // If the category has no expenses left, remove the entire category
+    if (expense !== null) {
+      const isCategoryEmpty = !updatedData.budget?.[category] || Object.keys(updatedData.budget?.[category]).length === 0;
+      
+      if (isCategoryEmpty) {
+        await updateDoc(userRef, {
+          [categoryPath]: deleteField(),
+        });
+      }
+    }
 
-      return { success: true, remainingBudget: currentRemaining + fieldValue };
+    return { success: true, remainingBudget: currentRemaining + value };
   } catch (error) {
-      console.error("Error deleting budget field:", error);
-      return { error: "Failed to update budget." };
+    console.error("Error deleting budget field:", error);
+    return { error: "Failed to delete budget field." };
   }
 };
 
