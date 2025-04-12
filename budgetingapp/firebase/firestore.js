@@ -518,34 +518,31 @@ const getRemainingBudget = async () => {
 
 /* Functions for recurring budget start */
 
-const addRecurringEntry = async (
-  category,
-  name,
-  amount,
-  interval,
-  startDate,
-  endDate = null,
-  type = 'expense'
-) => {
+const addRecurringEntry = async (category, expense, amount, interval, startDate, endDate = null, type = "expense") => {
+  const user = auth.currentUser;
+  if (!user) return { error: "No user logged in." };
+
+  const userRef = doc(db, "users", user.uid);
+  const recurringEntry = {
+    category,
+    expense,
+    amount,
+    interval, // daily, weekly, biweekly, monthly, yearly
+    startDate,
+    endDate,
+    type, // "income" or "expense"
+  };
+
   try {
-    const user = auth.currentUser;
-    const entry = {
-      category,
-      expense: name,
-      amount,
-      interval,
-      startDate,
-      endDate,
-      type, // ✅ this must be included
-      createdAt: new Date().toISOString(),
-    };
-    await addDoc(collection(db, 'recurringEntries'), entry);
+    await updateDoc(userRef, {
+      recurringEntries: arrayUnion(recurringEntry),
+    });
     return { success: true };
   } catch (error) {
-    return { error: error.message };
+    console.error("Error adding recurring entry:", error);
+    return { error: "Failed to add recurring entry." };
   }
 };
-
 
 const generateRecurringInstances = (entry, upToDate) => {
   const results = [];
@@ -629,8 +626,6 @@ const getRemainingBudgetWithRecurring = async () => {
 
   return baseBudget - manualExpenses;
 };
-
-
 
 /* Functions for recurring budget end */
 
