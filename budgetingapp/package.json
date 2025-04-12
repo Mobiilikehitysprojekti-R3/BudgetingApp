@@ -18,6 +18,8 @@
     "expo": "~52.0.37",
     "expo-constants": "^17.0.8",
     "expo-contacts": "^14.0.5",
+    "expo-file-system": "^18.0.12",
+    "expo-image-manipulator": "^13.0.6",
     "expo-image-picker": "^16.0.6",
     "expo-status-bar": "~2.0.1",
     "firebase": "^11.4.0",
