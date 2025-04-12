@@ -14,6 +14,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Calendar } from 'react-native-calendars';
 import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
+import { addRecurringEntry } from '../firebase/firestore';
+
 
 /* 
     The MyBudget component allows users to manage and track their budget.
@@ -32,7 +34,10 @@ export default function MyBudget() {
   const [expenseName, setExpenseName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [remainingBudget, setRemainingBudget] = useState(null);
+  const [budgetTotal, setBudgetTotal] = useState(null);
   const [message, setMessage] = useState('');
   const [budgetFields, setBudgetFields] = useState({});
   const [groups, setGroups] = useState([]);
@@ -45,6 +50,9 @@ export default function MyBudget() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
+
+  const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -105,6 +113,17 @@ export default function MyBudget() {
     }
   };
 
+  
+  useEffect(() => {
+    const calculateBudget = async () => {
+      const recurring = await getExpandedBudget(new Date());
+      const totalExpenses = recurring.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+      setRemainingBudget((budgetTotal ?? 0) - totalExpenses);
+    };
+    calculateBudget();
+  }, [budgetTotal]);
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -114,6 +133,17 @@ export default function MyBudget() {
     return unsubscribe;
   }, []);
 
+  
+  useEffect(() => {
+    const calculateBudget = async () => {
+      const recurring = await getExpandedBudget(new Date());
+      const totalExpenses = recurring.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+      setRemainingBudget((budgetTotal ?? 0) - totalExpenses);
+    };
+    calculateBudget();
+  }, [budgetTotal]);
+
+
   useEffect(() => {
     const loadGroups = async () => {
       const userGroups = await fetchUserGroups();
@@ -121,6 +151,22 @@ export default function MyBudget() {
     };
     loadGroups();
   }, []);
+  /// Function to fetch and expand the budget data with recurring entries
+  useEffect(() => {
+    const fetchRecurring = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+  
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setRecurringItems(data.recurringEntries || []);
+      }
+    };
+    fetchRecurring();
+  }, []);
+  
 
   const handleAddField = async () => {
     const value = parseFloat(fieldValue);
@@ -129,9 +175,41 @@ export default function MyBudget() {
       return;
     }
 
+    if (isRecurring) {
+      const today = new Date().toISOString().split('T')[0];
+      const result = await addRecurringEntry(
+        selectedCategory,
+        expenseName,
+        value,
+        recurringInterval,
+        today,
+        null,
+        'expense'
+      );
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+      } else {
+        setExpenseName('');
+        setFieldValue('');
+        setMessage(`Recurring expense "${expenseName}" added.`);
+        fetchUserBudgetData();
+      }
+      return;
+    }
+
     const budgetDate = selectedDate || new Date().toISOString().split('T')[0];
     const result = await addBudgetField(selectedCategory, expenseName, value, budgetDate);
-
+  
+    if (result.error) {
+      Alert.alert('Error', result.error);
+    } else {
+      setExpenseName('');
+      setFieldValue('');
+      setMessage(`Added "${expenseName}" to "${selectedCategory}" for $${value}`);
+      fetchUserBudgetData();
+    }
+  
     if (result.error) {
       Alert.alert('Error', result.error);
     } else {
@@ -196,6 +274,14 @@ export default function MyBudget() {
     >
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
         <Text style={styles.titleDark}>My Budget</Text>
+        <TextInput
+          style={styles.inputActive}
+          placeholder="Set Monthly Budget (€)"
+          value={budgetTotal?.toString() ?? ''}
+          onChangeText={val => setBudgetTotal(Number(val))}
+          keyboardType="numeric"
+        />
+
 
         <Calendar
           onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -276,6 +362,31 @@ export default function MyBudget() {
           keyboardType="numeric"
         />
 
+        
+        <TouchableOpacity
+          onPress={() => setIsRecurring(!isRecurring)}
+          style={[styles.buttonForm, { backgroundColor: isRecurring ? '#66bb6a' : '#ccc' }]}
+        >
+          <Text style={styles.buttonTextMiddle}>
+            {isRecurring ? 'Recurring Expense ✅' : 'One-time Expense'}
+          </Text>
+        </TouchableOpacity>
+
+        {isRecurring && (
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={recurringInterval}
+              onValueChange={(itemValue) => setRecurringInterval(itemValue)}
+            >
+              <Picker.Item label="Daily" value="daily" />
+              <Picker.Item label="Weekly" value="weekly" />
+              <Picker.Item label="Biweekly" value="biweekly" />
+              <Picker.Item label="Monthly" value="monthly" />
+              <Picker.Item label="Yearly" value="yearly" />
+            </Picker>
+          </View>
+        )}
+
         <Button title="Add Budget Field" onPress={handleAddField} />
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
@@ -334,6 +445,35 @@ export default function MyBudget() {
             </View>
           </View>
         </Modal>
+        
+        <Text style={styles.title2}>Recurring Expenses</Text>
+          {recurringItems?.length === 0 ? (
+            <Text>No recurring expenses yet.</Text>
+          ) : (
+            recurringItems
+              .filter((item) => item.type === 'expense')
+              .map((item, index) => (
+                <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+                  <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      const user = auth.currentUser;
+                      const userRef = doc(db, 'users', user.uid);
+                      const userSnap = await getDoc(userRef);
+                      if (!userSnap.exists()) return;
+
+                      const data = userSnap.data();
+                      const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
+                      await updateDoc(userRef, { recurringEntries: updated });
+                      setRecurringItems(updated);
+                    }}
+                  >
+                    <Text style={styles.deleteButton}>❌</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+          )}
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
