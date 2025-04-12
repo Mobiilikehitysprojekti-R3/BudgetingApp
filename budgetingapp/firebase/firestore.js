@@ -529,29 +529,17 @@ const addRecurringEntry = async (
 ) => {
   try {
     const user = auth.currentUser;
-    if (!user) return { error: "Not logged in" };
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) return { error: "User not found" };
-
-    const data = userSnap.data();
-    const newEntry = {
+    const entry = {
       category,
       expense: name,
       amount,
       interval,
       startDate,
       endDate,
-      type,
+      type, // ✅ this must be included
       createdAt: new Date().toISOString(),
     };
-
-    const existing = Array.isArray(data.recurringEntries) ? data.recurringEntries : [];
-    const updated = [...existing, newEntry];
-
-    await updateDoc(userRef, { recurringEntries: updated });
-
+    await addDoc(collection(db, 'recurringEntries'), entry);
     return { success: true };
   } catch (error) {
     return { error: error.message };
