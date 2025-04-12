@@ -1020,6 +1020,29 @@ const deleteGroup = async (groupId) => {
   }
 };
 
+const groupData = groupSnap.data();
+        if (groupData.owner !== user.uid) {
+            console.error("User  is not the owner of the group.");
+            return;
+        }
+
+        // Fetch all budgets associated with the group
+        const budgetsRef = collection(db, "groupBudget");
+        const q = query(budgetsRef, where("groupId", "==", groupId));
+        const budgetsSnap = await getDocs(q);
+
+        // Delete each budget associated with the group
+        const deleteBudgetPromises = budgetsSnap.docs.map((budgetDoc) => deleteBudget(budgetDoc.id));
+        await Promise.all(deleteBudgetPromises);
+
+        // Now delete the group
+        await deleteDoc(groupRef);
+        console.log("Group and associated budgets deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting group:", error.message);
+    }
+};
+
         /* FUNCTIONS FOR GROUP ENDS HERE */
 
         /* FUNCTIONS FOR MESSAGE STARTS HERE */
@@ -1096,6 +1119,29 @@ const markMessagesAsRead = async (groupId) => {
     console.error("Error marking messages as read: ", error)
   }
 }
+
+const deleteBudget = async (budgetId) => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
+
+    try {
+        const groupBudgetRef = doc(db, "groupBudget", budgetId);
+        const groupBudgetSnap = await getDoc(groupBudgetRef);
+
+        if (!groupBudgetSnap.exists()) {
+            console.error("Group budget does not exist.");
+            return;
+        }
+
+        await deleteDoc(groupBudgetRef);
+        console.log("Budget deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting budget:", error.message);
+    }
+};
 
         /* FUNCTIONS FOR MESSAGE ENDS HERE */
 
@@ -1219,5 +1265,5 @@ export {
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
     addGroupBudgetField, setGroupBudget, getUserByGroupId,
-    removeMemberFromGroup, addMemberToGroup,
+    removeMemberFromGroup, addMemberToGroup, deleteBudget
 };
