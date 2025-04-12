@@ -215,14 +215,29 @@ const styles = StyleSheet.create({
         padding: 5,
         borderRadius: 18,
     },
-    /* TEMPORARY styling for MyBudget page */
+    /*
+        Styling for MyBudget page
+        (Some elements fit GroupBudget as well)
+    */
+    pickerWrapper: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#fff'
+      },
+    categorySummary: {
+        padding: 10,
+        backgroundColor: '#eee',
+        borderRadius: 10,
+        marginBottom: 8,
+    },
     message: {
         marginTop: 16,
         fontSize: 16,
         color: 'green',
     },
     remaining: {
-        marginTop: 12,
         fontSize: 18,
         fontWeight: 'bold',
         color: 'blue',
@@ -283,7 +298,43 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 12,
         fontWeight: 'bold',
-    }
+    },
+    fakeInput: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: 50,
+        borderColor: "#4F4F4F",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 25,
+        fontSize: 16,
+        backgroundColor: "#fff",
+        color: "#4F4F4F",
+        marginBottom: 10,
+        width: "90%"
+    },
+    /* GroupBudget page */
+    rowContainer: {
+        marginVertical: 10,
+    },
+    editRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6
+    },
+    remainingInputInline: {
+        flex: 1
+    },
+    editInput: {
+        backgroundColor: '#ffffff',
+        color: '#000000',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5
+    },
 })
 
 export default styles;
