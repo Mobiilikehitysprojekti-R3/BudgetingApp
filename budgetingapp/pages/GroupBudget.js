@@ -4,7 +4,7 @@ import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setG
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 import { Ionicons } from '@expo/vector-icons';
-import Ionicons from '@expo/vector-icons/Ionicons';
+//import Ionicons from '@expo/vector-icons/Ionicons';
 
 /*
   The GroupBudget component allows users to manage a group budget.
