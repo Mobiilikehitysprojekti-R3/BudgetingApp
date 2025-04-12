@@ -1219,5 +1219,5 @@ export {
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
     addGroupBudgetField, setGroupBudget, getUserByGroupId,
-    removeMemberFromGroup, addMemberToGroup
+    removeMemberFromGroup, addMemberToGroup,
 };
