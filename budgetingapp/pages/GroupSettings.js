@@ -1,18 +1,42 @@
 import React, { useEffect, useState } from 'react'
 import { FlatList, View, Text, Alert, } from 'react-native'
-import { getUserByGroupId, removeMemberFromGroup } from '../firebase/firestore'
+import { 
+  getUserByGroupId, 
+  removeMemberFromGroup, 
+  addMemberToGroup, 
+  matchContactsToUsers 
+} from '../firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from '../styles'
+import AddMembersModal from '../components/AddMembersModal';
 
 export default function GroupSettings({ route }) {
   const { groupId } = route.params
   const [members, setmembers] = useState([])
   const [ownerId, setOwnerId] = useState(null)
+  const [openAddMembersModal, setOpenAddMembersModal] = useState(false)
+  const [contacts, setContacts] = useState([])
 
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
-
+/*
+  useEffect(() => {
+    const fetchMatchedContacts = async () => {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status !== 'granted') return;
+  
+      const { data } = await Contacts.getContactsAsync({
+        fields: [Contacts.Fields.PhoneNumbers],
+      });
+  
+      const matched = await matchContactsToUsers(data || []);
+      setContacts(matched); // these are all matched & registered users
+    };
+  
+    fetchMatchedContacts();
+  }, []);
+*/
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -54,6 +78,10 @@ export default function GroupSettings({ route }) {
     )
   }
 
+  handleCloseModal = async () => {
+    setOpenAddMembersModal(false)
+  }
+
   return (
     <View>
       <Text style={styles.title}>Group settings</Text>
@@ -77,6 +105,19 @@ export default function GroupSettings({ route }) {
           </View>
         )}
       />
+
+{isOwner && (
+  <Text
+    style={styles.link}
+    onPress={() => setOpenAddMembersModal(true)}
+  >
+    + Add Members
+  </Text>
+)}
+<AddMembersModal
+  visible={openAddMembersModal}
+  onClose={handleCloseModal}
+/>
       </View>
     </View>
   )
