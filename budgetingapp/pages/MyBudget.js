@@ -16,7 +16,6 @@ import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
 
-
 /* 
     The MyBudget component allows users to manage and track their budget.
     
