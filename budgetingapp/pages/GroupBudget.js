@@ -140,7 +140,7 @@ export default function GroupBudget({ route, navigation }) {
 
   const handleSlicePress = (category) => {
     setActiveCategory(category)
-  setDetailModalVisible(true)
+    setDetailModalVisible(true)
   }
 
   useEffect(() => {
