@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TextInput, Button, Alert, TouchableOpacity, Modal } from 'react-native';
 import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget, deleteBudget } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import { Calendar } from 'react-native-calendars';
 
 /*
   The GroupBudget component allows users to manage a group budget.
@@ -14,14 +16,22 @@ import { Ionicons } from '@expo/vector-icons';
 */
 
 export default function GroupBudget({ route, navigation }) {
+  const categories = ['groceries', 'essentials', 'entertainment', 'other']
+
   const { budgetId } = route.params
   const [groupBudget, setGroupBudgetState] = useState(null)
-  const [fieldName, setFieldName] = useState('')
+  const [expenseName, setExpenseName] = useState('')
   const [fieldValue, setFieldValue] = useState('')
   const [initialBudget, setInitialBudget] = useState('')
-  const [group, setGroup] = useState(null);
   const [isEditingRemaining, setIsEditingRemaining] = useState(false)
   const [newRemainingValue, setNewRemainingValue] = useState('')
+  const [activeCategory, setActiveCategory] = useState(null)
+  const [detailModalVisible, setDetailModalVisible] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState(categories[0])
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [startDate, setStartDate] = useState(null)
+  const [endDate, setEndDate] = useState(null)
+  const [markedDates, setMarkedDates] = useState({})
 
   // Load group budget data
   const loadGroupBudget = async () => {
@@ -71,25 +81,25 @@ export default function GroupBudget({ route, navigation }) {
   // Handle adding an expense field
   const handleAddField = async () => {
     const value = parseFloat(fieldValue)
-    if (!fieldName || isNaN(value) || value <= 0) {
+    if (!expenseName || isNaN(value) || value <= 0) {
       Alert.alert('Error', 'Please enter a valid name and amount.')
       return
     }
 
-    const result = await addGroupBudgetField(budgetId, fieldName, value)
+    const result = await addGroupBudgetField(budgetId, selectedCategory, expenseName, value, selectedDate)
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
-      setFieldName('')
+      setExpenseName('')
       setFieldValue('')
       loadGroupBudget()
     }
   }
 
   // Handle deleting an expense field
-  const handleDeleteField = async (field) => {
+  const handleDeleteField = async (category, expense) => {
     const confirm = await new Promise((resolve) =>
-      Alert.alert('Delete Field', `Are you sure you want to delete "${field}"?`, [
+      Alert.alert('Delete Field', `Are you sure you want to delete "${expense}" from "${category}"??`, [
         { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
         { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
       ])
@@ -97,7 +107,7 @@ export default function GroupBudget({ route, navigation }) {
 
     if (!confirm) return
 
-    const result = await deleteGroupBudgetField(budgetId, field)
+    const result = await deleteGroupBudgetField(budgetId, category, expense)
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
@@ -126,8 +136,12 @@ export default function GroupBudget({ route, navigation }) {
     } else {
         console.log("Budget deletion canceled.");
     }
-};
+  };
 
+  const handleSlicePress = (category) => {
+    setActiveCategory(category)
+    setDetailModalVisible(true)
+  }
 
   useEffect(() => {
     loadGroupBudget()
@@ -141,9 +155,38 @@ export default function GroupBudget({ route, navigation }) {
     )
   }
 
+  const filteredBudget = {}
+    Object.entries(groupBudget.budget || {}).forEach(([category, entries]) => {
+      filteredBudget[category] = {}
+      Object.entries(entries).forEach(([name, { amount, date }]) => {
+        if (!startDate || !endDate || (date >= startDate && date <= endDate)) {
+          filteredBudget[category][name] = amount
+      }
+    })
+  })
+
   return (
+    <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={100}
+        >
     <ScrollView style={styles.scrollView}>
       <Text style={styles.title}>Group Budget</Text>
+
+      <Calendar
+        onDayPress={(day) => setSelectedDate(day.dateString)}
+        markedDates={{
+          ...markedDates,
+          ...(selectedDate && {
+            [selectedDate]: {
+              selected: true,
+              selectedColor: '#00adf5',
+              marked: markedDates[selectedDate]?.marked,
+              dotColor: markedDates[selectedDate]?.dotColor
+            }
+        })
+      }}/>
 
       {groupBudget.remainingBudget === undefined ? (
         <View>
@@ -192,11 +235,23 @@ export default function GroupBudget({ route, navigation }) {
               )}
           </View>
 
+          <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+            dropdownIconColor="#4F4F4F">
+
+            {categories.map((cat) => (
+              <Picker.Item key={cat} label={cat} value={cat} />
+            ))}
+          </Picker>
+        </View>
+
           <TextInput
             style={styles.inputActive}
             placeholder="New field name"
-            value={fieldName}
-            onChangeText={setFieldName}
+            value={expenseName}
+            onChangeText={setExpenseName}
           />
 
           <TextInput
@@ -211,25 +266,44 @@ export default function GroupBudget({ route, navigation }) {
         </>
       )}
 
-      <BudgetPieChart data={groupBudget.budget || {}} />
+      <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
       <Text style={styles.title2}>Group Expenses:</Text>
-      {groupBudget.budget && Object.entries(groupBudget.budget).map(([category, amount]) => (
-        <View key={category} style={styles.budgetItem}>
-          <Text style={styles.budgetText}>{category}: ${amount}</Text>
-          <TouchableOpacity onPress={() => handleDeleteField(category)}>
-            <Text style={styles.deleteButton}>❌</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+      {Object.entries(filteredBudget).map(([category, expenses]) => {
+          const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+          return (
+            <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
+              <Text>{category.toUpperCase()}: ${total}</Text>
+            </TouchableOpacity>
+          );
+        })}
 
+      <Modal visible={detailModalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+              <ScrollView style={{ maxHeight: 300 }}>
+                {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
+                  <View key={name} style={styles.budgetItem}>
+                    <Text>{name}: ${value}</Text>
+                    <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
+                      <Text style={styles.deleteButton}>❌</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+              <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
+                <Text style={styles.buttonTextMiddle}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-                  <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteBudgetPress}>
-                      <Text style={styles.deleteText}>Delete budget</Text>
-                              <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
-                  </TouchableOpacity>
-              
-
+        <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteBudgetPress}>
+          <Text style={styles.deleteText}>Delete budget</Text>
+            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+        </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
