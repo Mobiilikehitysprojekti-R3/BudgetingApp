@@ -146,6 +146,7 @@ export default function GroupBudget({ route, navigation }) {
     setDetailModalVisible(true)
   }
 
+
   useEffect(() => {
     loadGroupBudget()
   }, [budgetId])
