@@ -1328,37 +1328,22 @@ const removeMemberFromGroup = async (groupId, memberUid) => {
 
 }
 
-const addMemberToGroup = async (groupId, selectedMembers) => {
-  console.log("mit vit")
-  const user = auth.currentUser
+const addMemberToGroup = async (groupId, members) => {
   try {
-    //Get user info from users collection
-    const userRef = doc(db, "users", user.uid)
-    const userSnap = await getDoc(userRef)
-    console.log("plääh")
-    if (!userSnap.exists()) {
-      throw new Error("User not found")
-    }
-    const userData = userSnap.data()
-    console.log("mlkdsmvöobeaä")
-    //Prepare member object to add
-    console.log("Ihn sam")
-    const newMember = {
-      name: userData.name,
-      phone: userData.phone,
-      uid: user.uid,
-    }
-    
-    //Add to group members
     const groupRef = doc(db, "groups", groupId)
     await updateDoc(groupRef, {
-      members: arrayUnion(newMember)
+      members: arrayUnion(...members)
     })
-    
-    console.log("Member added succesfully!")
+
+    const updatePromises = members.map(member => {
+      const userRef = doc(db, "users", member.uid)
+      return updateDoc(userRef, {
+        groupsId: arrayUnion(groupId)
+      })
+    })
+    await Promise.all(updatePromises)
   } catch (error) {
-    console.error("Error adding member to group:", error)
-    throw error
+    console.error("Error adding members: to group: ", error)
   }
 }
 
