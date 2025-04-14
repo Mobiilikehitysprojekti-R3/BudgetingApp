@@ -24,9 +24,9 @@ import { auth, db, deleteUser } from "./config";
           (createGroupBudget, fetchGroupBudgets, setGroupBudget, fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField)
       * GROUP 
           (createGroup, normalizePhoneNumber, getRegisteredUsers, matchContactsToUsers, fetchUserGroups, fetchGroupById, deleteGroup)
-	  * MESSAGE 
+	    * MESSAGE 
           (sendMessage, listenToMessages, markMessagesAsRead)
-	  * GROUP MEMBER 
+	    * GROUP MEMBER 
           (getUserByGroupId, removeMemberFromGroup, addMemberToGroup)
 */
 
