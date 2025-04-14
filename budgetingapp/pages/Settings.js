@@ -26,6 +26,8 @@ export default function Settings({ navigation }) {
   const [isPasswordEditing, setIsPasswordEditing] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const toggleTheme = () => setIsDarkMode((prev) => !prev)
 
   //Fetch user data
   useEffect(() => {
@@ -219,6 +221,18 @@ export default function Settings({ navigation }) {
           </View>
         </View>
       </Modal>
+
+      <View style={styles.settingsForm}>
+  <Text style={isDarkMode ? styles.linkDark : styles.link}>Theme</Text>
+  <TouchableOpacity onPress={toggleTheme}>
+    <Ionicons
+      name={isDarkMode ? "sunny-outline" : "moon-outline"}
+      size={20}
+      color="#4F4F4F"
+    />
+  </TouchableOpacity>
+</View>
+
       {/*Sign Out Button */}
       <TouchableOpacity style={styles.settingsButton} onPress={handleLogout}>
         <Text style={styles.buttonTextMiddle}>Sign Out</Text>
