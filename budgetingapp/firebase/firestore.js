@@ -33,11 +33,12 @@ import { auth, db, deleteUser } from "./config";
         /* FUNCTIONS FOR AUTHENTICATION AND ACCOUNT STARTS HERE */
 
 // Listen for authentication state changes
+let unsubscribeFromBudgetChanges
 onAuthStateChanged(auth, () => {
     const user = auth.currentUser;
     if (user) {
         console.log("User logged in:", user.uid);
-        listenToUserBudgetChanges()
+        unsubscribeFromBudgetChanges = listenToUserBudgetChanges()
         // Call functions only after the user is logged in
 
         updateUserIncome(50000);
@@ -45,6 +46,10 @@ onAuthStateChanged(auth, () => {
         updateRemainingUserBudget(10000);
         getUserData();
     } else {
+      // User is logged out, clean up any active listeners
+      if (unsubscribeFromBudgetChanges) {
+        unsubscribeFromBudgetChanges()
+    }
         //console.error("No user logged in.");
     }
 });
@@ -717,7 +722,7 @@ const listenToUserBudgetChanges = () => {
   const userRef = doc(db, "users", user.uid)
 
   // Set up a real-time listener for changes to the user's document
-  onSnapshot(userRef, async (doc) => {
+  const unsubscribe = onSnapshot(userRef, async (doc) => {
       if (doc.exists()) {
           const updatedBudget = doc.data().budget // Get updated budget value
 
@@ -739,6 +744,7 @@ const listenToUserBudgetChanges = () => {
           console.log("Shared budgets updated successfully!")
       }
   })
+  return unsubscribe
 }
 
 // Delete a shared budget in a specific group

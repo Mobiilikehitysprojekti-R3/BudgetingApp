@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
 import { auth, createUserWithEmailAndPassword, db } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import styles from "../styles"
+import { ThemeContext } from '../context/ThemeContext';
 
 /* 
     The SignUp component allows users to register by providing
@@ -20,6 +21,7 @@ export default function SignUp({ navigation }) {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const { isDarkMode } = useContext(ThemeContext)
 
   // Function to handle user registration
   const handleRegister = async () => {
@@ -66,22 +68,22 @@ export default function SignUp({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
       <Text style={styles.title}>SIGN UP</Text>
-      <View style={styles.form}>
+      <View style={isDarkMode ? styles.formDarkMode : styles.form}>
         <Text style={styles.link}>Name</Text>
         <TextInput 
           placeholder="" 
           value={name} 
           onChangeText={setName} 
-          style={styles.formInput} 
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput} 
         />
         <Text style={styles.link}>Email</Text>
         <TextInput 
           placeholder="" 
           value={email} 
           onChangeText={setEmail} 
-          style={styles.formInput} 
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput} 
           keyboardType="email-address" 
         />
         <Text style={styles.link}>Phone number</Text>
@@ -89,7 +91,7 @@ export default function SignUp({ navigation }) {
           placeholder="" 
           value={phone} 
           onChangeText={setPhone} 
-          style={styles.formInput} 
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput} 
           keyboardType="phone-pad" 
         />
         <Text style={styles.link}>Password</Text>
@@ -97,7 +99,7 @@ export default function SignUp({ navigation }) {
           placeholder="" 
           value={password} 
           onChangeText={setPassword} 
-          style={styles.formInput} 
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput} 
           secureTextEntry 
         />
       </View> 

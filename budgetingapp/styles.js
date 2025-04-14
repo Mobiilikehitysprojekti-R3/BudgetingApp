@@ -8,6 +8,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: "#FFF",
     },
+    membersContainer: {
+        margin: 15
+    },
     /* Titles: sign in, sign up, settings, create group */
     title: {
         fontSize: 24,
@@ -26,6 +29,15 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 10,
         color: "#4F4F4F"
+    },
+    /* Text */
+    regularText: {
+        fontSize: 16,
+        color: '#000'
+    },
+    listText: {
+        fontSize: 14,
+        color: '#000'
     },
     /* Sign in and sign up "forms" */
     form: {
@@ -120,7 +132,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
     profile: {
-        margin: 40,
+        margin: 30,
     },
     avatar: {
         width: 150,
@@ -143,7 +155,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 10,
       },
-      inputInactive: {
+    inputInactive: {
         backgroundColor: '#f0f0f0',
         color: '#aaaaaa', // Greyed out text color
         padding: 10,
@@ -151,7 +163,7 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 5,
         marginBottom: 10,
-      },
+    },
     /* Modal layout */
     modalOverlay: {
         flex: 1,
@@ -299,7 +311,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
-    fakeInput: {
+    /*fakeInput: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -313,7 +325,7 @@ const styles = StyleSheet.create({
         color: "#4F4F4F",
         marginBottom: 10,
         width: "90%"
-    },
+    },*/
     /* GroupBudget page */
     rowContainer: {
         marginVertical: 10,
@@ -334,6 +346,130 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5
+    },
+
+    /* DARK MODE */
+    /* Styling for containers for the entire application */
+    containerDarkMode: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#1A1A1A",
+    },
+    /* Titles: sign in, sign up, settings, create group */
+    titleDarkMode: {
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
+        color: "#A984BE"
+    },
+    /* Dark title */
+    titleLight: {
+        fontSize: 24,
+        marginBottom: 20,
+        color: "#FFF"
+    },
+    /* A smaller title */
+    subtitleDarkMode: {
+        fontSize: 18,
+        marginBottom: 10,
+        color: "#FFF"
+    },
+    /* Text */
+    regularTextDarkMode: {
+        fontSize: 16,
+        color: '#fff'
+    },
+    listTextDarkMode: {
+        fontSize: 14,
+        color: '#fff'
+    },
+    /* Sign in and sign up "forms" */
+    formDarkMode: {
+        backgroundColor: "#2C2C2C",
+        width: "80%",
+        padding: 20,
+        borderRadius: 18,
+        marginBottom: 10,
+    },
+    /* Form with black text and text centered in the middle */
+    formTwoDarkMode: {
+        backgroundColor: "#2C2C2C",
+        width: "80%",
+        padding: 20,
+        borderRadius: 18,
+        marginBottom: 10,
+        alignItems: "center",
+    },
+    /* Input fields in forms */
+    formInputDarkMode: {
+        backgroundColor: "#444444",
+        color: '#fff',
+        borderWidth: 1,
+        borderColor: "#6B6B6B",
+        height: "30",
+        marginBottom: 5,
+        textAlignVertical: "center",
+        paddingVertical: 0,
+        paddingHorizontal: 10,
+    },
+    inputActiveDarkMode: {
+        backgroundColor: '#444444',
+        color: '#FFF',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#6B6B6B',
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    inputInactiveDarkMode: {
+        backgroundColor: '#303030',
+        color: '#6B6B6B',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#6B6B6B',
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    /* Modal layout */
+    modalOverlayDarkMode: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContentDarkMode: {
+        width: "85%",
+        backgroundColor: "#1A1A1A",
+        borderRadius: 18,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    scrollViewDarkMode: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: '#1A1A1A',
+    },
+    settingsContainerDarkMode: {
+        backgroundColor: '#1A1A1A',
+        paddingTop: 40,
+        alignItems: "center",
+    },
+    chatContainerDarkMode: {
+        position: 'absolute',
+        bottom: 80,
+        right: 25,
+        backgroundColor: '#1A1A1A',
+        borderRadius: 25,
+        padding: 10,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
     },
 })
 

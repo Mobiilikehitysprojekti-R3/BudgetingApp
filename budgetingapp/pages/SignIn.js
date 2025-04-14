@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { View, TextInput, Text, Alert, TouchableOpacity } from "react-native";
 import { auth, signInWithEmailAndPassword } from "../firebase/config";
 import styles from "../styles";
+import { ThemeContext } from '../context/ThemeContext';
 
 /* 
     The SignIn allows users to log in by providing
@@ -13,6 +14,7 @@ export default function SignIn({ navigation }) {
   // useState hooks to store input values from the user
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { isDarkMode } = useContext(ThemeContext)
 
   // Function to handle user sign in
   const handleSignIn = async () => {
@@ -43,15 +45,15 @@ export default function SignIn({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
       <Text style={styles.title}>SIGN IN</Text>
-      <View style={styles.form}>
+      <View style={isDarkMode ? styles.formDarkMode : styles.form}>
         <Text style={styles.link}>Email</Text>
         <TextInput
           placeholder=""
           value={email}
           onChangeText={setEmail}
-          style={styles.formInput}
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
           keyboardType="email-address"
         />
         <Text style={styles.link}>Password</Text>
@@ -59,7 +61,7 @@ export default function SignIn({ navigation }) {
           placeholder=""
           value={password}
           onChangeText={setPassword}
-          style={styles.formInput}
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
           secureTextEntry
         />
       </View>

@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { matchContactsToUsers, addMemberToGroup } from '../firebase/firestore'
 import * as Contacts from 'expo-contacts'
 import { FlatList, Modal, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from "@expo/vector-icons/Ionicons"
 import styles from '../styles'
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function AddMembersModal({ visible, onClose, groupId, currentGroupMembers, onMembersUpdated }) {
   const [suggestedMembers, setSuggestedMembers] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
+  const { isDarkMode } = useContext(ThemeContext)
 
   useEffect(() => {
     const fetchSuggestedMembers = async () => {
@@ -59,18 +61,35 @@ export default function AddMembersModal({ visible, onClose, groupId, currentGrou
       visible={visible}
       animationType='slide'
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-        <Ionicons name="close" size={24} color="black" onPress={onClose}/>
-        <Text>Add Members to Group</Text>
+      <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+        <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+        <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
+        <Text style={styles.link}>Add Members to Group</Text>
         <FlatList
           data={suggestedMembers}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => toggleMemberSelection(item)}>
-              <Text style={{ padding: 10, backgroundColor: selectedMembers.includes(item) ? 'lightblue' : 'white' }}>
-                {item.contactName || item.name} ({item.phone})
-              </Text>
+              <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 10,
+                  backgroundColor: selectedMembers.includes(item)
+                  ? (isDarkMode ? '#3A3A3A' : '#D0E6FF')
+                  : (isDarkMode ? '#1F1F1F' : 'white'),
+                  borderRadius: 8,
+                  marginBottom: 8
+                }}>
+                <Ionicons 
+                  name="person" 
+                  size={20}
+                  color={isDarkMode ? "#fff" : "#000"} 
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={isDarkMode ? styles.listTextDarkMode : styles.listText}>
+                  {item.contactName} ({item.name}) ({item.phone})
+                </Text>
+                </View>
             </TouchableOpacity>
           )}
         />

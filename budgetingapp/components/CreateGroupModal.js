@@ -1,9 +1,10 @@
 import * as Contacts from "expo-contacts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, Alert, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { matchContactsToUsers, createGroup } from "../firebase/firestore";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from "../styles";
+import { ThemeContext } from '../context/ThemeContext';
 
 /* 
     The CreateGroup component allows users to create a new budgeting group
@@ -19,6 +20,7 @@ export default function CreateGroupModal({ visible, onClose }) {
   const [matchedUsers, setMatchedUsers] = useState([])
   const [groupName, setGroupName] = useState("")
   const [selectedMembers, setSelectedMembers] = useState([])
+  const { isDarkMode } = useContext(ThemeContext)
 
   // Request contact permissions and fetch contacts.
   useEffect(() => {
@@ -70,35 +72,53 @@ export default function CreateGroupModal({ visible, onClose }) {
         onRequestClose={onClose}
       >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-				<Ionicons name="close" size={24} color="black" onPress={onClose}/>
-        <Ionicons name="man" size={100} color="black"/>
+      <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+        <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+				<Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
+        <Ionicons name="man" size={100} color={isDarkMode ? "#fff" : "#000"}/>
           <Text style={styles.link}>Group name</Text>
-          <TextInput 
-            placeholder="Enter group name" 
-            value={groupName} 
+          <TextInput
+            placeholder="Enter group name"
+            placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+            value={groupName}
             onChangeText={setGroupName}
-            style={styles.formInput}
+            style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
           />
           <Text style={styles.link}>Suggested Members</Text>
           <FlatList
             data={matchedUsers}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-          <Text style={{ fontSize: 16, alignItems: "center", marginTop: 5}} onPress={() => toggleSelection(item)}>
-            <Ionicons name="person-sharp" size={16} color="black" />
-            {selectedMembers.includes(item) ? "✔ " : ""} {item.contactName} ({item.name})
-          </Text>
-          )}
-          />
-          <TouchableOpacity style={styles.buttonForm} onPress={handleCreateGroup}>
-            <Text style={styles.buttonTextMiddle}>Create group</Text>
-          </TouchableOpacity>
+              <TouchableOpacity onPress={() => toggleSelection(item)}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 10,
+                backgroundColor: selectedMembers.includes(item) 
+                ? (isDarkMode ? '#3A3A3A' : '#D0E6FF') 
+                : (isDarkMode ? '#1F1F1F' : 'white'),
+                borderRadius: 8,
+                marginBottom: 8,
+              }}>
+            <Ionicons 
+              name="person" 
+              size={20} 
+              color={isDarkMode ? "#fff" : "#000"} 
+              style={{ marginRight: 10 }}
+            />
+            <Text style={isDarkMode ? styles.listTextDarkMode : styles.listText}>
+              {item.contactName} ({item.name})
+            </Text>
+              </View>
+              </TouchableOpacity>
+            )}/>
+
+        <TouchableOpacity style={styles.buttonForm} onPress={handleCreateGroup}>
+          <Text style={styles.buttonTextMiddle}>Create Group</Text>
+        </TouchableOpacity>
         </View>
       </View>
       </TouchableWithoutFeedback>
     </Modal>
-
   )
 }

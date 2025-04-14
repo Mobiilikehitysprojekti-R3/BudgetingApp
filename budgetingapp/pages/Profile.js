@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { TouchableOpacity, View, Text, Image, Alert } from "react-native";
 import  Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
@@ -9,6 +9,7 @@ import { fetchUserGroups, getUserData } from "../firebase/firestore";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 import * as ImageManipulator from "expo-image-manipulator";
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function Profile({ navigation }) {
   const [userData, setUserData] = useState(null)
@@ -16,6 +17,7 @@ export default function Profile({ navigation }) {
   const [name, setName] = useState("");
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
+  const { isDarkMode } = useContext(ThemeContext)
 
   // Fetch user data
   useEffect(() => {
@@ -162,36 +164,35 @@ export default function Profile({ navigation }) {
     )
   }
 
-    
   useEffect(() => {
     getUserGroups();
     //loadUserProfilePicture()
   }, []);
 
     return (
-        <View style={styles.container}>
+        <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
             {/* Settings icon */}
             <Ionicons 
                 name="settings-outline" 
                 size={24} 
-                color="#4F4F4F" 
+                color={isDarkMode ? "#fff" : "#4F4F4F"}
                 style={{ position: "absolute", top: 30, right: 25}}
                 onPress={() => navigation.navigate("Settings")}
             />
             {/* Profile section */}
             <View style={styles.profile}>
-                <Image 
+                <Image
                     source={image ? { uri: image } : defaultAvatar}
                     style={styles.avatar}
                 />
                 <Feather 
                     name="edit-2" 
                     size={20} 
-                    color="#4F4F4F"
+                    color={isDarkMode ? "#fff" : "#4F4F4F"} 
                     onPress={handleEditPhoto}
                 />
             </View>
-            <Text>{name}</Text>
+            <Text style={isDarkMode ? styles.titleLight : styles.titleDark}>{name}</Text>
             {/* Buttons */}
             <TouchableOpacity style={styles.buttonOne} onPress={() => navigation.navigate("MyBudget")}>
                 <Text style={styles.buttonText}>
