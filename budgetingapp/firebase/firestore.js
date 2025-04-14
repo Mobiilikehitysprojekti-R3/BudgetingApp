@@ -1161,16 +1161,6 @@ const deleteGroup = async (groupId) => {
         return;
     }
 
-    await deleteDoc(groupRef);
-    console.log("Group deleted successfully!");
-
-    //const groupData = groupSnap.data();
-
-      if (groupData.owner !== user.uid) {
-          console.error("User  is not the owner of the group.");
-          return;
-      }
-
       // Fetch all budgets associated with the group
       const budgetsRef = collection(db, "groupBudget");
       const q = query(budgetsRef, where("groupId", "==", groupId));
@@ -1180,9 +1170,20 @@ const deleteGroup = async (groupId) => {
       const deleteBudgetPromises = budgetsSnap.docs.map((budgetDoc) => deleteBudget(budgetDoc.id));
       await Promise.all(deleteBudgetPromises);
 
+      // Find the shared budget where the userId matches the logged-in user
+      const sharedBudgetsRef = collection(db, "sharedBudgets")
+
+      const c = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
+
+      const querySnapshot = await getDocs(c)
+
+      // Delete all matching budget documents
+      const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref))
+      await Promise.all(deletePromises)
+
       // Now delete the group
       await deleteDoc(groupRef);
-      console.log("Group and associated budgets deleted successfully!");
+      console.log("Group deleted successfully!");
   } catch (error) {
       console.error("Error deleting group:", error.message);
   }};
