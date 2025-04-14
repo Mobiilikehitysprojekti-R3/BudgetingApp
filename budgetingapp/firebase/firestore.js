@@ -758,7 +758,7 @@ const deleteSharedBudget = async (groupId) => {
       // - The userId matches the logged-in user
       // - The groupId matches the provided groupId
       const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
-
+    
       // Execute the query and get the matching documents
       const querySnapshot = await getDocs(q)
 
