@@ -1170,24 +1170,35 @@ const deleteGroup = async (groupId) => {
       const deleteBudgetPromises = budgetsSnap.docs.map((budgetDoc) => deleteBudget(budgetDoc.id));
       await Promise.all(deleteBudgetPromises);
 
-      // Find the shared budget where the userId matches the logged-in user
-      const sharedBudgetsRef = collection(db, "sharedBudgets")
-
-      const c = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
-
-      const querySnapshot = await getDocs(c)
-
-      // Delete all matching budget documents
-      const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref))
-      await Promise.all(deletePromises)
-
-      // Now delete the group
+      // Removes the groupId from all users who are members of the group
+      const members = groupData.members || [];
+      const updatePromises = members.map(async (member) => {
+        const userRef = doc(db, "users", member.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const updatedGroups = (userData.groupsId || []).filter(id => id !== groupId);
+            await updateDoc(userRef, {
+                groupsId: updatedGroups
+            });
+        }
+      });
+      await Promise.all(updatePromises);
+  
+      // Deletes all shared budgets associated with the group
+      const sharedBudgetsRef = collection(db, "sharedBudgets");
+      const sharedBudgetsQuery = query(sharedBudgetsRef, where("groupId", "==", groupId));
+      const sharedBudgetsSnap = await getDocs(sharedBudgetsQuery);
+      const deleteSharedBudgetsPromises = sharedBudgetsSnap.docs.map((doc) => deleteDoc(doc.ref));
+      await Promise.all(deleteSharedBudgetsPromises);
+  
+      // deletes the group
       await deleteDoc(groupRef);
       console.log("Group deleted successfully!");
-  } catch (error) {
-      console.error("Error deleting group:", error.message);
-  }};
-    
+    } catch (error) {
+        console.error("Error deleting group:", error.message);
+    }
+  };
 
         /* FUNCTIONS FOR GROUP ENDS HERE */
 
