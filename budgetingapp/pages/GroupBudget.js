@@ -6,6 +6,7 @@ import styles from "../styles.js";
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { Calendar } from 'react-native-calendars';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 /*
   The GroupBudget component allows users to manage a group budget.
@@ -32,6 +33,8 @@ export default function GroupBudget({ route, navigation }) {
   const [startDate, setStartDate] = useState(null)
   const [endDate, setEndDate] = useState(null)
   const [markedDates, setMarkedDates] = useState({})
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
 
   // Load group budget data
   const loadGroupBudget = async () => {
@@ -234,6 +237,42 @@ export default function GroupBudget({ route, navigation }) {
             </View>
               )}
           </View>
+
+          <View style={{ marginVertical: 10 }}>
+          <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
+            <Text style={styles.buttonTextMiddle}>
+              {startDate ? `Start: ${startDate}` : 'Select Start Date'}
+            </Text>
+          </TouchableOpacity>
+          {showStartPicker && (
+            <DateTimePicker
+              value={startDate ? new Date(startDate) : new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowStartPicker(false);
+                if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
+              }}
+            />
+          )}
+
+          <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
+            <Text style={styles.buttonTextMiddle}>
+              {endDate ? `End: ${endDate}` : 'Select End Date'}
+            </Text>
+          </TouchableOpacity>
+          {showEndPicker && (
+            <DateTimePicker
+              value={endDate ? new Date(endDate) : new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowEndPicker(false);
+                if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
+              }}
+            />
+          )}
+        </View>
 
           <View style={styles.pickerWrapper}>
           <Picker

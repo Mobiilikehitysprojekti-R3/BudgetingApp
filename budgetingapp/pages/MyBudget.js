@@ -49,7 +49,6 @@ export default function MyBudget() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-
   const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
 
 
