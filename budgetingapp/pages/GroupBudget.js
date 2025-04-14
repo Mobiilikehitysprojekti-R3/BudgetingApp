@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TextInput, Button, Alert, TouchableOpacity } fr
 import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
+import { Ionicons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 /*
@@ -19,6 +20,7 @@ export default function GroupBudget({ route }) {
   const [fieldName, setFieldName] = useState('')
   const [fieldValue, setFieldValue] = useState('')
   const [initialBudget, setInitialBudget] = useState('')
+  const [group, setGroup] = useState(null);
   const [isEditingRemaining, setIsEditingRemaining] = useState(false)
   const [newRemainingValue, setNewRemainingValue] = useState('')
 

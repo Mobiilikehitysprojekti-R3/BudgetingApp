@@ -39,6 +39,8 @@ export default function CreateGroupModal({ visible, onClose }) {
     setSelectedMembers((prev) =>
       prev.includes(user) ? prev.filter((u) => u !== user) : [...prev, user]
     )
+    console.log("Selected member: ", selectedMembers)
+
   }
 
   const handleCreateGroup = async () => {

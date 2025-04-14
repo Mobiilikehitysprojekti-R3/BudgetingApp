@@ -992,11 +992,11 @@ const fetchGroupById = async (groupId) => {
 }
 
 const deleteGroup = async (groupId) => {
-    const user = auth.currentUser ;
-    if (!user) {
-        console.error("No user logged in.");
-        return;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+      console.error("No user logged in.");
+      return;
+  }
 
     try {
         const groupRef = doc(db, "groups", groupId);
@@ -1007,7 +1007,20 @@ const deleteGroup = async (groupId) => {
             return;
         }
 
-        const groupData = groupSnap.data();
+      const groupData = groupSnap.data();
+      if (groupData.owner !== user.uid) {
+          console.error("User is not the owner of the group.");
+          return;
+      }
+
+      await deleteDoc(groupRef);
+      console.log("Group deleted successfully!");
+  } catch (error) {
+      console.error("Error deleting group:", error.message);
+  }
+};
+
+const groupData = groupSnap.data();
         if (groupData.owner !== user.uid) {
             console.error("User  is not the owner of the group.");
             return;
@@ -1107,6 +1120,29 @@ const markMessagesAsRead = async (groupId) => {
   }
 }
 
+const deleteBudget = async (budgetId) => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("No user logged in.");
+        return;
+    }
+
+    try {
+        const groupBudgetRef = doc(db, "groupBudget", budgetId);
+        const groupBudgetSnap = await getDoc(groupBudgetRef);
+
+        if (!groupBudgetSnap.exists()) {
+            console.error("Group budget does not exist.");
+            return;
+        }
+
+        await deleteDoc(groupBudgetRef);
+        console.log("Budget deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting budget:", error.message);
+    }
+};
+
         /* FUNCTIONS FOR MESSAGE ENDS HERE */
 
         /* FUNCTIONS FOR GROUP MEMBER STARTS HERE */
@@ -1182,24 +1218,38 @@ const removeMemberFromGroup = async (groupId, memberUid) => {
 
 }
 
-const addMemberToGroup = async (groupId, memberUid) => {
-  const groupRef = doc(db, "groups", groupId)
-  const userRef = doc(db, "users", memberUid)
-
-  const [groupSnap, userSnap] = await Promise.all([
-    getDoc(groupRef),
-    getDoc(userRef)
-  ])
-  //Check if the group and user documents exist
-  if (!groupSnap.exists()) throw new Error("Group not found")
-  if (!userSnap.exists()) throw new Error("User not found")
-
-  const groupData = groupSnap.data()
-  const userData = userSnap.data()
-
-  //Check if user is already member of the group
-  const isAlreadyMember = groupData.members?.some()
-
+const addMemberToGroup = async (groupId, selectedMembers) => {
+  console.log("mit vit")
+  const user = auth.currentUser
+  try {
+    //Get user info from users collection
+    const userRef = doc(db, "users", user.uid)
+    const userSnap = await getDoc(userRef)
+    console.log("plääh")
+    if (!userSnap.exists()) {
+      throw new Error("User not found")
+    }
+    const userData = userSnap.data()
+    console.log("mlkdsmvöobeaä")
+    //Prepare member object to add
+    console.log("Ihn sam")
+    const newMember = {
+      name: userData.name,
+      phone: userData.phone,
+      uid: user.uid,
+    }
+    
+    //Add to group members
+    const groupRef = doc(db, "groups", groupId)
+    await updateDoc(groupRef, {
+      members: arrayUnion(newMember)
+    })
+    
+    console.log("Member added succesfully!")
+  } catch (error) {
+    console.error("Error adding member to group:", error)
+    throw error
+  }
 }
 
         /* FUNCTIONS FOR GROUP MEMBER ENDS HERE */
@@ -1215,5 +1265,5 @@ export {
     deleteSharedBudget, deleteGroup, sendMessage, listenToMessages,
     markMessagesAsRead, fetchGroupBudgetById, deleteGroupBudgetField,
     addGroupBudgetField, setGroupBudget, getUserByGroupId,
-    removeMemberFromGroup, addMemberToGroup
+    removeMemberFromGroup, addMemberToGroup, deleteBudget
 };
