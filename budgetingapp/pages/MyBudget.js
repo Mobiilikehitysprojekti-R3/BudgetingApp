@@ -16,7 +16,6 @@ import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
 
-
 /* 
     The MyBudget component allows users to manage and track their budget.
     
@@ -50,7 +49,6 @@ export default function MyBudget() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-
   const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
 
 
