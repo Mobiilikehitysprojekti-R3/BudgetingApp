@@ -20,39 +20,22 @@ export default function GroupSettings({ route }) {
 
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
-/*
-  useEffect(() => {
-    const fetchMatchedContacts = async () => {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status !== 'granted') return;
-  
-      const { data } = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers],
-      });
-  
-      const matched = await matchContactsToUsers(data || []);
-      setContacts(matched); // these are all matched & registered users
-    };
-  
-    fetchMatchedContacts();
-  }, []);
-*/
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const fetchedMembers = await getUserByGroupId(groupId)
 
-        if (fetchedMembers) {
-          setmembers(fetchedMembers.members)
-          setOwnerId(fetchedMembers.ownerId)
-        } else {
-          setError('Failed to load group members.')
-        }
-      } catch (error) {
-        setError('Error fetching group members.')
-      } 
-    }
+  const fetchMembers = async () => {
+    try {
+      const fetchedMembers = await getUserByGroupId(groupId)
 
+      if (fetchedMembers) {
+        setmembers(fetchedMembers.members)
+        setOwnerId(fetchedMembers.ownerId)
+      } else {
+        setError('Failed to load group members.')
+      }
+    } catch (error) {
+      setError('Error fetching group members.')
+    } 
+  }
+  useEffect(() => {
     fetchMembers()
   }, [groupId])
 
@@ -117,6 +100,9 @@ export default function GroupSettings({ route }) {
 <AddMembersModal
   visible={openAddMembersModal}
   onClose={handleCloseModal}
+  groupId={groupId}
+  currentGroupMembers={members.map(member => member.uid)}
+  onMembersUpdated={fetchMembers}
 />
       </View>
     </View>

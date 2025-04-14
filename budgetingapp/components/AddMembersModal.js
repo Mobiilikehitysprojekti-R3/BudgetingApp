@@ -1,74 +1,84 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, FlatList, Modal, TouchableOpacity  } from 'react-native'
-import { addMemberToGroup, matchContactsToUsers } from '../firebase/firestore'
-import * as Contacts from 'expo-contacts'; 
-import Ionicons from '@expo/vector-icons/Ionicons';
-import styles from '../styles';
+import { matchContactsToUsers, addMemberToGroup } from '../firebase/firestore'
+import * as Contacts from 'expo-contacts'
+import { FlatList, Modal, Text, TouchableOpacity, View } from 'react-native'
+import Ionicons from "@expo/vector-icons/Ionicons"
+import styles from '../styles'
 
-
-export default function AddMembersModal({ groupId, onClose, visible}) {
-  const [matchedUsers, setMatchedUsers] = useState([])
-  const [contacts, setContacts] = useState([])
+export default function AddMembersModal({ visible, onClose, groupId, currentGroupMembers, onMembersUpdated }) {
+  const [suggestedMembers, setSuggestedMembers] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
 
-
   useEffect(() => {
-      (async () => {
+    const fetchSuggestedMembers = async () => {
+      try {
         const { status } = await Contacts.requestPermissionsAsync()
         if (status === "granted") {
-          const { data } = await Contacts.getContactsAsync()
-          if (data.length > 0) {
-            setContacts(data)
-            const matched = await matchContactsToUsers(data)
-            setMatchedUsers(matched)
-            console.log("Matched users: ",matched)
-          }
+          const { data: contacts } = await Contacts.getContactsAsync({
+            fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name]
+          })
+          const matchedMembers = await matchContactsToUsers(contacts)
+          const newSuggestedMembers = matchedMembers.filter(member => 
+            !currentGroupMembers.includes(member.uid)
+        )
+          setSuggestedMembers(newSuggestedMembers)
         }
-      })()
-    }, [])
-
-    const toggleSelection = (user) => {
-      setSelectedMembers((prev) =>
-        prev.includes(user) ? prev.filter((u) => u !== user) : [...prev, user]
-      )
-      console.log("Selected member: ", selectedMembers, user)
+      } catch (error) {
+        console.error("Error loading suggested members: ", error)
+      }
     }
+    if (visible) {
+      fetchSuggestedMembers()
+    }
+  }, [visible])
 
-  const handleAdd= async () => {
+  const handleAddMembers = async () => {
     try {
-      await addMemberToGroup(selectedMembers)
-      setSelectedMembers([])
+      await addMemberToGroup(groupId, selectedMembers)
+      if (onMembersUpdated) {
+        await onMembersUpdated()
+      }
       onClose()
     } catch (error) {
-      console.error("Failed to add user: " + error.message)
+      console.error("Error adding members: ", error)
     }
   }
+
+  const toggleMemberSelection = (member) => {
+    setSelectedMembers(prevSelected => {
+      if (prevSelected.includes(member)) {
+        return prevSelected.filter(selected => selected !== member)
+      } else {
+        return [...prevSelected, member]
+      }
+    })
+  }
+
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
+      animationType='slide'
     >
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
-				<Ionicons name="close" size={24} color="black" onPress={onClose}/>
-        <Text style={styles.link}>Suggested Members</Text>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+        <Ionicons name="close" size={24} color="black" onPress={onClose}/>
+        <Text>Add Members to Group</Text>
         <FlatList
-            data={matchedUsers}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-          <Text style={{ fontSize: 16, alignItems: "center", marginTop: 5}} onPress={() => toggleSelection(item)}>
-            <Ionicons name="person-sharp" size={16} color="black" />
-            {selectedMembers.includes(item) ? "✔ " : ""} {item.contactName} ({item.name})
-          </Text>
+          data={suggestedMembers}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => toggleMemberSelection(item)}>
+              <Text style={{ padding: 10, backgroundColor: selectedMembers.includes(item) ? 'lightblue' : 'white' }}>
+                {item.contactName || item.name} ({item.phone})
+              </Text>
+            </TouchableOpacity>
           )}
-          />
-          <TouchableOpacity style={styles.buttonForm} onPress={handleAdd}>
+        />
+        <TouchableOpacity style={styles.buttonForm} onPress={handleAddMembers}>
             <Text style={styles.buttonTextMiddle}>Add member</Text>
           </TouchableOpacity>
+        </View>
       </View>
-    </View>
     </Modal>
   )
 }
