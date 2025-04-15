@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
+import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
-import { auth, db } from '../firebase/config.js';
+import { auth } from '../firebase/config.js';
 import ChatModal from '../components/ChatModal.js';
 import { sendMessage, listenToMessages, markMessagesAsRead } from '../firebase/firestore'
 import { useFocusEffect } from '@react-navigation/native';
@@ -187,7 +187,7 @@ export default function Group({ route, navigation }) {
        />
      )}
       </View>
-      
+
       {group?.owner === auth.currentUser?.uid && (
       <Ionicons 
         name="add-circle-outline" 
