@@ -51,7 +51,6 @@ export default function MyBudget() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
 
-
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'My Budget',

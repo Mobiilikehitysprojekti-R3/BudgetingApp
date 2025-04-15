@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { FlatList, View, Text, Alert, } from 'react-native'
 import { 
   getUserByGroupId, 
@@ -10,6 +10,7 @@ import { getAuth } from 'firebase/auth'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from '../styles'
 import AddMembersModal from '../components/AddMembersModal';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function GroupSettings({ route }) {
   const { groupId } = route.params
@@ -17,6 +18,7 @@ export default function GroupSettings({ route }) {
   const [ownerId, setOwnerId] = useState(null)
   const [openAddMembersModal, setOpenAddMembersModal] = useState(false)
   const [contacts, setContacts] = useState([])
+  const { isDarkMode } = useContext(ThemeContext)
 
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
@@ -61,7 +63,7 @@ export default function GroupSettings({ route }) {
     )
   }
 
-  handleCloseModal = async () => {
+  const handleCloseModal = async () => {
     setOpenAddMembersModal(false)
   }
 
@@ -72,16 +74,17 @@ export default function GroupSettings({ route }) {
       <Text style={styles.link}>Group Members</Text>
 
       <FlatList
+        style={styles.membersContainer}
         data={members}
         keyExtractor={(item) => item.uid}
         renderItem={({ item }) => (
-          <View style={styles.fakeInput}>
-            <Text>{item.name}</Text>
+          <View style={styles.editRow}>
+            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
             {isOwner && item.uid !== ownerId && (
-              <Ionicons 
-                name="trash-outline" 
-                size={20} 
-                color="#4F4F4F" 
+              <Ionicons
+                name="person-remove-outline"
+                size={20}
+                color={isDarkMode ? "#fff" : "#4F4F4F"}
                 onPress={() => handleRemoveMember(item.uid, item.name)}
               />
             )}

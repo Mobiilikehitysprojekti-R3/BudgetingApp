@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { fetchBudgetById } from '../firebase/firestore'; 
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
+import { ThemeContext } from '../context/ThemeContext.js';
 
 /* 
     The BudgetDetails component displays information about a specific
@@ -15,6 +16,7 @@ export default function BudgetDetails({ route }) {
     const [budget, setBudget] = useState(null)
     const [selectedCategory, setSelectedCategory] = useState(null)
     const [detailModalVisible, setDetailModalVisible] = useState(false)
+    const { isDarkMode } = useContext(ThemeContext)
 
     useEffect(() => {
         const loadBudgetData = async () => {

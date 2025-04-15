@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, Alert, TextInput, Modal, ScrollView, TouchableOpacity } from 'react-native';
 import { auth, db } from '../firebase/config';
 import { getDoc, doc } from "firebase/firestore";
@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth';
 import { updateUserName, updateUserPhone, updateUserEmail, updateUserPassword, deleteAccount } from "../firebase/firestore";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from "../styles";
+import { ThemeContext } from '../context/ThemeContext';
 
 /* 
     The Settings component allows logged-in users to update 
@@ -26,7 +27,8 @@ export default function Settings({ navigation }) {
   const [isPasswordEditing, setIsPasswordEditing] = useState(false)
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
-
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext)
+  
   //Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
@@ -117,11 +119,17 @@ export default function Settings({ navigation }) {
   }
   //Style for "locked" fields
   const inputStyle = isEditing ? styles.inputActive : styles.inputInactive
+  const inputStyleDarkMode = isEditing ? styles.inputActiveDarkMode : styles.inputInactiveDarkMode
   const passwordInputStyle = isPasswordEditing ? styles.inputActive : styles.inputInactive
 
+  const themedInputStyle = isDarkMode ? inputStyleDarkMode : inputStyle;
+  const themedPasswordInputStyle = isDarkMode
+    ? (isPasswordEditing ? styles.inputActiveDarkMode : styles.inputInactiveDarkMode)
+    : passwordInputStyle;
+
   return (
-  <ScrollView style={styles.scrollView}>
-    <View style={styles.settingsContainer}>
+    <ScrollView style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
+    <View style={styles.settingsContainer}>  
       <Text style={styles.title}>Settings</Text>
       <View style={styles.settingsForm}>
         <Text style={styles.link}>Profile settings</Text>
@@ -129,14 +137,14 @@ export default function Settings({ navigation }) {
           <Ionicons
             name="pencil"
             size={20}
-            color="#4F4F4F"
+            color={isDarkMode ? "#fff" : "#4F4F4F"} 
             onPress={() => setIsEditing(true)}
           />
         ) : (
           <Ionicons
             name="save"
             size={20}
-            color="#4F4F4F"
+            color={isDarkMode ? "#fff" : "#4F4F4F"} 
             onPress={() => {
               setIsUpdatingPassword(false);
               setIsPasswordModalVisible(true);
@@ -148,17 +156,17 @@ export default function Settings({ navigation }) {
         <TextInput 
           placeholder="Name" value={name}
           onChangeText={setName} editable={isEditing}
-          style={inputStyle}
+          style={themedInputStyle}
         />
         <TextInput 
           placeholder="Phone" value={phone}
           onChangeText={setPhone} editable={isEditing}
-          style={inputStyle} keyboardType="phone-pad"
+          style={themedInputStyle} keyboardType="phone-pad"
         />
         <TextInput 
           placeholder="Email" value={email}
           onChangeText={setEmail} editable={isEditing}
-          style={inputStyle} keyboardType="email-address"
+          style={themedInputStyle} keyboardType="email-address"
         />
       </View>
       <View style={styles.settingsForm}>
@@ -167,14 +175,14 @@ export default function Settings({ navigation }) {
             <Ionicons
               name="pencil"
               size={20}
-              color="#4F4F4F"
+              color={isDarkMode ? "#fff" : "#4F4F4F"} 
               onPress={() => setIsPasswordEditing(true)}
             />
           ) : (
             <Ionicons
               name="save"
               size={20}
-              color="#4F4F4F"
+              color={isDarkMode ? "#fff" : "#4F4F4F"} 
               onPress={() => {
                 setIsUpdatingPassword(true);
                 setIsPasswordModalVisible(true);
@@ -184,22 +192,23 @@ export default function Settings({ navigation }) {
         </View>
         <View style={styles.settingsFormTwo}>
           <TextInput 
-            placeholder="New Password" 
-            value={newPassword} 
-            onChangeText={setNewPassword} 
-            editable={isPasswordEditing} 
-            style={passwordInputStyle} 
+            placeholder="New Password"
+            placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            editable={isPasswordEditing}
+            style={themedPasswordInputStyle}
             secureTextEntry
           />
         </View>
         {/* Password verification pop-up */}
       <Modal visible={isPasswordModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}> 
+        <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+          <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}> 
             <Ionicons 
               name="close" 
               size={24} 
-              color="#4F4F4F" 
+              color={isDarkMode ? "#fff" : "#4F4F4F"}
               onPress={() => {
                 setIsPasswordModalVisible(false)
                 setCurrentPassword("")
@@ -211,7 +220,7 @@ export default function Settings({ navigation }) {
               value={currentPassword} 
               onChangeText={setCurrentPassword} 
               secureTextEntry 
-              style={inputStyle} 
+              style={themedInputStyle} 
             />
             <TouchableOpacity style={styles.buttonForm} onPress={handleSave}>
               <Text style={styles.buttonTextMiddle}>Confirm</Text>
@@ -219,6 +228,18 @@ export default function Settings({ navigation }) {
           </View>
         </View>
       </Modal>
+      
+      <View style={styles.settingsForm}>
+      <Text style={styles.link}>Theme</Text>
+        <TouchableOpacity onPress={toggleTheme}>
+          <Ionicons
+            name={isDarkMode ? "sunny-outline" : "moon-outline"}
+            size={20}
+            color={isDarkMode ? "#fff" : "#4F4F4F"}
+          />
+        </TouchableOpacity>
+      </View>
+
       {/*Sign Out Button */}
       <TouchableOpacity style={styles.settingsButton} onPress={handleLogout}>
         <Text style={styles.buttonTextMiddle}>Sign Out</Text>
@@ -226,7 +247,7 @@ export default function Settings({ navigation }) {
       {/*Delete Account Section */}
       <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteUser}>
         <Text style={styles.deleteText}>Delete Account</Text>
-        <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
+        <Ionicons name="trash-outline" size={16} color={isDarkMode ? "red" : "#4F4F4F"} />
       </TouchableOpacity>
       </View>
     </ScrollView> 
