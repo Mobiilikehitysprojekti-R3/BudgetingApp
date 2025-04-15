@@ -16,6 +16,10 @@ import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
 
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
+
 export default function MyBudget() {
   const categories = ['groceries', 'essentials', 'entertainment', 'other'];
 
@@ -142,6 +146,13 @@ export default function MyBudget() {
     });
     return unsubscribe;
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserBudgetData(); // 👈 Reloads budget when the screen gains focus
+    }, [])
+  );
+  
 
   useEffect(() => {
     const loadGroups = async () => {
