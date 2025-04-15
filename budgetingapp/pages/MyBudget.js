@@ -4,10 +4,10 @@ import {
   FlatList, Modal, KeyboardAvoidingView, Platform
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { addBudgetField, deleteBudgetField, shareBudgetWithGroup, fetchUserGroups } from '../firebase/firestore';
+import { addBudgetField, deleteBudgetField, shareBudgetWithGroup, fetchUserGroups, getExpandedBudget } from '../firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,17 +15,6 @@ import { Calendar } from 'react-native-calendars';
 import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
-
-
-/* 
-    The MyBudget component allows users to manage and track their budget.
-    
-    Users can:
-    - Add new budget fields with names and amounts (e.g. groceries, rent, etc.).
-    - View their remaining budget.
-    - Delete budget fields.
-    - Share their budget details with groups they belong to.
-*/
 
 export default function MyBudget() {
   const categories = ['groceries', 'essentials', 'entertainment', 'other'];
@@ -50,9 +39,7 @@ export default function MyBudget() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-
-  const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
-
+  const [recurringItems, setRecurringItems] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -69,7 +56,6 @@ export default function MyBudget() {
       ),
     });
   }, [navigation]);
-  
 
   const handleSlicePress = (category) => {
     setActiveCategory(category);
@@ -86,7 +72,7 @@ export default function MyBudget() {
 
       if (userSnap.exists()) {
         const data = userSnap.data();
-        setRemainingBudget(data.remainingBudget ?? 0);
+        setBudgetTotal(data.budgetTotal ?? 0);
 
         const validBudget = {};
         const datesWithBudget = [];
@@ -113,22 +99,40 @@ export default function MyBudget() {
 
         setBudgetFields(validBudget);
         setMarkedDates(marked);
+        calculateRemainingBudget(validBudget);
       }
     } catch (error) {
       console.error('Error fetching budget data:', error);
     }
   };
 
-  
-  useEffect(() => {
-    const calculateBudget = async () => {
-      const recurring = await getExpandedBudget(new Date());
-      const totalExpenses = recurring.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
-      setRemainingBudget((budgetTotal ?? 0) - totalExpenses);
-    };
-    calculateBudget();
-  }, [budgetTotal]);
+  const calculateRemainingBudget = async (budgetData) => {
+    const user = auth.currentUser;
+    if (!user) return;
 
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
+
+    const data = userSnap.data();
+    const totalBudget = data.budgetTotal || 0;
+
+    let manualExpenses = 0;
+    for (const category of Object.values(budgetData)) {
+      for (const expense of Object.values(category)) {
+        if (expense?.amount) {
+          manualExpenses += expense.amount;
+        }
+      }
+    }
+
+    const recurring = await getExpandedBudget(new Date());
+    const recurringExpenses = recurring
+      .filter(e => e.type === 'expense')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    setRemainingBudget(totalBudget - manualExpenses - recurringExpenses);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -139,17 +143,6 @@ export default function MyBudget() {
     return unsubscribe;
   }, []);
 
-  
-  useEffect(() => {
-    const calculateBudget = async () => {
-      const recurring = await getExpandedBudget(new Date());
-      const totalExpenses = recurring.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
-      setRemainingBudget((budgetTotal ?? 0) - totalExpenses);
-    };
-    calculateBudget();
-  }, [budgetTotal]);
-
-
   useEffect(() => {
     const loadGroups = async () => {
       const userGroups = await fetchUserGroups();
@@ -158,12 +151,11 @@ export default function MyBudget() {
     loadGroups();
   }, []);
 
-  /// Function to fetch and expand the budget data with recurring entries
   useEffect(() => {
     const fetchRecurring = async () => {
       const user = auth.currentUser;
       if (!user) return;
-  
+
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
@@ -173,7 +165,6 @@ export default function MyBudget() {
     };
     fetchRecurring();
   }, []);
-  
 
   const handleAddField = async () => {
     const value = parseFloat(fieldValue);
@@ -207,16 +198,7 @@ export default function MyBudget() {
 
     const budgetDate = selectedDate || new Date().toISOString().split('T')[0];
     const result = await addBudgetField(selectedCategory, expenseName, value, budgetDate);
-  
-    if (result.error) {
-      Alert.alert('Error', result.error);
-    } else {
-      setExpenseName('');
-      setFieldValue('');
-      setMessage(`Added "${expenseName}" to "${selectedCategory}" for $${value}`);
-      fetchUserBudgetData();
-    }
-  
+
     if (result.error) {
       Alert.alert('Error', result.error);
     } else {
@@ -289,7 +271,6 @@ export default function MyBudget() {
           keyboardType="numeric"
         />
 
-
         <Calendar
           onDayPress={(day) => setSelectedDate(day.dateString)}
           markedDates={{
@@ -346,7 +327,6 @@ export default function MyBudget() {
           <Picker
             selectedValue={selectedCategory}
             onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            
             dropdownIconColor="#4F4F4F"
           >
             {categories.map((cat) => (
@@ -369,7 +349,6 @@ export default function MyBudget() {
           keyboardType="numeric"
         />
 
-        
         <TouchableOpacity
           onPress={() => setIsRecurring(!isRecurring)}
           style={[styles.buttonForm, { backgroundColor: isRecurring ? '#66bb6a' : '#ccc' }]}
@@ -398,7 +377,7 @@ export default function MyBudget() {
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {remainingBudget !== null && (
-          <Text style={styles.remaining}>Remaining Budget: ${remainingBudget}</Text>
+          <Text style={styles.remaining}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
         )}
 
         <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
@@ -407,10 +386,12 @@ export default function MyBudget() {
           const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
           return (
             <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-              <Text>{category.toUpperCase()}: ${total}</Text>
+              <Text>{category.toUpperCase()}: €{total}</Text>
             </TouchableOpacity>
           );
         })}
+
+        {/* Modals and recurring list code stays unchanged */}
 
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
