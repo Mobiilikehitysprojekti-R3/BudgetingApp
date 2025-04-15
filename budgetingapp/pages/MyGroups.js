@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal } from 'react-native';
 import styles from '../styles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CreateGroupModal from '../components/CreateGroupModal';
 import { fetchUserGroups } from '../firebase/firestore';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function MyGroups({ navigation }) {
   const [groups, setGroups] = useState([]);
-	const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
+  const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
+  const { isDarkMode } = useContext(ThemeContext)
 
 	useEffect(() => {
 		const loadGroups = async () => {
@@ -28,7 +30,7 @@ export default function MyGroups({ navigation }) {
   	}
 
   return (
-  <View style={styles.container}>
+  <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
 		<Text style={styles.title}>MY GROUPS</Text>
 	<View style={styles.list}>
     <FlatList

@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Modal, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
 import { Ionicons } from '@expo/vector-icons';
-import { auth, db } from '../firebase/config.js';
+import { auth } from '../firebase/config.js';
 import ChatModal from '../components/ChatModal.js';
 import { sendMessage, listenToMessages, markMessagesAsRead } from '../firebase/firestore'
 import { useFocusEffect } from '@react-navigation/native';
+import { ThemeContext } from '../context/ThemeContext';
 
 /* 
   The Group component allows users to view and manage budgets within a specific group.
@@ -28,7 +29,8 @@ export default function Group({ route, navigation }) {
   const [chatVisible, setChatVisible] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [messages, setMessages] = useState([]);
-    
+  const { isDarkMode } = useContext(ThemeContext)
+  
   const loadGroupBudgets = async () => {
     console.log("Fetching budgets for groupId:", groupId);
     try {
@@ -88,28 +90,7 @@ export default function Group({ route, navigation }) {
     } catch (error) {
       console.error("Error deleting budget:", error)
     }
-  }   
-  
-const handleDeleteGroupPress = async () => {
-    // Confirmation alert
-    const confirm = await new Promise((resolve) =>
-        Alert.alert('Delete group', `Are you sure you want to delete this group?`, [
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
-        ])
-    );
-
-    // Check if the user confirmed the deletion
-    if (!confirm) return; // Exit if the user did not confirm
-
-    try {
-        await deleteGroup(groupId);
-        navigation.navigate('MyGroups')
-    } catch (error) {
-        console.error("Error deleting group:", error);
-        Alert.alert("Error", "Failed to delete group.");
-    }
-};
+  }
 
   const handleOpenCreateBudgetModal = () => {
     if (group?.owner === auth.currentUser?.uid) {
@@ -150,12 +131,12 @@ const handleDeleteGroupPress = async () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
       {/* Settings icon */}
       <Ionicons 
-        name="settings-outline" 
-        size={24} 
-        color="#4F4F4F" 
+        name="settings-outline"
+        size={24}
+        color={isDarkMode ? "#fff" : "#4F4F4F"}
         style={{ position: "absolute", top: 30, right: 25}}
         onPress={() => navigation.navigate("GroupSettings", {groupId})}
       />
@@ -164,7 +145,7 @@ const handleDeleteGroupPress = async () => {
       <View style={styles.list}>
       <Text style={styles.link}>Shared Budgets:</Text>
       {sharedBudgets.length === 0 ? (
-        <Text style={styles.noBudgetsText}>No shared budgets available.</Text>
+        <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>No shared budgets available.</Text>
       ) : (
         <FlatList
           data={sharedBudgets}
@@ -175,7 +156,7 @@ const handleDeleteGroupPress = async () => {
                 onPress={() => navigation.navigate('BudgetDetails', { budgetId: item.id })}>
                 <Text style={styles.buttonText}>View {item.userName}'s Budget</Text>
                 {item.userId === auth.currentUser?.uid && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => handleDeleteSharedBudget(item.groupId)}
                   style={styles.deleteIconForTouchable}>
                 <Ionicons name="close-outline" size={24} color="white" />
@@ -191,7 +172,7 @@ const handleDeleteGroupPress = async () => {
       <View style={styles.list}>
       <Text style={styles.link}>Group Budgets:</Text>
       {groupBudgets.length === 0 ? (
-        <Text>No budgets available.</Text>
+        <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>No budgets available.</Text>
       ) : (
       <FlatList
         data={groupBudgets}
@@ -207,11 +188,13 @@ const handleDeleteGroupPress = async () => {
      )}
       </View>
 
+      {group?.owner === auth.currentUser?.uid && (
       <Ionicons 
         name="add-circle-outline" 
         size={30} color="#A984BE" 
         onPress={handleOpenCreateBudgetModal}
       />
+      )}
       
       <CreateBudgetModal 
         visible={openCreateBudgetModal}
@@ -219,17 +202,9 @@ const handleDeleteGroupPress = async () => {
         groupId={groupId}
       />
 
-                  
-      {group.owner === auth.currentUser?.uid && (
-        <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
-          <Text style={styles.deleteText}>Delete Group</Text>
-            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
-        </TouchableOpacity>
-      )}
-
       {/* Chatbox */}
-      <TouchableOpacity style={styles.chatContainer} onPress={() => setChatVisible(true)}>
-        <Ionicons name="chatbox-ellipses-outline" size={40} color="#4F4F4F" />
+      <TouchableOpacity style={isDarkMode ? styles.chatContainerDarkMode : styles.chatContainer} onPress={() => setChatVisible(true)}>
+        <Ionicons name="chatbox-ellipses-outline" size={40} color={isDarkMode ? "#A984BE" : "#4F4F4F"} />
         {unreadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{unreadCount}</Text>

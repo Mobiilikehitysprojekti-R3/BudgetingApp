@@ -24,20 +24,21 @@ import { auth, db, deleteUser } from "./config";
           (createGroupBudget, fetchGroupBudgets, setGroupBudget, fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField)
       * GROUP 
           (createGroup, normalizePhoneNumber, getRegisteredUsers, matchContactsToUsers, fetchUserGroups, fetchGroupById, deleteGroup)
-	  * MESSAGE 
+	    * MESSAGE 
           (sendMessage, listenToMessages, markMessagesAsRead)
-	  * GROUP MEMBER 
+	    * GROUP MEMBER 
           (getUserByGroupId, removeMemberFromGroup, addMemberToGroup)
 */
 
         /* FUNCTIONS FOR AUTHENTICATION AND ACCOUNT STARTS HERE */
 
 // Listen for authentication state changes
+let unsubscribeFromBudgetChanges
 onAuthStateChanged(auth, () => {
     const user = auth.currentUser;
     if (user) {
         console.log("User logged in:", user.uid);
-        listenToUserBudgetChanges()
+        unsubscribeFromBudgetChanges = listenToUserBudgetChanges()
         // Call functions only after the user is logged in
 
         //updateUserIncome(50000);
@@ -45,6 +46,10 @@ onAuthStateChanged(auth, () => {
         //updateRemainingUserBudget(10000);
         getUserData();
     } else {
+      // User is logged out, clean up any active listeners
+      if (unsubscribeFromBudgetChanges) {
+        unsubscribeFromBudgetChanges()
+    }
         //console.error("No user logged in.");
     }
 });
@@ -717,7 +722,7 @@ const listenToUserBudgetChanges = () => {
   const userRef = doc(db, "users", user.uid)
 
   // Set up a real-time listener for changes to the user's document
-  onSnapshot(userRef, async (doc) => {
+  const unsubscribe = onSnapshot(userRef, async (doc) => {
       if (doc.exists()) {
           const updatedBudget = doc.data().budget // Get updated budget value
 
@@ -739,6 +744,7 @@ const listenToUserBudgetChanges = () => {
           console.log("Shared budgets updated successfully!")
       }
   })
+  return unsubscribe
 }
 
 // Delete a shared budget in a specific group
@@ -758,7 +764,7 @@ const deleteSharedBudget = async (groupId) => {
       // - The userId matches the logged-in user
       // - The groupId matches the provided groupId
       const q = query(sharedBudgetsRef, where("userId", "==", user.uid), where("groupId", "==", groupId))
-
+    
       // Execute the query and get the matching documents
       const querySnapshot = await getDocs(q)
 
@@ -885,54 +891,89 @@ const fetchGroupBudgetById = async (budgetId) => {
 }
 
 // Add an expense field to a group (subtract from the overall budget)
-const addGroupBudgetField = async (groupId, field, value) => {
+const addGroupBudgetField = async (groupId, category, expense, amount, date = null) => {
   if (!auth.currentUser) return { error: "Not authenticated." }
 
   const groupBudgetRef = doc(db, 'groupBudget', groupId)
   const groupBudgetSnap = await getDoc(groupBudgetRef)
   if (!groupBudgetSnap.exists()) return { error: "Group not found." }
 
-  const currentBudget = groupBudgetSnap.data().remainingBudget
-  const newRemainingBudget = currentBudget - value
+  const currentBudget = groupBudgetSnap.data().remainingBudget ?? 0
 
-  const safeField = field.replace(/[^a-zA-Z0-9_]/g, "_")
+  if (typeof amount !== 'number' || amount > currentBudget) {
+    return { error: "Invalid or insufficient budget amount." }
+  }
+
+  const safeCategory = category.replace(/[^a-zA-Z0-9_]/g, "_")
+  const safeExpense = expense.replace(/[^a-zA-Z0-9_]/g, "_")
+  const today = date || new Date().toISOString().split("T")[0]
+
+  const path = `budget.${safeCategory}.${safeExpense}`
 
   try {
-      // Update the expense field and remaining budget
-      await updateDoc(groupBudgetRef, {
-          [`budget.${safeField}`]: value,
-          remainingBudget: newRemainingBudget
-      })
-      return { success: true }
+    await updateDoc(groupBudgetRef, {
+      [path]: {
+        amount: amount,
+        date: today,
+      },
+      remainingBudget: currentBudget - amount,
+    })
+    return { success: true }
   } catch (err) {
-      console.error("Error adding group expense:", err)
-      return { error: "Failed to update group budget." }
+    console.error("Error adding group expense:", err)
+    return { error: "Failed to update group budget." }
   }
 }
 
 // Delete an expense field from a group (add back to the overall budget)
-const deleteGroupBudgetField = async (groupId, field) => {
+const deleteGroupBudgetField = async (groupId, category, expense = null) => {
   if (!auth.currentUser) return { error: "Not authenticated." };
 
   const groupBudgetRef = doc(db, 'groupBudget', groupId);
   const groupBudgetSnap = await getDoc(groupBudgetRef);
   if (!groupBudgetSnap.exists()) return { error: "Group not found." }
 
-  const currentBudget = groupBudgetSnap.data().remainingBudget
-  const expenseValue = groupBudgetSnap.data().budget[field]
+  const data = groupBudgetSnap.data();
+  const currentRemaining = data.remainingBudget ?? 0;
 
-  const newRemainingBudget = currentBudget + expenseValue
+  let value = 0;
+  let path;
+  let categoryPath = `budget.${category}`;
+
+  if (expense !== null) {
+    path = `budget.${category}.${expense}`;
+    value = data.budget?.[category]?.[expense]?.amount ?? 0;
+  } else {
+    path = `budget.${category}`;
+    value = data.budget?.[category]?.amount ?? 0;
+  }
 
   try {
-      // Delete the expense field and update the remaining budget
-      await updateDoc(groupBudgetRef, {
-          [`budget.${field}`]: deleteField(),
-          remainingBudget: newRemainingBudget
-      })
-      return { success: true }
-  } catch (err) {
-      console.error("Error deleting group expense:", err)
-      return { error: "Failed to delete group expense." }
+    await updateDoc(groupBudgetRef, {
+      [path]: deleteField(),
+      remainingBudget: currentRemaining + value,
+    });
+
+    // Fetch updated group budget to check if the category is now empty
+    const updatedSnap = await getDoc(groupBudgetRef);
+    const updatedData = updatedSnap.data();
+
+    if (expense !== null) {
+      const isCategoryEmpty =
+        !updatedData.budget?.[category] ||
+        Object.keys(updatedData.budget?.[category]).length === 0;
+
+      if (isCategoryEmpty) {
+        await updateDoc(groupBudgetRef, {
+          [categoryPath]: deleteField(),
+        });
+      }
+    }
+
+    return { success: true, remainingBudget: currentRemaining + value };
+  } catch (error) {
+    console.error("Error deleting group budget field:", error);
+    return { error: "Failed to delete group budget field." };
   }
 }
 
@@ -1126,16 +1167,6 @@ const deleteGroup = async (groupId) => {
         return;
     }
 
-    await deleteDoc(groupRef);
-    console.log("Group deleted successfully!");
-
-    //const groupData = groupSnap.data();
-
-      if (groupData.owner !== user.uid) {
-          console.error("User  is not the owner of the group.");
-          return;
-      }
-
       // Fetch all budgets associated with the group
       const budgetsRef = collection(db, "groupBudget");
       const q = query(budgetsRef, where("groupId", "==", groupId));
@@ -1145,13 +1176,35 @@ const deleteGroup = async (groupId) => {
       const deleteBudgetPromises = budgetsSnap.docs.map((budgetDoc) => deleteBudget(budgetDoc.id));
       await Promise.all(deleteBudgetPromises);
 
-      // Now delete the group
+      // Removes the groupId from all users who are members of the group
+      const members = groupData.members || [];
+      const updatePromises = members.map(async (member) => {
+        const userRef = doc(db, "users", member.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const updatedGroups = (userData.groupsId || []).filter(id => id !== groupId);
+            await updateDoc(userRef, {
+                groupsId: updatedGroups
+            });
+        }
+      });
+      await Promise.all(updatePromises);
+  
+      // Deletes all shared budgets associated with the group
+      const sharedBudgetsRef = collection(db, "sharedBudgets");
+      const sharedBudgetsQuery = query(sharedBudgetsRef, where("groupId", "==", groupId));
+      const sharedBudgetsSnap = await getDocs(sharedBudgetsQuery);
+      const deleteSharedBudgetsPromises = sharedBudgetsSnap.docs.map((doc) => deleteDoc(doc.ref));
+      await Promise.all(deleteSharedBudgetsPromises);
+  
+      // deletes the group
       await deleteDoc(groupRef);
-      console.log("Group and associated budgets deleted successfully!");
-  } catch (error) {
-      console.error("Error deleting group:", error.message);
-  }};
-    
+      console.log("Group deleted successfully!");
+    } catch (error) {
+        console.error("Error deleting group:", error.message);
+    }
+  };
 
         /* FUNCTIONS FOR GROUP ENDS HERE */
 
@@ -1328,37 +1381,25 @@ const removeMemberFromGroup = async (groupId, memberUid) => {
 
 }
 
-const addMemberToGroup = async (groupId, selectedMembers) => {
-  console.log("mit vit")
-  const user = auth.currentUser
+const addMemberToGroup = async (groupId, members) => {
   try {
-    //Get user info from users collection
-    const userRef = doc(db, "users", user.uid)
-    const userSnap = await getDoc(userRef)
-    console.log("plääh")
-    if (!userSnap.exists()) {
-      throw new Error("User not found")
-    }
-    const userData = userSnap.data()
-    console.log("mlkdsmvöobeaä")
-    //Prepare member object to add
-    console.log("Ihn sam")
-    const newMember = {
-      name: userData.name,
-      phone: userData.phone,
-      uid: user.uid,
-    }
-    
-    //Add to group members
     const groupRef = doc(db, "groups", groupId)
+    // Remove contactName before adding to group
+    const cleanedMembers = members.map(({ contactName, ...rest }) => rest)
+
     await updateDoc(groupRef, {
-      members: arrayUnion(newMember)
+      members: arrayUnion(...cleanedMembers)
     })
-    
-    console.log("Member added succesfully!")
+
+    const updatePromises = cleanedMembers.map(member => {
+      const userRef = doc(db, "users", member.uid)
+      return updateDoc(userRef, {
+        groupsId: arrayUnion(groupId)
+      })
+    })
+    await Promise.all(updatePromises)
   } catch (error) {
-    console.error("Error adding member to group:", error)
-    throw error
+    console.error("Error adding members: to group: ", error)
   }
 }
 

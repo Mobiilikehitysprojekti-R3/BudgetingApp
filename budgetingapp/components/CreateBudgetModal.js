@@ -1,12 +1,14 @@
-import React, { useState, useEffect} from 'react';
-import { View, Text, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, TextInput, Modal, Alert, TouchableOpacity } from 'react-native';
 import { createGroupBudget, fetchGroupById } from '../firebase/firestore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from '../styles';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function CreateBudgetModal({ visible, onClose, groupId }) {
   const [budgetName, setBudgetName] = useState('');
-  const [group, setGroup] = useState(null); 
+  const [group, setGroup] = useState(null);
+  const { isDarkMode } = useContext(ThemeContext)
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -53,15 +55,16 @@ export default function CreateBudgetModal({ visible, onClose, groupId }) {
     transparent={true}
     onRequestClose={onClose}
   >
-    <View style={styles.modalOverlay}>
-			<View style={styles.modalContent}>
-		    <Ionicons name="close" size={28} color="black" onPress={onClose}/>
+    <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+			<View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+		    <Ionicons name="close" size={28} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
         <Text style={styles.link}>Create New Budget</Text>
         <TextInput
           placeholder="Budget Name"
+          placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
           value={budgetName}
           onChangeText={setBudgetName}
-          style={styles.formInput}
+          style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
         />
         <TouchableOpacity style={styles.buttonForm} onPress={handleCreateBudget}>
           <Text style={styles.buttonTextMiddle}>Create</Text>
