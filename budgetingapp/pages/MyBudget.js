@@ -262,15 +262,6 @@ export default function MyBudget() {
       keyboardVerticalOffset={100}
     >
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
-        <Text style={styles.titleDark}>My Budget</Text>
-        <TextInput
-          style={styles.inputActive}
-          placeholder="Set Monthly Budget (€)"
-          value={budgetTotal?.toString() ?? ''}
-          onChangeText={val => setBudgetTotal(Number(val))}
-          keyboardType="numeric"
-        />
-
         <Calendar
           onDayPress={(day) => setSelectedDate(day.dateString)}
           markedDates={{
