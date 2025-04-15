@@ -1384,11 +1384,14 @@ const removeMemberFromGroup = async (groupId, memberUid) => {
 const addMemberToGroup = async (groupId, members) => {
   try {
     const groupRef = doc(db, "groups", groupId)
+    // Remove contactName before adding to group
+    const cleanedMembers = members.map(({ contactName, ...rest }) => rest)
+
     await updateDoc(groupRef, {
-      members: arrayUnion(...members)
+      members: arrayUnion(...cleanedMembers)
     })
 
-    const updatePromises = members.map(member => {
+    const updatePromises = cleanedMembers.map(member => {
       const userRef = doc(db, "users", member.uid)
       return updateDoc(userRef, {
         groupsId: arrayUnion(groupId)

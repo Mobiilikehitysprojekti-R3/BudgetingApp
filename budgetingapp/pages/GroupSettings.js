@@ -1,27 +1,27 @@
 import React, { useEffect, useState, useContext } from 'react'
-import { FlatList, View, Text, Alert, } from 'react-native'
+import { FlatList, View, Text, Alert, TouchableOpacity } from 'react-native'
 import { 
   getUserByGroupId, 
-  removeMemberFromGroup, 
-  addMemberToGroup, 
-  matchContactsToUsers 
+  removeMemberFromGroup,
+  deleteGroup
 } from '../firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import styles from '../styles'
 import AddMembersModal from '../components/AddMembersModal';
 import { ThemeContext } from '../context/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function GroupSettings({ route }) {
   const { groupId } = route.params
   const [members, setmembers] = useState([])
   const [ownerId, setOwnerId] = useState(null)
   const [openAddMembersModal, setOpenAddMembersModal] = useState(false)
-  const [contacts, setContacts] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
 
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
+  const navigation = useNavigation();
 
   const fetchMembers = async () => {
     try {
@@ -67,6 +67,26 @@ export default function GroupSettings({ route }) {
     setOpenAddMembersModal(false)
   }
 
+  const handleDeleteGroup = async () => {
+    const confirm = await new Promise((resolve) =>
+      Alert.alert('Delete group', 'Are you sure you want to delete this group?', [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+      ])
+    );
+  
+    if (!confirm) return;
+  
+    try {
+      await deleteGroup(groupId);
+      navigation.navigate('MyGroups');
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      Alert.alert("Error", "Failed to delete group.");
+    }
+  };
+  
+
   return (
     <View>
       <Text style={styles.title}>Group settings</Text>
@@ -107,6 +127,13 @@ export default function GroupSettings({ route }) {
   currentGroupMembers={members.map(member => member.uid)}
   onMembersUpdated={fetchMembers}
 />
+{isOwner && (
+  <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroup}>
+    <Text style={styles.deleteText}>Delete Group</Text>
+    <Ionicons name="trash-outline" size={16} color={isDarkMode ? "red" : "#4F4F4F"} />
+  </TouchableOpacity>
+)}
+
       </View>
     </View>
   )
