@@ -49,15 +49,20 @@ export default function MyBudget() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [recurringItems, setRecurringItems] = useState([]);// State to hold recurring items
+  const [recurringItems, setRecurringItems] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       title: 'My Budget',
       headerRight: () => (
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginRight: 15 }}>
-          <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 15, marginRight: 15 }}>
+          <TouchableOpacity onPress={() => navigation.navigate('BudgetSettings')}>
+            <Ionicons name="settings-outline" size={24} color="#4F4F4F" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation]);
