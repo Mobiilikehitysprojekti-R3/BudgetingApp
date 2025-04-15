@@ -357,15 +357,12 @@ const addBudgetField = async (category, expense, amount, date = null) => {
 
       today = date || new Date().toISOString().split("T")[0];
   
-      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
-
       const path = `budget.${category}.${expense}`;
       updateData = {
         [path]: {
           amount: amount,
           date: today,
-        },
-        remainingBudget: currentRemaining - amount,
+        }
       };
     } else {
       updateData = {

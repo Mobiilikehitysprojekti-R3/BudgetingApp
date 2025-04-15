@@ -204,7 +204,7 @@ export default function MyBudget() {
     } else {
       setExpenseName('');
       setFieldValue('');
-      setMessage(`Added "${expenseName}" to "${selectedCategory}" for $${value}`);
+      setMessage(`Added "${expenseName}" to "${selectedCategory}" for €${value}`);
       fetchUserBudgetData();
     }
   };
