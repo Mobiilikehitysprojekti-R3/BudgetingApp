@@ -40,9 +40,9 @@ onAuthStateChanged(auth, () => {
         listenToUserBudgetChanges()
         // Call functions only after the user is logged in
 
-        updateUserIncome(50000);
+        //updateUserIncome(50000);
         //updateUserBudget();
-        updateRemainingUserBudget(10000);
+        //updateRemainingUserBudget(10000);
         getUserData();
     } else {
         //console.error("No user logged in.");

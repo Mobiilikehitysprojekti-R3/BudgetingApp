@@ -157,6 +157,7 @@ export default function MyBudget() {
     };
     loadGroups();
   }, []);
+
   /// Function to fetch and expand the budget data with recurring entries
   useEffect(() => {
     const fetchRecurring = async () => {
