@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, Button, Modal, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget, deleteGroup } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
 import styles from "../styles.js"
@@ -90,28 +90,7 @@ export default function Group({ route, navigation }) {
     } catch (error) {
       console.error("Error deleting budget:", error)
     }
-  }   
-  
-const handleDeleteGroupPress = async () => {
-    // Confirmation alert
-    const confirm = await new Promise((resolve) =>
-        Alert.alert('Delete group', `Are you sure you want to delete this group?`, [
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
-        ])
-    );
-
-    // Check if the user confirmed the deletion
-    if (!confirm) return; // Exit if the user did not confirm
-
-    try {
-      await deleteGroup(groupId);
-      navigation.navigate('MyGroups')
-  } catch (error) {
-      console.error("Error deleting group:", error);
-      Alert.alert("Error", "Failed to delete group.");
   }
-};
 
   const handleOpenCreateBudgetModal = () => {
     if (group?.owner === auth.currentUser?.uid) {
@@ -208,25 +187,20 @@ const handleDeleteGroupPress = async () => {
        />
      )}
       </View>
-
+      
+      {group?.owner === auth.currentUser?.uid && (
       <Ionicons 
         name="add-circle-outline" 
         size={30} color="#A984BE" 
         onPress={handleOpenCreateBudgetModal}
       />
+      )}
       
       <CreateBudgetModal 
         visible={openCreateBudgetModal}
         onClose={handleCloseModal}
         groupId={groupId}
       />
-
-      {group.owner === auth.currentUser?.uid && (
-        <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroupPress}>
-          <Text style={styles.deleteText}>Delete Group</Text>
-            <Ionicons name="trash-outline" size={16} color={isDarkMode ? "red" : "#4F4F4F"}  />
-        </TouchableOpacity>
-      )}
 
       {/* Chatbox */}
       <TouchableOpacity style={isDarkMode ? styles.chatContainerDarkMode : styles.chatContainer} onPress={() => setChatVisible(true)}>
