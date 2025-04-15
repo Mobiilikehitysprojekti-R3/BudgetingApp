@@ -58,12 +58,18 @@ export default function MyBudget() {
     navigation.setOptions({
       title: 'My Budget',
       headerRight: () => (
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ marginRight: 15 }}>
-          <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 15, marginRight: 15 }}>
+          <TouchableOpacity onPress={() => navigation.navigate('BudgetSettings')}>
+            <Ionicons name="settings-outline" size={24} color="#4F4F4F" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation]);
+  
 
   const handleSlicePress = (category) => {
     setActiveCategory(category);
