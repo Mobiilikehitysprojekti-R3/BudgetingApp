@@ -149,7 +149,7 @@ export default function MyBudget() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchUserBudgetData(); // 👈 Reloads budget when the screen gains focus
+      fetchUserBudgetData();
     }, [])
   );
   
@@ -401,8 +401,6 @@ export default function MyBudget() {
             </TouchableOpacity>
           );
         })}
-
-        {/* Modals and recurring list code stays unchanged */}
 
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
