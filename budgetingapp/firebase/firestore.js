@@ -41,9 +41,9 @@ onAuthStateChanged(auth, () => {
         unsubscribeFromBudgetChanges = listenToUserBudgetChanges()
         // Call functions only after the user is logged in
 
-        updateUserIncome(50000);
+        //updateUserIncome(50000);
         //updateUserBudget();
-        updateRemainingUserBudget(10000);
+        //updateRemainingUserBudget(10000);
         getUserData();
     } else {
       // User is logged out, clean up any active listeners
@@ -357,15 +357,12 @@ const addBudgetField = async (category, expense, amount, date = null) => {
 
       today = date || new Date().toISOString().split("T")[0];
   
-      if (amount > currentRemaining) return { error: "Insufficient remaining budget." };
-
       const path = `budget.${category}.${expense}`;
       updateData = {
         [path]: {
           amount: amount,
           date: today,
-        },
-        remainingBudget: currentRemaining - amount,
+        }
       };
     } else {
       updateData = {

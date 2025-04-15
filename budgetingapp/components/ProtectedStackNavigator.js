@@ -12,6 +12,7 @@ import Group from '../pages/Group';
 import BudgetDetails from '../pages/BudgetDetails';
 import GroupBudget from '../pages/GroupBudget';
 import GroupSettings from '../pages/GroupSettings';
+import BudgetSettings from '../pages/BudgetSettings';
 
 /* 
     The ProtectedStackNavigator component handles navigation for authenticated users.
@@ -57,6 +58,7 @@ export default function ProtectedStackNavigator() {
       <Stack.Screen name="BudgetDetails" component={BudgetDetails} />
       <Stack.Screen name="GroupBudget" component={GroupBudget} />
       <Stack.Screen name="GroupSettings" component={GroupSettings} />
+      <Stack.Screen name="BudgetSettings" component={BudgetSettings} />
     </Stack.Navigator>
   )
 }
