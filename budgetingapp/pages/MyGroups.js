@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import styles from '../styles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import CreateGroupModal from '../components/CreateGroupModal';
@@ -10,14 +10,24 @@ export default function MyGroups({ navigation }) {
   const [groups, setGroups] = useState([]);
   const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false)
   const { isDarkMode } = useContext(ThemeContext)
+	const [isLoading, setIsLoading] = useState(true)
 
 	useEffect(() => {
 		const loadGroups = async () => {
 			const userGroups = await fetchUserGroups()
 			setGroups(userGroups)
+			setIsLoading(false)
 		}
 		loadGroups()
 	}, [])
+
+	if (isLoading) {
+		return (
+			<View style={styles.container}>
+				<Text>Loading...</Text>
+			</View>
+		)
+	}
 
   const handleGroupPress = (groupId) => {
     navigation.navigate('Group', { groupId }); // Navigate to Group page

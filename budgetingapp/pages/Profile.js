@@ -17,23 +17,13 @@ export default function Profile({ navigation }) {
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
-  const [stockData, setStockData] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-/*useEffect(() => { // Stock data fetch test!!
-  const fetchStockData = async () => {
-    try {
-      const res = await fetch(
-        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=demo"
-      )
-      const data = await res.json()
-      setStockData(data)
-    } catch (error) {
-      console.error("Error fetching stock data:", error)
-    }
-  }
-
-  fetchStockData()
-}, [])*/
+  // Fetch the user's groups using the fetchUserGroups function from firestore.js
+  const getUserGroups = async () => {
+    const groups = await fetchUserGroups();
+    setUserGroups(groups);
+  };
 
   // Fetch user data
   useEffect(() => {
@@ -48,16 +38,19 @@ export default function Profile({ navigation }) {
           setImage(userData.profilePictureBase64 ? `data:image/jpeg;base64,${userData.profilePictureBase64}` : null); // Handle profile picture
         }
       }
+      setIsLoading(false)
     };
-
     fetchUserData();
+    getUserGroups();
   }, []);
 
-  // Fetch the user's groups using the fetchUserGroups function from firestore.js
-  const getUserGroups = async () => {
-    const groups = await fetchUserGroups();
-    setUserGroups(groups);
-  };
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    )
+  }
 
   // Function to handle pressing "My Groups"
   const handleMyGroupsPress = () => {
@@ -179,11 +172,6 @@ export default function Profile({ navigation }) {
       ]
     )
   }
-
-  useEffect(() => {
-    getUserGroups();
-    //loadUserProfilePicture()
-  }, []);
 
     return (
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
