@@ -5,19 +5,35 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import Feather from '@expo/vector-icons/Feather';
 import styles from "../styles";
-import { fetchUserGroups, getUserData } from "../firebase/firestore";
+import { fetchUserGroups } from "../firebase/firestore";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 import * as ImageManipulator from "expo-image-manipulator";
 import { ThemeContext } from '../context/ThemeContext';
 
 export default function Profile({ navigation }) {
-  const [userData, setUserData] = useState(null)
   const [image, setImage] = useState(null)
   const [name, setName] = useState("");
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
+  const [stockData, setStockData] = useState([])
+
+/*useEffect(() => { // Stock data fetch test!!
+  const fetchStockData = async () => {
+    try {
+      const res = await fetch(
+        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=demo"
+      )
+      const data = await res.json()
+      setStockData(data)
+    } catch (error) {
+      console.error("Error fetching stock data:", error)
+    }
+  }
+
+  fetchStockData()
+}, [])*/
 
   // Fetch user data
   useEffect(() => {
