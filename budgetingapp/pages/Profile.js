@@ -5,19 +5,35 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import Feather from '@expo/vector-icons/Feather';
 import styles from "../styles";
-import { fetchUserGroups, getUserData } from "../firebase/firestore";
+import { fetchUserGroups } from "../firebase/firestore";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 import * as ImageManipulator from "expo-image-manipulator";
 import { ThemeContext } from '../context/ThemeContext';
 
 export default function Profile({ navigation }) {
-  const [userData, setUserData] = useState(null)
   const [image, setImage] = useState(null)
   const [name, setName] = useState("");
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
+  const [stockData, setStockData] = useState([])
+
+useEffect(() => {
+  const fetchStockData = async () => {
+    try {
+      const res = await fetch(
+        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=2KS8QFkhhsECo5ZhcaGEDlbYR7qzCbbB"
+      );
+      const data = await res.json();
+      setStockData(data);
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+    }
+  };
+
+  fetchStockData();
+}, []);
 
   // Fetch user data
   useEffect(() => {
@@ -171,6 +187,19 @@ export default function Profile({ navigation }) {
 
     return (
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
+        <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>
+          📈 Stocks
+        </Text>
+          {stockData.map((stock) => (
+        <View key={stock.symbol} style={{ marginVertical: 5 }}>
+          <Text style={{ color: isDarkMode ? "#fff" : "#000" }}>
+            {stock.symbol}: ${stock.price.toFixed(2)} ({stock.change.toFixed(2)})
+          </Text>
+        </View>
+        ))}
+        </View>
+
             {/* Settings icon */}
             <Ionicons 
                 name="settings-outline" 
