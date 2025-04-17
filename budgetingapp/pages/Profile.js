@@ -23,7 +23,7 @@ export default function Profile({ navigation }) {
   const fetchStockData = async () => {
     try {
       const res = await fetch(
-        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=2KS8QFkhhsECo5ZhcaGEDlbYR7qzCbbB"
+        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=demo"
       )
       const data = await res.json()
       setStockData(data)
