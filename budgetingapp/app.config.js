@@ -4,6 +4,9 @@ export default {
   expo: {
     name: "budgetingapp",
     slug: "budgetingapp",
+    android: {
+      package: "com.b8udg371ng.budgetingapp",
+    },
     extra: {
       apiKey: process.env.REACT_APP_API_KEY,
       authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -12,6 +15,9 @@ export default {
       messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
       appId: process.env.REACT_APP_APP_ID,
       measurementId: process.env.REACT_APP_MEASUREMENT_ID,
+      eas: {
+        projectId: "82985b13-bf74-46da-be55-2dbf75c28afb",
+      },
     },
   },
 };
