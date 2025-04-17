@@ -19,21 +19,21 @@ export default function Profile({ navigation }) {
   const { isDarkMode } = useContext(ThemeContext)
   const [stockData, setStockData] = useState([])
 
-useEffect(() => {
+/*useEffect(() => { // Stock data fetch test!!
   const fetchStockData = async () => {
     try {
       const res = await fetch(
         "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=2KS8QFkhhsECo5ZhcaGEDlbYR7qzCbbB"
-      );
-      const data = await res.json();
-      setStockData(data);
+      )
+      const data = await res.json()
+      setStockData(data)
     } catch (error) {
-      console.error("Error fetching stock data:", error);
+      console.error("Error fetching stock data:", error)
     }
-  };
+  }
 
-  fetchStockData();
-}, []);
+  fetchStockData()
+}, [])*/
 
   // Fetch user data
   useEffect(() => {
@@ -187,19 +187,6 @@ useEffect(() => {
 
     return (
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
-        <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>
-          📈 Stocks
-        </Text>
-          {stockData.map((stock) => (
-        <View key={stock.symbol} style={{ marginVertical: 5 }}>
-          <Text style={{ color: isDarkMode ? "#fff" : "#000" }}>
-            {stock.symbol}: ${stock.price.toFixed(2)} ({stock.change.toFixed(2)})
-          </Text>
-        </View>
-        ))}
-        </View>
-
             {/* Settings icon */}
             <Ionicons 
                 name="settings-outline" 
