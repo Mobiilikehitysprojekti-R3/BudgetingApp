@@ -63,8 +63,8 @@ export default function AddMembersModal({ visible, onClose, groupId, currentGrou
     >
       <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
         <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-        <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
-        <Text style={styles.link}>Add Members to Group</Text>
+        <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
+        <Text style={[styles.link, { marginTop: 10 }]}>Add Members to Group</Text>
         <FlatList
           data={suggestedMembers}
           keyExtractor={item => item.id}
@@ -73,12 +73,12 @@ export default function AddMembersModal({ visible, onClose, groupId, currentGrou
               <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  padding: 10,
+                  padding: 8,
                   backgroundColor: selectedMembers.includes(item)
                   ? (isDarkMode ? '#3A3A3A' : '#D0E6FF')
                   : (isDarkMode ? '#1F1F1F' : 'white'),
                   borderRadius: 8,
-                  marginBottom: 8
+                  marginBottom: 5
                 }}>
                 <Ionicons 
                   name="person" 
