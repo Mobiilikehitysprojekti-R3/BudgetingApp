@@ -247,7 +247,8 @@ export default function MyBudget() {
         setFieldValue('');
         setMessage(`Recurring expense "${expenseName}" added.`);
         fetchUserBudgetData();
-      calculateMonthlySavings().then(setMonthlySavings);
+        calculateMonthlySavings().then(setMonthlySavings);
+        fetchRecurring(); 
       }
       return;
     }
@@ -517,6 +518,9 @@ export default function MyBudget() {
                       const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
                       await updateDoc(userRef, { recurringEntries: updated });
                       setRecurringItems(updated);
+
+                      calculateRemainingBudget(budgetFields);
+                      calculateMonthlySavings().then(setMonthlySavings);
                     }}
                   >
                     <Text style={styles.deleteButton}>❌</Text>
