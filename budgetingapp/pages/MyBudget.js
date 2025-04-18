@@ -44,6 +44,7 @@ export default function MyBudget() {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [recurringItems, setRecurringItems] = useState([]);
+  const [monthlySavings, setMonthlySavings] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -147,9 +148,52 @@ export default function MyBudget() {
     return unsubscribe;
   }, []);
 
+  
+  const calculateMonthlySavings = async () => {
+    const user = auth.currentUser;
+    if (!user) return [];
+
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return [];
+
+    const data = userSnap.data();
+    const budget = data.budget || {};
+    const recurring = data.recurringEntries || [];
+    const monthlyBudget = data.budgetTotal || 0;
+
+    const monthlyExpenses = {};
+
+    for (const [_, entries] of Object.entries(budget)) {
+      for (const [__, entry] of Object.entries(entries)) {
+        const date = entry.date || new Date().toISOString().split('T')[0];
+        const month = date.slice(0, 7);
+        if (!monthlyExpenses[month]) monthlyExpenses[month] = 0;
+        monthlyExpenses[month] += entry.amount;
+      }
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    recurring.forEach(entry => {
+      if (entry.type === 'expense') {
+        if (!monthlyExpenses[currentMonth]) monthlyExpenses[currentMonth] = 0;
+        monthlyExpenses[currentMonth] += entry.amount;
+      }
+    });
+
+    const savings = Object.entries(monthlyExpenses).map(([month, totalSpent]) => ({
+      month,
+      savings: monthlyBudget - totalSpent
+    }));
+
+    return savings;
+  };
+
+
   useFocusEffect(
     useCallback(() => {
       fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
     }, [])
   );
   
@@ -203,6 +247,7 @@ export default function MyBudget() {
         setFieldValue('');
         setMessage(`Recurring expense "${expenseName}" added.`);
         fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
       }
       return;
     }
@@ -217,6 +262,7 @@ export default function MyBudget() {
       setFieldValue('');
       setMessage(`Added "${expenseName}" to "${selectedCategory}" for €${value}`);
       fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
     }
   };
 
@@ -236,6 +282,7 @@ export default function MyBudget() {
     } else {
       setMessage(`Deleted "${expense}" from "${category}"`);
       fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
       setDetailModalVisible(false);
     }
   };
@@ -390,6 +437,13 @@ export default function MyBudget() {
         {remainingBudget !== null && (
           <Text style={styles.remaining}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
         )}
+
+        <View style={{ padding: 10 }}>
+          <Text style={styles.titleDark}>Monthly Savings</Text>
+          {monthlySavings.map((item) => (
+            <Text key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
+          ))}
+        </View>
 
         <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
