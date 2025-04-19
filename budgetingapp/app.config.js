@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "WMMB",
+    name: "BudGo",
     slug: "budgetingapp",
     icon: "./assets/WMMD.png",
     android: {
