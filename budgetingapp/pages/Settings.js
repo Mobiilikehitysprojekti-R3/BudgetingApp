@@ -235,7 +235,7 @@ export default function Settings({ navigation }) {
         <TouchableOpacity onPress={toggleTheme}>
           <Ionicons
             name={isDarkMode ? "sunny-outline" : "moon-outline"}
-            size={20}
+            size={22}
             color={isDarkMode ? "#fff" : "#4F4F4F"}
           />
         </TouchableOpacity>

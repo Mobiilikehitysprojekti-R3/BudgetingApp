@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     deleteContainer: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 5,
+        marginTop: 15,
     },
     deleteText: {
         color: "red",
@@ -505,6 +505,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 5,
+    },
+    groupItemDarkMode: {
+        padding: 10,
+        borderBottomWidth: 0.7,
+        borderBottomColor: '#6B6B6B',
     },
 })
 

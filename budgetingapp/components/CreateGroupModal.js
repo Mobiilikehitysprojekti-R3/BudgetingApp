@@ -101,7 +101,7 @@ export default function CreateGroupModal({ visible, onClose }) {
                 ? (isDarkMode ? '#3A3A3A' : '#D0E6FF') 
                 : (isDarkMode ? '#1F1F1F' : 'white'),
                 borderRadius: 8,
-                marginBottom: 5,
+                marginBottom: 8,
               }}>
             <Ionicons 
               name="person" 

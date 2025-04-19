@@ -18,7 +18,7 @@ import { addRecurringEntry } from '../firebase/firestore';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
-import { ThemeContext } from '@react-navigation/native';
+import { ThemeContext } from '../context/ThemeContext';
 
 
 export default function MyBudget() {
@@ -409,21 +409,22 @@ export default function MyBudget() {
         {/* Modals and recurring list code stays unchanged */}
 
         <Modal visible={modalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text>Share Budget With</Text>
+          <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+            <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+              <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
               <FlatList
                 data={groups}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.groupItem} onPress={() => handleShareBudget(item.id)}>
-                    <Text style={styles.groupText}>{item.name}</Text>
+                  <TouchableOpacity style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem} onPress={() => handleShareBudget(item.id)}>
+                    <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
                   </TouchableOpacity>
                 )}
               />
+              <View style={{marginTop: 10}}>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
                 <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity>
+              </TouchableOpacity></View>
             </View>
           </View>
         </Modal>
