@@ -58,7 +58,7 @@ export default function BudgetDetails({ route }) {
     }
 
     return (
-        <ScrollView style={styles.scrollView}>
+        <ScrollView style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
         <Text style={styles.title}>Budget Details</Text>
 
         <BudgetPieChart data={formattedBudget} onSlicePress={handleCategoryPress} />
@@ -66,28 +66,30 @@ export default function BudgetDetails({ route }) {
         {Object.entries(formattedBudget).map(([category, expenses]) => {
             const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
             return (
-            <TouchableOpacity key={category} onPress={() => handleCategoryPress(category)} style={styles.categorySummary}>
-                <Text>{category.toUpperCase()}: ${total}</Text>
+            <TouchableOpacity key={category} onPress={() => handleCategoryPress(category)}
+            style={isDarkMode ? styles.categorySummaryDarkMode : styles.categorySummary}>
+                <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{category.toUpperCase()}: ${total}</Text>
             </TouchableOpacity>
         )
     })}
 
         <Modal visible={detailModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.title2}>Details for {selectedCategory?.toUpperCase()}</Text>
+        <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+          <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+            <Text style={[styles.link, { marginTop: 10 }]}>Details for {selectedCategory?.toUpperCase()}</Text>
             <ScrollView style={{ maxHeight: 300 }}>
               {selectedCategory &&
                 formattedBudget[selectedCategory] &&
                 Object.entries(formattedBudget[selectedCategory]).map(([name, value]) => (
-                  <View key={name} style={styles.budgetItem}>
-                    <Text>{name}: ${value}</Text>
+                  <View key={name} style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem}>
+                    <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{name}: ${value}</Text>
                   </View>
                 ))}
             </ScrollView>
+            <View style={{marginTop: 10}}>
             <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
               <Text style={styles.buttonTextMiddle}>Close</Text>
-            </TouchableOpacity>
+            </TouchableOpacity></View>
           </View>
         </View>
       </Modal>

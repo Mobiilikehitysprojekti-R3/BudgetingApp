@@ -511,6 +511,12 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0.7,
         borderBottomColor: '#6B6B6B',
     },
+    categorySummaryDarkMode: {
+        padding: 10,
+        backgroundColor: '#313131',
+        borderRadius: 10,
+        marginBottom: 8,
+    },
 })
 
 export default styles;
