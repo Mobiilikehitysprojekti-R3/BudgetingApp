@@ -349,12 +349,14 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 5
     },
-    containerFullScreen: {
+    settingsContainer2: {
         flex: 1,
         paddingHorizontal: 15,
     },
-    containerDark: {
-        backgroundColor: '#121212',
+    settingsContainer2DarkMode: {
+        flex: 1,
+        paddingHorizontal: 15,
+        backgroundColor: "#1A1A1A"
     },
     settingsTitleWrapper: {
         alignItems: 'center',

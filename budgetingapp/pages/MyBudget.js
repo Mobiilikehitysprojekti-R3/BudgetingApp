@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react'; 
+import React, { useState, useContext, useEffect, useLayoutEffect } from 'react'; 
 import {
   View, Text, TextInput, Button, Alert, ScrollView, TouchableOpacity,
   FlatList, Modal, KeyboardAvoidingView, Platform
@@ -18,6 +18,7 @@ import { addRecurringEntry } from '../firebase/firestore';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { ThemeContext } from '@react-navigation/native';
 
 
 export default function MyBudget() {
@@ -44,6 +45,7 @@ export default function MyBudget() {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [recurringItems, setRecurringItems] = useState([]);
+  const { isDarkMode } = useContext(ThemeContext)
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -51,10 +53,12 @@ export default function MyBudget() {
       headerRight: () => (
         <View style={{ flexDirection: 'row', gap: 15, marginRight: 15 }}>
           <TouchableOpacity onPress={() => navigation.navigate('BudgetSettings')}>
-            <Ionicons name="settings-outline" size={24} color="#4F4F4F" />
+            <Ionicons name="settings-outline" size={24}
+            color={isDarkMode ? "#fff" : "#4F4F4F"} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <Ionicons name="arrow-redo-outline" size={24} color="#4F4F4F" />
+            <Ionicons name="arrow-redo-outline" size={24}
+            color={isDarkMode ? "#fff" : "#4F4F4F"} />
           </TouchableOpacity>
         </View>
       ),

@@ -18,7 +18,6 @@ export default function GroupSettings({ route }) {
   const [ownerId, setOwnerId] = useState(null)
   const [openAddMembersModal, setOpenAddMembersModal] = useState(false)
   const { isDarkMode } = useContext(ThemeContext)
-
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
   const navigation = useNavigation();
@@ -90,8 +89,7 @@ export default function GroupSettings({ route }) {
   return (
     <View
       style={[
-        styles.containerFullScreen,
-        isDarkMode ? styles.containerDark : styles.containerLight
+        isDarkMode ? styles.settingsContainer2DarkMode : styles.settingsContainer2
       ]}>
 
       <View style={styles.settingsTitleWrapper}>

@@ -61,7 +61,7 @@ export default function CreateBudgetModal({ visible, onClose, groupId }) {
         <Text style={[styles.link, { marginTop: 10 }]}>Create New Budget</Text>
         <TextInput
           placeholder="Budget Name"
-          placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
           value={budgetName}
           onChangeText={setBudgetName}
           style={isDarkMode ? styles.inputActiveDarkMode : styles.inputActive}
