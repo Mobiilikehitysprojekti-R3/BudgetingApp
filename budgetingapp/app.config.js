@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "BudGo",
     slug: "budgetingapp",
-    icon: "./assets/WMMD.png",
+    icon: "./assets/Budgo.png",
     android: {
       package: "com.b8udg371ng.budgetingapp",
     },
