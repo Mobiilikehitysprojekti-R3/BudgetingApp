@@ -46,6 +46,7 @@ export default function MyBudget() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [recurringItems, setRecurringItems] = useState([]);
   const { isDarkMode } = useContext(ThemeContext)
+  const [monthlySavings, setMonthlySavings] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -151,9 +152,52 @@ export default function MyBudget() {
     return unsubscribe;
   }, []);
 
+  
+  const calculateMonthlySavings = async () => {
+    const user = auth.currentUser;
+    if (!user) return [];
+
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return [];
+
+    const data = userSnap.data();
+    const budget = data.budget || {};
+    const recurring = data.recurringEntries || [];
+    const monthlyBudget = data.budgetTotal || 0;
+
+    const monthlyExpenses = {};
+
+    for (const [_, entries] of Object.entries(budget)) {
+      for (const [__, entry] of Object.entries(entries)) {
+        const date = entry.date || new Date().toISOString().split('T')[0];
+        const month = date.slice(0, 7);
+        if (!monthlyExpenses[month]) monthlyExpenses[month] = 0;
+        monthlyExpenses[month] += entry.amount;
+      }
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    recurring.forEach(entry => {
+      if (entry.type === 'expense') {
+        if (!monthlyExpenses[currentMonth]) monthlyExpenses[currentMonth] = 0;
+        monthlyExpenses[currentMonth] += entry.amount;
+      }
+    });
+
+    const savings = Object.entries(monthlyExpenses).map(([month, totalSpent]) => ({
+      month,
+      savings: monthlyBudget - totalSpent
+    }));
+
+    return savings;
+  };
+
+
   useFocusEffect(
     useCallback(() => {
-      fetchUserBudgetData(); // 👈 Reloads budget when the screen gains focus
+      fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
     }, [])
   );
   
@@ -207,6 +251,8 @@ export default function MyBudget() {
         setFieldValue('');
         setMessage(`Recurring expense "${expenseName}" added.`);
         fetchUserBudgetData();
+        calculateMonthlySavings().then(setMonthlySavings);
+        fetchRecurring(); 
       }
       return;
     }
@@ -221,6 +267,7 @@ export default function MyBudget() {
       setFieldValue('');
       setMessage(`Added "${expenseName}" to "${selectedCategory}" for €${value}`);
       fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
     }
   };
 
@@ -240,6 +287,7 @@ export default function MyBudget() {
     } else {
       setMessage(`Deleted "${expense}" from "${category}"`);
       fetchUserBudgetData();
+      calculateMonthlySavings().then(setMonthlySavings);
       setDetailModalVisible(false);
     }
   };
@@ -395,6 +443,13 @@ export default function MyBudget() {
           <Text style={styles.remaining}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
         )}
 
+        <View style={{ padding: 10 }}>
+          <Text style={styles.titleDark}>Monthly Savings</Text>
+          {monthlySavings.map((item) => (
+            <Text key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
+          ))}
+        </View>
+
         <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
         {Object.entries(filteredBudget).map(([category, expenses]) => {
@@ -405,8 +460,6 @@ export default function MyBudget() {
             </TouchableOpacity>
           );
         })}
-
-        {/* Modals and recurring list code stays unchanged */}
 
         <Modal visible={modalVisible} animationType="slide" transparent>
           <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
@@ -470,6 +523,9 @@ export default function MyBudget() {
                       const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
                       await updateDoc(userRef, { recurringEntries: updated });
                       setRecurringItems(updated);
+
+                      calculateRemainingBudget(budgetFields);
+                      calculateMonthlySavings().then(setMonthlySavings);
                     }}
                   >
                     <Text style={styles.deleteButton}>❌</Text>
