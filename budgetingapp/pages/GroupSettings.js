@@ -18,7 +18,6 @@ export default function GroupSettings({ route }) {
   const [ownerId, setOwnerId] = useState(null)
   const [openAddMembersModal, setOpenAddMembersModal] = useState(false)
   const { isDarkMode } = useContext(ThemeContext)
-
   const currentUserId = getAuth().currentUser?.uid
   const isOwner = currentUserId === ownerId
   const navigation = useNavigation();
@@ -88,53 +87,65 @@ export default function GroupSettings({ route }) {
   
 
   return (
-    <View>
-      <Text style={styles.title}>Group settings</Text>
-      <View>
-      <Text style={styles.link}>Group Members</Text>
+    <View
+      style={[
+        isDarkMode ? styles.settingsContainer2DarkMode : styles.settingsContainer2
+      ]}>
 
-      <FlatList
-        style={styles.membersContainer}
-        data={members}
-        keyExtractor={(item) => item.uid}
-        renderItem={({ item }) => (
-          <View style={styles.editRow}>
-            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
-            {isOwner && item.uid !== ownerId && (
-              <Ionicons
-                name="person-remove-outline"
-                size={20}
-                color={isDarkMode ? "#fff" : "#4F4F4F"}
-                onPress={() => handleRemoveMember(item.uid, item.name)}
-              />
-            )}
-          </View>
+      <View style={styles.settingsTitleWrapper}>
+        <Text style={[styles.title, styles.settingsTitle]}>Group Settings</Text>
+      </View>
+
+      <View style={styles.membersSection}>
+        <Text style={[styles.link, styles.membersLabel]}>Group Members</Text>
+  
+        <FlatList
+          style={styles.membersList}
+          data={members}
+          keyExtractor={(item) => item.uid}
+          renderItem={({ item }) => (
+            <View style={[styles.editRow, {paddingVertical: 5}]}>
+              <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>
+                {item.name}
+              </Text>
+              {isOwner && item.uid !== ownerId && (
+                <Ionicons
+                  name="person-remove-outline"
+                  size={20}
+                  color={isDarkMode ? "#fff" : "#4F4F4F"}
+                  onPress={() => handleRemoveMember(item.uid, item.name)}
+                />
+              )}
+            </View>
+          )}
+        />
+  
+        {isOwner && (
+          <Text
+            style={[styles.link, styles.addMembersLink]}
+            onPress={() => setOpenAddMembersModal(true)}
+          >
+            + Add Members
+          </Text>
         )}
+      </View>
+  
+      <AddMembersModal
+        visible={openAddMembersModal}
+        onClose={handleCloseModal}
+        groupId={groupId}
+        currentGroupMembers={members.map(member => member.uid)}
+        onMembersUpdated={fetchMembers}
       />
 
-{isOwner && (
-  <Text
-    style={styles.link}
-    onPress={() => setOpenAddMembersModal(true)}
-  >
-    + Add Members
-  </Text>
-)}
-<AddMembersModal
-  visible={openAddMembersModal}
-  onClose={handleCloseModal}
-  groupId={groupId}
-  currentGroupMembers={members.map(member => member.uid)}
-  onMembersUpdated={fetchMembers}
-/>
-{isOwner && (
-  <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroup}>
-    <Text style={styles.deleteText}>Delete Group</Text>
-    <Ionicons name="trash-outline" size={16} color={isDarkMode ? "red" : "#4F4F4F"} />
-  </TouchableOpacity>
-)}
-
-      </View>
+      {isOwner && (
+        <View style={styles.deleteWrapper}>
+          <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteGroup}>
+            <Text style={styles.deleteText}>Delete Group</Text>
+            <Ionicons name="trash-outline" size={16} color={isDarkMode ? "red" : "#4F4F4F"} />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
-  )
+  )  
 }

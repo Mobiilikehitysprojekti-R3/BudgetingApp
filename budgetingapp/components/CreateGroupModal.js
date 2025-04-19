@@ -74,16 +74,19 @@ export default function CreateGroupModal({ visible, onClose }) {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
         <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-				<Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
-        <Ionicons name="man" size={100} color={isDarkMode ? "#fff" : "#000"}/>
-          <Text style={styles.link}>Group name</Text>
+				<Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
+        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+          <Ionicons name="people-circle-outline" size={100} color={isDarkMode ? "#fff" : "#000"} />
+        </View>
+        <View style={{ marginBottom: 5 }}>
+          <Text style={styles.link}>Group Name</Text>
           <TextInput
             placeholder="Enter group name"
             placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
             value={groupName}
             onChangeText={setGroupName}
-            style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
-          />
+            style={isDarkMode ? styles.inputActiveDarkMode : styles.inputActive}
+          /></View>
           <Text style={styles.link}>Suggested Members</Text>
           <FlatList
             data={matchedUsers}
@@ -93,7 +96,7 @@ export default function CreateGroupModal({ visible, onClose }) {
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: 10,
+                padding: 8,
                 backgroundColor: selectedMembers.includes(item) 
                 ? (isDarkMode ? '#3A3A3A' : '#D0E6FF') 
                 : (isDarkMode ? '#1F1F1F' : 'white'),

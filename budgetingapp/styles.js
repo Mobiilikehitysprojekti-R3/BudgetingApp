@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     link: {
         color: "#A984BE",
         fontSize: 16,
-        marginBottom: 5,
+        marginBottom: 8,
     },
     /* Input fields in forms */
     formInput: {
@@ -109,9 +109,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#A984BE",
-        height: "40",
+        height: 40,
         borderRadius: 18,
-        marginVertical: 15,
+        marginTop: 8,
+        marginBottom: 5,
     },
     /* Button text aligned left */
     buttonText: {
@@ -167,6 +168,7 @@ const styles = StyleSheet.create({
     /* Modal layout */
     modalOverlay: {
         flex: 1,
+        padding: 5,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
         width: "85%",
         backgroundColor: "#FFF",
         borderRadius: 18,
-        padding: 20,
+        padding: 25,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     deleteContainer: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 5,
+        marginTop: 15,
     },
     deleteText: {
         color: "red",
@@ -347,6 +349,39 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 5
     },
+    settingsContainer2: {
+        flex: 1,
+        paddingHorizontal: 15,
+    },
+    settingsContainer2DarkMode: {
+        flex: 1,
+        paddingHorizontal: 15,
+        backgroundColor: "#1A1A1A"
+    },
+    settingsTitleWrapper: {
+        alignItems: 'center',
+        marginTop: 40,
+    }, 
+    settingsTitle: {
+        textAlign: 'center',
+    },
+    membersSection: {
+        paddingHorizontal: 30,
+    },
+    membersLabel: {
+        textAlign: 'left',
+        marginBottom: 10,
+    },
+    addMembersLink: {
+        marginTop: 15,
+    },
+    deleteWrapper: {
+        alignItems: 'center',
+        marginBottom: 40,
+    },
+    membersList: {
+        maxHeight: 250,
+    },      
 
     /* DARK MODE */
     /* Styling for containers for the entire application */
@@ -470,6 +505,17 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 5,
+    },
+    groupItemDarkMode: {
+        padding: 10,
+        borderBottomWidth: 0.7,
+        borderBottomColor: '#6B6B6B',
+    },
+    categorySummaryDarkMode: {
+        padding: 10,
+        backgroundColor: '#313131',
+        borderRadius: 10,
+        marginBottom: 8,
     },
 })
 

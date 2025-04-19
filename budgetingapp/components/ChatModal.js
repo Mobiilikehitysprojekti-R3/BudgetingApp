@@ -44,7 +44,7 @@ export default function ChatModal({ visible, onClose, groupId }) {
       onRequestClose={onClose}
     >
         <View style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#fff', padding: 10 }}>
-        <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "black"} onPress={onClose}/>
+        <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "black"} onPress={onClose}/>
         {/* Message list */}
         <View style={{ flex: 1, marginTop: 30, marginHorizontal: 10 }}>
         <FlatList

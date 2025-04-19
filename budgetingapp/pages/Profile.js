@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useLayoutEffect } from "react";
 import { TouchableOpacity, View, Text, Image, Alert } from "react-native";
 import  Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
@@ -17,23 +17,22 @@ export default function Profile({ navigation }) {
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
-  const [stockData, setStockData] = useState([])
 
-/*useEffect(() => { // Stock data fetch test!!
-  const fetchStockData = async () => {
-    try {
-      const res = await fetch(
-        "https://financialmodelingprep.com/api/v3/quote/AAPL,TSLA,GOOGL?apikey=demo"
-      )
-      const data = await res.json()
-      setStockData(data)
-    } catch (error) {
-      console.error("Error fetching stock data:", error)
-    }
-  }
-
-  fetchStockData()
-}, [])*/
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Profile',
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', gap: 15, marginRight: 15 }}>
+          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+          <Ionicons 
+                name="settings-outline" 
+                size={24} 
+                color={isDarkMode ? "#fff" : "#4F4F4F"}
+            /></TouchableOpacity>
+        </View>
+      ),
+    })
+  }, [navigation])
 
   // Fetch user data
   useEffect(() => {
@@ -187,14 +186,6 @@ export default function Profile({ navigation }) {
 
     return (
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
-            {/* Settings icon */}
-            <Ionicons 
-                name="settings-outline" 
-                size={24} 
-                color={isDarkMode ? "#fff" : "#4F4F4F"}
-                style={{ position: "absolute", top: 30, right: 25}}
-                onPress={() => navigation.navigate("Settings")}
-            />
             {/* Profile section */}
             <View style={styles.profile}>
                 <Image
