@@ -206,21 +206,22 @@ export default function Settings({ navigation }) {
         <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
           <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}> 
             <Ionicons 
-              name="close" 
-              size={24} 
+              name="close"
+              size={27}
               color={isDarkMode ? "#fff" : "#4F4F4F"}
               onPress={() => {
                 setIsPasswordModalVisible(false)
                 setCurrentPassword("")
               }}
-            />        
-            <Text style={{ fontSize: 16, marginBottom: 10}}>Enter current password to confirm changes:</Text>
+            />
+            <Text style={[styles.link, { marginTop: 10 }]}>Enter current password to confirm changes</Text>
             <TextInput 
-              placeholder="Current Password" 
+              placeholder="Current Password"
+              placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
               value={currentPassword} 
               onChangeText={setCurrentPassword} 
               secureTextEntry 
-              style={themedInputStyle} 
+              style={isDarkMode ? styles.inputActiveDarkMode : styles.inputActive} 
             />
             <TouchableOpacity style={styles.buttonForm} onPress={handleSave}>
               <Text style={styles.buttonTextMiddle}>Confirm</Text>
@@ -234,7 +235,7 @@ export default function Settings({ navigation }) {
         <TouchableOpacity onPress={toggleTheme}>
           <Ionicons
             name={isDarkMode ? "sunny-outline" : "moon-outline"}
-            size={20}
+            size={22}
             color={isDarkMode ? "#fff" : "#4F4F4F"}
           />
         </TouchableOpacity>

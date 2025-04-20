@@ -57,14 +57,14 @@ export default function CreateBudgetModal({ visible, onClose, groupId }) {
   >
     <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
 			<View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-		    <Ionicons name="close" size={28} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
-        <Text style={styles.link}>Create New Budget</Text>
+		    <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"} onPress={onClose}/>
+        <Text style={[styles.link, { marginTop: 10 }]}>Create New Budget</Text>
         <TextInput
           placeholder="Budget Name"
-          placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
           value={budgetName}
           onChangeText={setBudgetName}
-          style={isDarkMode ? styles.formInputDarkMode : styles.formInput}
+          style={isDarkMode ? styles.inputActiveDarkMode : styles.inputActive}
         />
         <TouchableOpacity style={styles.buttonForm} onPress={handleCreateBudget}>
           <Text style={styles.buttonTextMiddle}>Create</Text>
