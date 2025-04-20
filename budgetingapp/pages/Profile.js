@@ -17,6 +17,13 @@ export default function Profile({ navigation }) {
   const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch the user's groups using the fetchUserGroups function from firestore.js
+  const getUserGroups = async () => {
+    const groups = await fetchUserGroups();
+    setUserGroups(groups);
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -47,16 +54,19 @@ export default function Profile({ navigation }) {
           setImage(userData.profilePictureBase64 ? `data:image/jpeg;base64,${userData.profilePictureBase64}` : null); // Handle profile picture
         }
       }
+      setIsLoading(false)
     };
-
     fetchUserData();
+    getUserGroups();
   }, []);
 
-  // Fetch the user's groups using the fetchUserGroups function from firestore.js
-  const getUserGroups = async () => {
-    const groups = await fetchUserGroups();
-    setUserGroups(groups);
-  };
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    )
+  }
 
   // Function to handle pressing "My Groups"
   const handleMyGroupsPress = () => {
@@ -178,11 +188,6 @@ export default function Profile({ navigation }) {
       ]
     )
   }
-
-  useEffect(() => {
-    getUserGroups();
-    //loadUserProfilePicture()
-  }, []);
 
     return (
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
