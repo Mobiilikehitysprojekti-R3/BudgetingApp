@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useLayoutEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { fetchGroupById, fetchGroupBudgets, fetchSharedBudgets, deleteSharedBudget } from '../firebase/firestore';
 import CreateBudgetModal from '../components/CreateBudgetModal.js';
@@ -30,6 +30,22 @@ export default function Group({ route, navigation }) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [messages, setMessages] = useState([]);
   const { isDarkMode } = useContext(ThemeContext)
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Group',
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', gap: 15, marginRight: 15 }}>
+          <TouchableOpacity onPress={() => navigation.navigate("GroupSettings", {groupId})}>
+          <Ionicons 
+            name="settings-outline"
+            size={24}
+            color={isDarkMode ? "#fff" : "#4F4F4F"}
+          /></TouchableOpacity>
+        </View>
+      ),
+    })
+  }, [navigation])
   
   const loadGroupBudgets = async () => {
     console.log("Fetching budgets for groupId:", groupId);
@@ -132,14 +148,6 @@ export default function Group({ route, navigation }) {
 
   return (
     <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
-      {/* Settings icon */}
-      <Ionicons 
-        name="settings-outline"
-        size={24}
-        color={isDarkMode ? "#fff" : "#4F4F4F"}
-        style={{ position: "absolute", top: 30, right: 25}}
-        onPress={() => navigation.navigate("GroupSettings", {groupId})}
-      />
         <Text style={styles.title}>{group.name}</Text>
       
       <View style={styles.list}>
