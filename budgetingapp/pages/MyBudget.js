@@ -199,6 +199,7 @@ export default function MyBudget() {
   useFocusEffect(
     useCallback(() => {
       fetchUserBudgetData();
+      fetchRecurring();
       calculateMonthlySavings().then(setMonthlySavings);
     }, [])
   );
@@ -212,20 +213,17 @@ export default function MyBudget() {
     loadGroups();
   }, []);
 
-  useEffect(() => {
-    const fetchRecurring = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        setRecurringItems(data.recurringEntries || []);
-      }
-    };
-    fetchRecurring();
-  }, []);
+  const fetchRecurring = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setRecurringItems(data.recurringEntries || [])
+    }
+  }  
 
   const handleAddField = async () => {
     const value = parseFloat(fieldValue);
