@@ -22,7 +22,7 @@ import { auth, db, deleteUser } from "./config";
           (shareBudgetWithGroup, fetchSharedBudgets, listenToUserBudgetChanges, deleteSharedBudget, fetchBudgetById)
       * GROUP BUDGET 
           (createGroupBudget, fetchGroupBudgets, setGroupBudget, fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField)
-      * GROUP 
+      * GROUP
           (createGroup, normalizePhoneNumber, getRegisteredUsers, matchContactsToUsers, fetchUserGroups, fetchGroupById, deleteGroup)
 	    * MESSAGE 
           (sendMessage, listenToMessages, markMessagesAsRead)
