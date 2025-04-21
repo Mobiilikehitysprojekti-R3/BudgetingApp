@@ -241,10 +241,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
       },
     categorySummary: {
-        padding: 10,
+        width: '100%',
         backgroundColor: '#eee',
         borderRadius: 10,
-        marginBottom: 8,
+        padding: 10,
+        marginVertical: 5,
+        alignSelf: 'center',
+    },
+    categorySummaryText: {
+        fontSize: 14,
+        textAlign: 'left',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
     },
     message: {
         marginTop: 16,
