@@ -22,7 +22,7 @@ import { ThemeContext } from '../context/ThemeContext';
 
 
 export default function MyBudget() {
-  const categories = ['groceries', 'essentials', 'entertainment', 'other'];
+  const categories = ['groceries', 'home', 'essentials', 'investments', 'entertainment', 'other'];
 
   const navigation = useNavigation();
   const [expenseName, setExpenseName] = useState('');
@@ -47,6 +47,11 @@ export default function MyBudget() {
   const [recurringItems, setRecurringItems] = useState([]);
   const { isDarkMode } = useContext(ThemeContext)
   const [monthlySavings, setMonthlySavings] = useState([]);
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+  
+  const toggleDropdown = () => {
+    setDropdownVisible(!isDropdownVisible);
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -386,17 +391,113 @@ export default function MyBudget() {
           )}
         </View>
 
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={selectedCategory}
-            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            dropdownIconColor="#4F4F4F"
+        <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
+
+{Object.entries(filteredBudget).map(([category, expenses]) => {
+  const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+  return (
+    <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
+      <Text>{category.toUpperCase()}: €{total}</Text>
+    </TouchableOpacity>
+  );
+})}
+
+<Modal visible={modalVisible} animationType="slide" transparent>
+  <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+    <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+      <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
+      <FlatList
+        data={groups}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem} onPress={() => handleShareBudget(item.id)}>
+            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
+      <View style={{marginTop: 10}}>
+      <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
+        <Text style={styles.buttonTextMiddle}>Close</Text>
+      </TouchableOpacity></View>
+    </View>
+  </View>
+</Modal>
+
+<Modal visible={detailModalVisible} animationType="slide" transparent>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+      <ScrollView style={{ maxHeight: 300 }}>
+        {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
+          <View key={name} style={styles.budgetItem}>
+            <Text>{name}: ${value}</Text>
+            <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
+              <Text style={styles.deleteButton}>❌</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+      <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
+        <Text style={styles.buttonTextMiddle}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+<Text style={styles.title2}>Recurring Expenses</Text>
+  {recurringItems?.length === 0 ? (
+    <Text>No recurring expenses yet.</Text>
+  ) : (
+    recurringItems
+      .filter((item) => item.type === 'expense')
+      .map((item, index) => (
+        <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+          <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
+          <TouchableOpacity
+            onPress={async () => {
+              const user = auth.currentUser;
+              const userRef = doc(db, 'users', user.uid);
+              const userSnap = await getDoc(userRef);
+              if (!userSnap.exists()) return;
+
+              const data = userSnap.data();
+              const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
+              await updateDoc(userRef, { recurringEntries: updated });
+              setRecurringItems(updated);
+
+              calculateRemainingBudget(budgetFields);
+              calculateMonthlySavings().then(setMonthlySavings);
+            }}
           >
-            {categories.map((cat) => (
-              <Picker.Item key={cat} label={cat} value={cat} />
-            ))}
-          </Picker>
+            <Text style={styles.deleteButton}>❌</Text>
+          </TouchableOpacity>
         </View>
+      ))
+  )}
+<View style={styles.container}>
+  <TouchableOpacity onPress={toggleDropdown} style={styles.pickerWrapper}>
+    <Text style={styles.selectedValue}>
+      {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) || 'Select a category'}
+    </Text>
+  </TouchableOpacity>
+
+  {isDropdownVisible && (
+    <View style={styles.dropdownContainer}>
+      <Picker
+        selectedValue={selectedCategory}
+        onValueChange={(itemValue) => {
+          setSelectedCategory(itemValue);
+          setDropdownVisible(false);
+        }}
+        dropdownIconColor="#4F4F4F"
+      >
+        {categories.map((cat) => (
+          <Picker.Item key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)} value={cat} />
+        ))}
+      </Picker>
+    </View>
+  )}
+</View>
 
         <TextInput
           style={styles.inputActive}
@@ -436,7 +537,11 @@ export default function MyBudget() {
           </View>
         )}
 
-        <Button title="Add Budget Field" onPress={handleAddField} />
+      <Ionicons 
+        name="add-circle-outline" 
+        size={30} color="#A984BE" 
+        onPress={handleAddField}
+      />
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {remainingBudget !== null && (
@@ -450,89 +555,7 @@ export default function MyBudget() {
           ))}
         </View>
 
-        <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
-        {Object.entries(filteredBudget).map(([category, expenses]) => {
-          const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
-          return (
-            <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-              <Text>{category.toUpperCase()}: €{total}</Text>
-            </TouchableOpacity>
-          );
-        })}
-
-        <Modal visible={modalVisible} animationType="slide" transparent>
-          <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
-            <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-              <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
-              <FlatList
-                data={groups}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem} onPress={() => handleShareBudget(item.id)}>
-                    <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-              <View style={{marginTop: 10}}>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
-                <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity></View>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={detailModalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
-              <ScrollView style={{ maxHeight: 300 }}>
-                {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
-                  <View key={name} style={styles.budgetItem}>
-                    <Text>{name}: ${value}</Text>
-                    <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
-                      <Text style={styles.deleteButton}>❌</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-              <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
-                <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-        
-        <Text style={styles.title2}>Recurring Expenses</Text>
-          {recurringItems?.length === 0 ? (
-            <Text>No recurring expenses yet.</Text>
-          ) : (
-            recurringItems
-              .filter((item) => item.type === 'expense')
-              .map((item, index) => (
-                <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
-                  <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const user = auth.currentUser;
-                      const userRef = doc(db, 'users', user.uid);
-                      const userSnap = await getDoc(userRef);
-                      if (!userSnap.exists()) return;
-
-                      const data = userSnap.data();
-                      const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
-                      await updateDoc(userRef, { recurringEntries: updated });
-                      setRecurringItems(updated);
-
-                      calculateRemainingBudget(budgetFields);
-                      calculateMonthlySavings().then(setMonthlySavings);
-                    }}
-                  >
-                    <Text style={styles.deleteButton}>❌</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-          )}
 
       </ScrollView>
     </KeyboardAvoidingView>
