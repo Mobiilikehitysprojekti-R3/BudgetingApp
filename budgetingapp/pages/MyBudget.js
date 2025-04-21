@@ -335,8 +335,10 @@ export default function MyBudget() {
    <TouchableOpacity onPress={() => setShowCalendar(true)} style={styles.calendarIcon}>
     <Ionicons name="calendar-outline" size={30} color="#A984BE" />
       </TouchableOpacity> 
-      <Text style={{ textAlign: 'right', flex: 1 }}>
-        {budgetTotal !== undefined ? `Your budget: €${budgetTotal.toFixed(2)}` : '€0.00'}
+      <Text style={[styles.subtitle, { textAlign: 'right', flex: 1 }]}>
+        {budgetTotal !== null && budgetTotal !== undefined 
+          ? `Your budget: €${budgetTotal.toFixed(2)}` 
+          : 'Your budget: €0.00'}
       </Text>
     </View>
 
