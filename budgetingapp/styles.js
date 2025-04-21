@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginBottom: 10,
         backgroundColor: '#fff'
-      },
+    },
     categorySummary: {
         width: '100%',
         backgroundColor: '#eee',
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
     categorySummaryText: {
         fontSize: 14,
         textAlign: 'left',
+        color: '#000'
     },
     row: {
         flexDirection: 'row',
@@ -530,6 +531,30 @@ const styles = StyleSheet.create({
         backgroundColor: '#313131',
         borderRadius: 10,
         marginBottom: 8,
+    },
+    categorySummaryTextDarkMode: {
+        fontSize: 14,
+        textAlign: 'left',
+        color: '#fff'
+    },
+    budgetItemDarkMode: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#6B6B6B',
+    },
+    pickerWrapperDarkMode: {
+        borderWidth: 1,
+        borderColor: '#6B6B6B',
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#444444'
+    },
+    subtitleDarkMode: {
+        fontSize: 18,
+        marginBottom: 10,
+        color: "#fff"
     },
 })
 
