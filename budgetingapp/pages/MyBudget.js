@@ -22,7 +22,7 @@ import { ThemeContext } from '../context/ThemeContext';
 
 
 export default function MyBudget() {
-  const categories = ['groceries', 'essentials', 'entertainment', 'other'];
+  const categories = ['Groceries', 'Home', 'Essentials', 'Investments', 'Health', 'Restaurants', 'Entertainment', 'Hobbies', 'Shopping', 'Other'];
 
   const navigation = useNavigation();
   const [expenseName, setExpenseName] = useState('');
@@ -47,6 +47,10 @@ export default function MyBudget() {
   const [recurringItems, setRecurringItems] = useState([]);
   const { isDarkMode } = useContext(ThemeContext)
   const [monthlySavings, setMonthlySavings] = useState([]);
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -324,31 +328,45 @@ export default function MyBudget() {
       style={{ flex: 1 }}
       keyboardVerticalOffset={100}
     >
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
-        <Text style={styles.titleDark}>My Budget</Text>
-        <TextInput
-          style={styles.inputActive}
-          placeholder="Set Monthly Budget (€)"
-          value={budgetTotal?.toString() ?? ''}
-          onChangeText={val => setBudgetTotal(Number(val))}
-          keyboardType="numeric"
-        />
 
-        <Calendar
-          onDayPress={(day) => setSelectedDate(day.dateString)}
-          markedDates={{
-            ...markedDates,
-            ...(selectedDate && {
-              [selectedDate]: {
-                selected: true,
-                selectedColor: '#00adf5',
-                marked: markedDates[selectedDate]?.marked,
-                dotColor: markedDates[selectedDate]?.dotColor
-              }
-            })
-          }}
-          style={{ marginBottom: 20 }}
-        />
+  <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
+   {/* Calendar Icon to Open Calendar */}
+   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+   <TouchableOpacity onPress={() => setShowCalendar(true)} style={styles.calendarIcon}>
+    <Ionicons name="calendar-outline" size={30} color="#A984BE" />
+      </TouchableOpacity> 
+      <Text style={[styles.subtitle, { textAlign: 'right', flex: 1 }]}>
+        {budgetTotal !== null && budgetTotal !== undefined 
+          ? `Your budget: €${budgetTotal.toFixed(2)}` 
+          : 'Your budget: €0.00'}
+      </Text>
+    </View>
+
+        {/* Calendar Modal */}
+        {showCalendar && (
+          <Modal transparent={true} animationType="slide" visible={showCalendar}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Calendar
+                  onDayPress={(day) => {
+                    setSelectedDate(day.dateString);
+                    setShowCalendar(false); // Close calendar on date select
+                  }}
+                  markedDates={{
+                    [selectedDate]: {
+                      selected: true,
+                      selectedColor: '#00adf5',
+                    },
+                  }}
+                  style={{ marginBottom: 20 }}
+                />
+                <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.buttonForm}>
+                  <Text style={styles.buttonTextMiddle}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        )}
 
         <View style={{ marginVertical: 10 }}>
           <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
@@ -362,6 +380,7 @@ export default function MyBudget() {
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
+                setShowStart
                 setShowStartPicker(false);
                 if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
               }}
@@ -385,6 +404,62 @@ export default function MyBudget() {
             />
           )}
         </View>
+
+        <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
+
+
+{Object.entries(filteredBudget).map(([category, expenses]) => {
+  const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+  return (
+    <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
+      <Text>{category.toUpperCase()}: €{total}</Text>
+    </TouchableOpacity>
+  );
+})}
+
+<Modal visible={modalVisible} animationType="slide" transparent>
+  <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+    <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+      <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
+      <FlatList
+        data={groups}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem} onPress={() => handleShareBudget(item.id)}>
+            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
+      <View style={{marginTop: 10}}>
+      <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
+        <Text style={styles.buttonTextMiddle}>Close</Text>
+      </TouchableOpacity></View>
+    </View>
+  </View>
+</Modal>
+
+<Modal visible={detailModalVisible} animationType="slide" transparent>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+      <ScrollView style={{ maxHeight: 300 }}>
+        {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
+          <View key={name} style={styles.budgetItem}>
+            <Text>{name}: ${value}</Text>
+            <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
+              <Text style={styles.deleteButton}>❌</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+      <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
+        <Text style={styles.buttonTextMiddle}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+</View>
 
         <View style={styles.pickerWrapper}>
           <Picker
@@ -436,11 +511,47 @@ export default function MyBudget() {
           </View>
         )}
 
-        <Button title="Add Budget Field" onPress={handleAddField} />
+<View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+      <Ionicons 
+        name="add-circle-outline" 
+        size={30} color="#A984BE" 
+        onPress={handleAddField}
+      />
+
+<Text style={styles.title2}>Recurring Expenses</Text>
+  {recurringItems?.length === 0 ? (
+    <Text>No recurring expenses yet.</Text>
+  ) : (
+    recurringItems
+      .filter((item) => item.type === 'expense')
+      .map((item, index) => (
+        <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+          <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
+          <TouchableOpacity
+            onPress={async () => {
+              const user = auth.currentUser;
+              const userRef = doc(db, 'users', user.uid);
+              const userSnap = await getDoc(userRef);
+              if (!userSnap.exists()) return;
+
+              const data = userSnap.data();
+              const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
+              await updateDoc(userRef, { recurringEntries: updated });
+              setRecurringItems(updated);
+
+              calculateRemainingBudget(budgetFields);
+              calculateMonthlySavings().then(setMonthlySavings);
+            }}
+          >
+            <Text style={styles.deleteButton}>❌</Text>
+          </TouchableOpacity>
+        </View>
+      ))
+  )}
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {remainingBudget !== null && (
-          <Text style={styles.remaining}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
+          <Text style={styles.subtitle}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
         )}
 
         <View style={{ padding: 10 }}>
@@ -450,90 +561,8 @@ export default function MyBudget() {
           ))}
         </View>
 
-        <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
 
-        {Object.entries(filteredBudget).map(([category, expenses]) => {
-          const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
-          return (
-            <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-              <Text>{category.toUpperCase()}: €{total}</Text>
-            </TouchableOpacity>
-          );
-        })}
-
-        <Modal visible={modalVisible} animationType="slide" transparent>
-          <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
-            <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-              <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
-              <FlatList
-                data={groups}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={isDarkMode ? styles.groupItemDarkMode : styles.groupItem} onPress={() => handleShareBudget(item.id)}>
-                    <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{item.name}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-              <View style={{marginTop: 10}}>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
-                <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity></View>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={detailModalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
-              <ScrollView style={{ maxHeight: 300 }}>
-                {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
-                  <View key={name} style={styles.budgetItem}>
-                    <Text>{name}: ${value}</Text>
-                    <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
-                      <Text style={styles.deleteButton}>❌</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-              <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
-                <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-        
-        <Text style={styles.title2}>Recurring Expenses</Text>
-          {recurringItems?.length === 0 ? (
-            <Text>No recurring expenses yet.</Text>
-          ) : (
-            recurringItems
-              .filter((item) => item.type === 'expense')
-              .map((item, index) => (
-                <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
-                  <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const user = auth.currentUser;
-                      const userRef = doc(db, 'users', user.uid);
-                      const userSnap = await getDoc(userRef);
-                      if (!userSnap.exists()) return;
-
-                      const data = userSnap.data();
-                      const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
-                      await updateDoc(userRef, { recurringEntries: updated });
-                      setRecurringItems(updated);
-
-                      calculateRemainingBudget(budgetFields);
-                      calculateMonthlySavings().then(setMonthlySavings);
-                    }}
-                  >
-                    <Text style={styles.deleteButton}>❌</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-          )}
-
+      </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
