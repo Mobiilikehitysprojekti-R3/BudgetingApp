@@ -35,6 +35,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#000'
     },
+    centerText: {
+        textAlign: 'center'
+    },
     listText: {
         fontSize: 14,
         color: '#000'

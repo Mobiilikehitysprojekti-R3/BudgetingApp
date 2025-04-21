@@ -15,7 +15,6 @@ import { Calendar } from 'react-native-calendars';
 import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
-
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
@@ -24,6 +23,7 @@ import { ThemeContext } from '../context/ThemeContext';
 export default function MyBudget() {
   const categories = ['Groceries', 'Home', 'Essentials', 'Investments', 'Entertainment', 'Hobbies', 'Other'];
 
+  const [recurringModalVisible, setRecurringModalVisible] = useState(false)
   const navigation = useNavigation();
   const [expenseName, setExpenseName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
@@ -448,13 +448,14 @@ export default function MyBudget() {
     <View style={styles.modalContent}>
     <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
         onPress={() => setDetailModalVisible(false)}/>
-      <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+      <Text style={[styles.link, { marginTop: 10 }]}>Details for {activeCategory?.toUpperCase()}</Text>
       <ScrollView style={{ maxHeight: 300 }}>
         {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
           <View key={name} style={styles.budgetItem}>
             <Text>{name}: ${value}</Text>
             <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
-              <Text style={styles.deleteButton}>❌</Text>
+              <Text style={styles.deleteButton}>
+                <Ionicons name="close-outline" size={25}></Ionicons></Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -463,7 +464,8 @@ export default function MyBudget() {
   </View>
 </Modal>
 </View>
-<View style={{ marginTop: 10 }}>
+
+<View style={{ marginTop: 10, marginBottom: 20 }}>
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={selectedCategory}
@@ -521,47 +523,67 @@ export default function MyBudget() {
         size={30} color="#A984BE" 
         onPress={handleAddField}
       />
-</View>
-<Text style={styles.subtitle}>Recurring Expenses</Text>
-  {recurringItems?.length === 0 ? (
-    <Text>No recurring expenses yet.</Text>
-  ) : (
-    recurringItems
-      .filter((item) => item.type === 'expense')
+</View></View>
+
+{recurringItems.filter(e => e.type === 'expense').length === 0 ? (
+  <Text style={[styles.regularText, styles.centerText]}>No recurring expenses yet.</Text>
+) : (
+  <TouchableOpacity onPress={() => setRecurringModalVisible(true)} style={styles.categorySummary}>
+    <View style={styles.row}>
+      <Text style={styles.categorySummaryText}>RECURRING EXPENSES</Text>
+      <Text style={styles.categorySummaryText}>
+        €{recurringItems
+          .filter(e => e.type === 'expense')
+          .reduce((sum, e) => sum + e.amount, 0)
+          .toFixed(2)}
+      </Text>
+    </View>
+  </TouchableOpacity>
+)}
+
+<Modal visible={recurringModalVisible} animationType="slide" transparent>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+    <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+        onPress={() => setRecurringModalVisible(false)}/>
+    <Text style={styles.subtitle}>Recurring Expenses</Text>
+    {recurringItems
+      ?.filter((item) => item.type === 'expense')
       .map((item, index) => (
-        <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
-          <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
-          <TouchableOpacity
-            onPress={async () => {
-              const user = auth.currentUser;
-              const userRef = doc(db, 'users', user.uid);
-              const userSnap = await getDoc(userRef);
-              if (!userSnap.exists()) return;
+      <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+      <Text>
+        {item.expense}: €{item.amount} ({item.interval})
+      </Text>
+      <TouchableOpacity
+        onPress={async () => {
+          const user = auth.currentUser;
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) return;
 
-              const data = userSnap.data();
-              const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
-              await updateDoc(userRef, { recurringEntries: updated });
-              setRecurringItems(updated);
+          const data = userSnap.data();
+          const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
+          await updateDoc(userRef, { recurringEntries: updated });
+          setRecurringItems(updated);
 
-              calculateRemainingBudget(budgetFields);
-              calculateMonthlySavings().then(setMonthlySavings);
-            }}
-          >
-            <Text style={styles.deleteButton}>❌</Text>
-          </TouchableOpacity>
-        </View>
-      ))
-  )}
-
-        <View>
-          <Text style={styles.subtitle}>Monthly Savings</Text>
+          calculateRemainingBudget(budgetFields);
+          calculateMonthlySavings().then(setMonthlySavings);
+        }}
+      >
+        <Text style={styles.deleteButton}>
+          <Ionicons name="close-outline" size={25}></Ionicons></Text>
+      </TouchableOpacity>
+    </View>
+  ))}
+    </View>
+  </View>
+</Modal>
+        <View style={{ marginTop: 15 }}>
+          <Text style={[styles.subtitle, styles.centerText]}>Monthly Savings</Text>
           {monthlySavings.map((item) => (
-            <Text key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
+            <Text style={[styles.subtitle, styles.centerText]} key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
           ))}
         </View>
-
-
-      </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
