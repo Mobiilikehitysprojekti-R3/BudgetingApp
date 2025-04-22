@@ -15,15 +15,14 @@ import { Calendar } from 'react-native-calendars';
 import styles from "../styles";
 import { Picker } from '@react-native-picker/picker';
 import { addRecurringEntry } from '../firebase/firestore';
-
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 
-
 export default function MyBudget() {
-  const categories = ['Groceries', 'Home', 'Essentials', 'Investments', 'Health', 'Restaurants', 'Entertainment', 'Hobbies', 'Shopping', 'Other'];
+  const categories = ['Groceries', 'Home', 'Essentials', 'Investments', 'Entertainment', 'Hobbies', 'Other'];
 
+  const [recurringModalVisible, setRecurringModalVisible] = useState(false)
   const navigation = useNavigation();
   const [expenseName, setExpenseName] = useState('');
   const [fieldValue, setFieldValue] = useState('');
@@ -47,7 +46,6 @@ export default function MyBudget() {
   const [recurringItems, setRecurringItems] = useState([]);
   const { isDarkMode } = useContext(ThemeContext)
   const [monthlySavings, setMonthlySavings] = useState([]);
-  const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   
 
@@ -201,6 +199,7 @@ export default function MyBudget() {
   useFocusEffect(
     useCallback(() => {
       fetchUserBudgetData();
+      fetchRecurring();
       calculateMonthlySavings().then(setMonthlySavings);
     }, [])
   );
@@ -214,20 +213,17 @@ export default function MyBudget() {
     loadGroups();
   }, []);
 
-  useEffect(() => {
-    const fetchRecurring = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        setRecurringItems(data.recurringEntries || []);
-      }
-    };
-    fetchRecurring();
-  }, []);
+  const fetchRecurring = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setRecurringItems(data.recurringEntries || [])
+    }
+  }  
 
   const handleAddField = async () => {
     const value = parseFloat(fieldValue);
@@ -253,7 +249,7 @@ export default function MyBudget() {
       } else {
         setExpenseName('');
         setFieldValue('');
-        setMessage(`Recurring expense "${expenseName}" added.`);
+        //setMessage(`Recurring expense "${expenseName}" added.`);
         fetchUserBudgetData();
         calculateMonthlySavings().then(setMonthlySavings);
         fetchRecurring(); 
@@ -269,7 +265,7 @@ export default function MyBudget() {
     } else {
       setExpenseName('');
       setFieldValue('');
-      setMessage(`Added "${expenseName}" to "${selectedCategory}" for €${value}`);
+      //setMessage(`Added "${expenseName}" to "${selectedCategory}" for €${value}`);
       fetchUserBudgetData();
       calculateMonthlySavings().then(setMonthlySavings);
     }
@@ -289,7 +285,7 @@ export default function MyBudget() {
     if (result.error) {
       Alert.alert('Error', result.error);
     } else {
-      setMessage(`Deleted "${expense}" from "${category}"`);
+      //setMessage(`Deleted "${expense}" from "${category}"`);
       fetchUserBudgetData();
       calculateMonthlySavings().then(setMonthlySavings);
       setDetailModalVisible(false);
@@ -323,87 +319,90 @@ export default function MyBudget() {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#1A1A1A' : '#fff' }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
+      style={{ flex: 1,}}
       keyboardVerticalOffset={100}
     >
 
   <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
    {/* Calendar Icon to Open Calendar */}
    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-   <TouchableOpacity onPress={() => setShowCalendar(true)} style={styles.calendarIcon}>
-    <Ionicons name="calendar-outline" size={30} color="#A984BE" />
-      </TouchableOpacity> 
-      <Text style={[styles.subtitle, { textAlign: 'right', flex: 1 }]}>
+      <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, { flex: 1 }]}>
         {budgetTotal !== null && budgetTotal !== undefined 
           ? `Your budget: €${budgetTotal.toFixed(2)}` 
           : 'Your budget: €0.00'}
       </Text>
+      <TouchableOpacity onPress={() => setShowCalendar(true)}>
+        <Ionicons name="calendar-outline" size={30} color="#A984BE" />
+      </TouchableOpacity>
     </View>
+    {message ? <Text style={styles.message}>{message}</Text> : null}
+        {remainingBudget !== null && (
+          <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, { textAlign: 'left', flex: 1 }]}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
+        )}
 
         {/* Calendar Modal */}
         {showCalendar && (
           <Modal transparent={true} animationType="slide" visible={showCalendar}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <Calendar
-                  onDayPress={(day) => {
-                    setSelectedDate(day.dateString);
-                    setShowCalendar(false); // Close calendar on date select
-                  }}
-                  markedDates={{
-                    [selectedDate]: {
-                      selected: true,
-                      selectedColor: '#00adf5',
-                    },
-                  }}
-                  style={{ marginBottom: 20 }}
-                />
-                <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.buttonForm}>
-                  <Text style={styles.buttonTextMiddle}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+          <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+          <Calendar
+            onDayPress={(day) => {
+              setSelectedDate(day.dateString);
+              setShowCalendar(false);
+            }}
+            markedDates={{
+              [selectedDate]: {
+                selected: true,
+                selectedColor: '#00adf5',
+              },
+            }}
+            style={{ marginBottom: 20 }}
+          />
+
+        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {startDate ? `Start: ${startDate}` : 'Select Start Date'}
+          </Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate ? new Date(startDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
         )}
 
-        <View style={{ marginVertical: 10 }}>
-          <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
-            <Text style={styles.buttonTextMiddle}>
-              {startDate ? `Start: ${startDate}` : 'Select Start Date'}
-            </Text>
-          </TouchableOpacity>
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate ? new Date(startDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowStart
-                setShowStartPicker(false);
-                if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
-              }}
-            />
-          )}
+        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {endDate ? `End: ${endDate}` : 'Select End Date'}
+          </Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate ? new Date(endDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
+        )}
 
-          <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
-            <Text style={styles.buttonTextMiddle}>
-              {endDate ? `End: ${endDate}` : 'Select End Date'}
-            </Text>
-          </TouchableOpacity>
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate ? new Date(endDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowEndPicker(false);
-                if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
-              }}
-            />
-          )}
-        </View>
+        <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+  )}
 
         <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
         <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
@@ -412,8 +411,12 @@ export default function MyBudget() {
 {Object.entries(filteredBudget).map(([category, expenses]) => {
   const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
   return (
-    <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-      <Text>{category.toUpperCase()}: €{total}</Text>
+    <TouchableOpacity key={category} onPress={() => handleSlicePress(category)}
+      style={isDarkMode ? styles.categorySummaryDarkMode : styles.categorySummary}>
+      <View style={styles.row}>
+        <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>{category.toUpperCase()}</Text>
+        <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>€{total}</Text>
+      </View>
     </TouchableOpacity>
   );
 })}
@@ -421,6 +424,9 @@ export default function MyBudget() {
 <Modal visible={modalVisible} animationType="slide" transparent>
   <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
     <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+    <View style={{marginBottom: 5}}>
+      <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+      onPress={() => setModalVisible(false)}/>
       <Text style={[styles.link, { marginTop: 10 }]}>Share Budget With</Text>
       <FlatList
         data={groups}
@@ -431,41 +437,42 @@ export default function MyBudget() {
           </TouchableOpacity>
         )}
       />
-      <View style={{marginTop: 10}}>
-      <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.buttonForm}>
-        <Text style={styles.buttonTextMiddle}>Close</Text>
-      </TouchableOpacity></View>
+      </View>
     </View>
   </View>
 </Modal>
 
 <Modal visible={detailModalVisible} animationType="slide" transparent>
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
+  <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+    <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+    <View style={{marginBottom: 5}}>
+    <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+        onPress={() => setDetailModalVisible(false)}/>
+      <Text style={[styles.link, { marginTop: 10 }]}>Details for {activeCategory?.toUpperCase()}</Text>
       <ScrollView style={{ maxHeight: 300 }}>
         {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
-          <View key={name} style={styles.budgetItem}>
-            <Text>{name}: ${value}</Text>
+          <View key={name} style={isDarkMode ? styles.budgetItemDarkMode : styles.budgetItem}>
+            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{name}: €{value}</Text>
             <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
-              <Text style={styles.deleteButton}>❌</Text>
+              <Text style={styles.deleteButton}>
+                <Ionicons name="close-outline" size={25}></Ionicons></Text>
             </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
-      <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
-        <Text style={styles.buttonTextMiddle}>Close</Text>
-      </TouchableOpacity>
+      </View>
     </View>
   </View>
 </Modal>
 </View>
 
-        <View style={styles.pickerWrapper}>
+<View style={{ marginTop: 10, marginBottom: 20 }}>
+        <View style={isDarkMode? styles.pickerWrapperDarkMode : styles.pickerWrapper}>
           <Picker
+            style={isDarkMode? styles.regularTextDarkMode : styles.regularText}
             selectedValue={selectedCategory}
             onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            dropdownIconColor="#4F4F4F"
+            dropdownIconColor= {isDarkMode ? '#fff' : '#4F4F4F'}
           >
             {categories.map((cat) => (
               <Picker.Item key={cat} label={cat} value={cat} />
@@ -473,34 +480,47 @@ export default function MyBudget() {
           </Picker>
         </View>
 
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
         <TextInput
-          style={styles.inputActive}
-          placeholder="New field name (e.g. groceries)"
+          style={[isDarkMode ? styles.inputActiveDarkMode : styles.inputActive, { flex: 1 }]}
+          placeholder="Description"
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
           value={expenseName}
           onChangeText={setExpenseName}
         />
         <TextInput
-          style={styles.inputActive}
+          style={[isDarkMode ? styles.inputActiveDarkMode : styles.inputActive, { width: 100 }]}
           placeholder="Amount"
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
           value={fieldValue}
           onChangeText={setFieldValue}
           keyboardType="numeric"
-        />
+        /></View>
 
-        <TouchableOpacity
-          onPress={() => setIsRecurring(!isRecurring)}
-          style={[styles.buttonForm, { backgroundColor: isRecurring ? '#66bb6a' : '#ccc' }]}
-        >
-          <Text style={styles.buttonTextMiddle}>
-            {isRecurring ? 'Recurring Expense ✅' : 'One-time Expense'}
-          </Text>
-        </TouchableOpacity>
+      <View style={{ marginBottom: 10 }}>
+      <TouchableOpacity
+        onPress={() => setIsRecurring(!isRecurring)}
+        style={[styles.buttonForm, {
+        backgroundColor: isRecurring
+          ? '#66bb6a'
+          : isDarkMode
+          ? '#313131'
+          : '#ccc'
+        }
+      ]}>
+    <Text style={styles.buttonTextMiddle}>
+      {isRecurring ? 'Recurring Expense ✅' : 'One-time Expense'}
+    </Text>
+    </TouchableOpacity>
+    </View>
 
         {isRecurring && (
-          <View style={styles.pickerWrapper}>
+          <View style={isDarkMode? styles.pickerWrapperDarkMode : styles.pickerWrapper}>
             <Picker
+              style={isDarkMode? styles.regularTextDarkMode : styles.regularText}
               selectedValue={recurringInterval}
               onValueChange={(itemValue) => setRecurringInterval(itemValue)}
+              dropdownIconColor= {isDarkMode ? '#fff' : '#4F4F4F'}
             >
               <Picker.Item label="Daily" value="daily" />
               <Picker.Item label="Weekly" value="weekly" />
@@ -511,59 +531,76 @@ export default function MyBudget() {
           </View>
         )}
 
-<View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+<View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 5 }}>
       <Ionicons 
         name="add-circle-outline" 
-        size={30} color="#A984BE" 
+        size={33} color="#A984BE" 
         onPress={handleAddField}
       />
+</View></View>
 
-<Text style={styles.title2}>Recurring Expenses</Text>
-  {recurringItems?.length === 0 ? (
-    <Text>No recurring expenses yet.</Text>
-  ) : (
-    recurringItems
-      .filter((item) => item.type === 'expense')
+{recurringItems.filter(e => e.type === 'expense').length === 0 ? (
+  <Text style={[
+    isDarkMode ? styles.regularTextDarkMode : styles.regularText,
+    styles.centerText]}>No recurring expenses yet.</Text>
+) : (
+  <TouchableOpacity onPress={() => setRecurringModalVisible(true)} style={isDarkMode ? styles.categorySummaryDarkMode : styles.categorySummary}>
+    <View style={styles.row}>
+      <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>RECURRING EXPENSES</Text>
+      <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>
+        €{recurringItems
+          .filter(e => e.type === 'expense')
+          .reduce((sum, e) => sum + e.amount, 0)
+          .toFixed(2)}
+      </Text>
+    </View>
+  </TouchableOpacity>
+)}
+
+<Modal visible={recurringModalVisible} animationType="slide" transparent>
+  <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+    <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+    <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+        onPress={() => setRecurringModalVisible(false)}/>
+    <Text style={isDarkMode ? styles.subtitleDarkMode : styles.subtitle}>Recurring Expenses</Text>
+    {recurringItems
+      ?.filter((item) => item.type === 'expense')
       .map((item, index) => (
-        <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
-          <Text>{item.expense}: €{item.amount} ({item.interval})</Text>
-          <TouchableOpacity
-            onPress={async () => {
-              const user = auth.currentUser;
-              const userRef = doc(db, 'users', user.uid);
-              const userSnap = await getDoc(userRef);
-              if (!userSnap.exists()) return;
+      <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+      <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>
+        {item.expense}: €{item.amount} ({item.interval})
+      </Text>
+      <TouchableOpacity
+        onPress={async () => {
+          const user = auth.currentUser;
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) return;
 
-              const data = userSnap.data();
-              const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
-              await updateDoc(userRef, { recurringEntries: updated });
-              setRecurringItems(updated);
+          const data = userSnap.data();
+          const updated = (data.recurringEntries || []).filter((_, i) => i !== index);
+          await updateDoc(userRef, { recurringEntries: updated });
+          setRecurringItems(updated);
 
-              calculateRemainingBudget(budgetFields);
-              calculateMonthlySavings().then(setMonthlySavings);
-            }}
-          >
-            <Text style={styles.deleteButton}>❌</Text>
-          </TouchableOpacity>
-        </View>
-      ))
-  )}
-
-        {message ? <Text style={styles.message}>{message}</Text> : null}
-        {remainingBudget !== null && (
-          <Text style={styles.subtitle}>Remaining Budget: €{remainingBudget.toFixed(2)}</Text>
-        )}
-
-        <View style={{ padding: 10 }}>
-          <Text style={styles.titleDark}>Monthly Savings</Text>
+          calculateRemainingBudget(budgetFields);
+          calculateMonthlySavings().then(setMonthlySavings);
+        }}
+      >
+        <Text style={styles.deleteButton}>
+          <Ionicons name="close-outline" size={25}></Ionicons></Text>
+      </TouchableOpacity>
+    </View>
+  ))}
+    </View>
+  </View>
+</Modal>
+        <View style={{ marginTop: 15 }}>
+          <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, styles.centerText]}>Monthly Savings</Text>
           {monthlySavings.map((item) => (
-            <Text key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
+            <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, styles.centerText]} key={item.month}>{item.month}: €{item.savings.toFixed(2)}</Text>
           ))}
         </View>
-
-
-      </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView></View>
   );
 }

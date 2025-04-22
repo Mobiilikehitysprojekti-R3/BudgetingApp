@@ -35,6 +35,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#000'
     },
+    centerText: {
+        textAlign: 'center'
+    },
     listText: {
         fontSize: 14,
         color: '#000'
@@ -239,12 +242,24 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginBottom: 10,
         backgroundColor: '#fff'
-      },
+    },
     categorySummary: {
-        padding: 10,
+        width: '100%',
         backgroundColor: '#eee',
         borderRadius: 10,
-        marginBottom: 8,
+        padding: 10,
+        marginVertical: 5,
+        alignSelf: 'center',
+    },
+    categorySummaryText: {
+        fontSize: 14,
+        textAlign: 'left',
+        color: '#000'
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
     },
     message: {
         marginTop: 16,
@@ -516,6 +531,30 @@ const styles = StyleSheet.create({
         backgroundColor: '#313131',
         borderRadius: 10,
         marginBottom: 8,
+    },
+    categorySummaryTextDarkMode: {
+        fontSize: 14,
+        textAlign: 'left',
+        color: '#fff'
+    },
+    budgetItemDarkMode: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#6B6B6B',
+    },
+    pickerWrapperDarkMode: {
+        borderWidth: 1,
+        borderColor: '#6B6B6B',
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#444444'
+    },
+    subtitleDarkMode: {
+        fontSize: 18,
+        marginBottom: 10,
+        color: "#fff"
     },
 })
 
