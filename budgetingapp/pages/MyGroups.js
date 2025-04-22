@@ -57,7 +57,7 @@ export default function MyGroups({ navigation }) {
 
 		<Ionicons 
 			name="add-circle-outline" 
-			size={30} color="#A984BE" 
+			size={33} color="#A984BE" 
 			onPress={() => {setOpenCreateGroupModal(true)}}
 		/>
 		<CreateGroupModal 

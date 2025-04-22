@@ -55,8 +55,8 @@ export default function BudgetSettings() {
 
   return (
     <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: isDarkMode ? '#1A1A1A' : '#' }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
       keyboardVerticalOffset={100}
     >
       <ScrollView contentContainerStyle={{ paddingTop: 40, paddingHorizontal: 25 }}>

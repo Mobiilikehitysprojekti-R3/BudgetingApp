@@ -322,7 +322,7 @@ export default function MyBudget() {
       keyboardVerticalOffset={100}
     >
 
-  <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 10, paddingHorizontal: 5 }} style={styles.scrollView}>
+  <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 10, paddingHorizontal: 5 }} style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
    {/* Calendar Icon to Open Calendar */}
    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
       <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, { flex: 1 }]}>
@@ -344,6 +344,8 @@ export default function MyBudget() {
           <Modal transparent={true} animationType="slide" visible={showCalendar}>
           <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
           <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+          <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+            onPress={() => setShowCalendar(false)}/>
           <Calendar
             onDayPress={(day) => {
               setSelectedDate(day.dateString);
@@ -401,10 +403,6 @@ export default function MyBudget() {
             }}
           />
         )}
-
-        <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.buttonForm}>
-          <Text style={styles.buttonTextMiddle}>Close</Text>
-        </TouchableOpacity>
       </View>
     </View>
   </Modal>
