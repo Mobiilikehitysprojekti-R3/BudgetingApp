@@ -92,10 +92,6 @@ export default function GroupSettings({ route }) {
         isDarkMode ? styles.settingsContainer2DarkMode : styles.settingsContainer2
       ]}>
 
-      <View style={styles.settingsTitleWrapper}>
-        <Text style={[styles.title, styles.settingsTitle]}>Group Settings</Text>
-      </View>
-
       <View style={styles.membersSection}>
         <Text style={[styles.link, styles.membersLabel]}>Group Members</Text>
   

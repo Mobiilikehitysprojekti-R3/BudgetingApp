@@ -57,8 +57,7 @@ export default function BudgetSettings() {
       style={{ flex: 1 }}
       keyboardVerticalOffset={100}
     >
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Text style={styles.titleDark}>Budget Settings</Text>
+      <ScrollView contentContainerStyle={{ paddingTop: 40, paddingHorizontal: 25 }}>
 
         <TextInput
           style={styles.inputActive}

@@ -195,7 +195,6 @@ export default function MyBudget() {
     return savings;
   };
 
-
   useFocusEffect(
     useCallback(() => {
       fetchUserBudgetData();
@@ -204,7 +203,6 @@ export default function MyBudget() {
     }, [])
   );
   
-
   useEffect(() => {
     const loadGroups = async () => {
       const userGroups = await fetchUserGroups();

@@ -366,6 +366,7 @@ const styles = StyleSheet.create({
     },
     settingsContainer2: {
         flex: 1,
+        paddingTop: 40,
         paddingHorizontal: 15,
     },
     settingsContainer2DarkMode: {

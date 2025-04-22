@@ -41,7 +41,6 @@ export default function MyGroups({ navigation }) {
 
   return (
   <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
-		<Text style={styles.title}>MY GROUPS</Text>
 	<View style={styles.list}>
     <FlatList
       data={groups}
