@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import { ThemeContext } from '../context/ThemeContext';
 
 const screenWidth = Dimensions.get('window').width;
 
 const BudgetPieChart = ({ data, onSlicePress }) => {
+  const { isDarkMode } = useContext(ThemeContext)
+
   if (!data || typeof data !== 'object') return null;
 
   const chartData = Object.entries(data)
@@ -14,7 +17,7 @@ const BudgetPieChart = ({ data, onSlicePress }) => {
         name: category,
         population: total,
         color: getColor(index),
-        legendFontColor: '#333',
+        legendFontColor: isDarkMode ? '#FFF' : '#000',
         legendFontSize: 14,
       };
     })

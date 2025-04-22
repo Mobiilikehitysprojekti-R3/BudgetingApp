@@ -59,7 +59,6 @@ export default function BudgetDetails({ route }) {
 
     return (
         <ScrollView style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
-        <Text style={styles.title}>Budget Details</Text>
 
         <BudgetPieChart data={formattedBudget} onSlicePress={handleCategoryPress} />
 

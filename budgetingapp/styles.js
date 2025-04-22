@@ -22,13 +22,13 @@ const styles = StyleSheet.create({
     titleDark: {
         fontSize: 24,
         marginBottom: 20,
-        color: "#4F4F4F"
+        color: "#000"
     },
     /* A smaller title */
     subtitle: {
         fontSize: 18,
         marginBottom: 10,
-        color: "#4F4F4F"
+        color: "#000"
     },
     /* Text */
     regularText: {
@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
         width: "85%",
         backgroundColor: "#FFF",
         borderRadius: 18,
-        padding: 25,
+        padding: 20,
+        paddingBottom: 25,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     },
     categorySummary: {
         width: '100%',
-        backgroundColor: '#eee',
+        backgroundColor: '#e7e7e7',
         borderRadius: 10,
         padding: 10,
         marginVertical: 5,

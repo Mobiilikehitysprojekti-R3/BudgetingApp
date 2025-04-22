@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform
 } from 'react-native';
@@ -6,11 +6,13 @@ import { updateUserIncome, updateUserBudget } from '../firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import styles from "../styles";
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function BudgetSettings() {
   const [income, setIncome] = useState('');
   const [budget, setBudget] = useState('');
   const [message, setMessage] = useState('');
+  const { isDarkMode } = useContext(ThemeContext)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +62,7 @@ export default function BudgetSettings() {
       <ScrollView contentContainerStyle={{ paddingTop: 40, paddingHorizontal: 25 }}>
 
         <TextInput
-          style={styles.inputActive}
+          style={isDarkMode? styles.inputActiveDarkMode : styles.inputActive}
           placeholder="Monthly Income (€)"
           keyboardType="numeric"
           value={income}
@@ -68,7 +70,7 @@ export default function BudgetSettings() {
         />
 
         <TextInput
-          style={styles.inputActive}
+          style={isDarkMode? styles.inputActiveDarkMode : styles.inputActive}
           placeholder="Planned Monthly Budget (€)"
           keyboardType="numeric"
           value={budget}

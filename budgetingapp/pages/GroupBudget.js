@@ -176,7 +176,6 @@ export default function GroupBudget({ route, navigation }) {
           keyboardVerticalOffset={100}
         >
     <ScrollView style={styles.scrollView}>
-      <Text style={styles.title}>Group Budget</Text>
 
       <Calendar
         onDayPress={(day) => setSelectedDate(day.dateString)}
