@@ -3,7 +3,6 @@ import { TouchableOpacity, View, Text, Image, Alert } from "react-native";
 import  Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import Feather from '@expo/vector-icons/Feather';
 import styles from "../styles";
 import { fetchUserGroups } from "../firebase/firestore";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
@@ -14,7 +13,6 @@ import { ThemeContext } from '../context/ThemeContext';
 export default function Profile({ navigation }) {
   const [image, setImage] = useState(null)
   const [name, setName] = useState("");
-  const defaultAvatar = require("../assets/hacker.png")
   const [userGroups, setUserGroups] = useState([])
   const { isDarkMode } = useContext(ThemeContext)
   const [isLoading, setIsLoading] = useState(true)
@@ -193,12 +191,13 @@ export default function Profile({ navigation }) {
         <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
             {/* Profile section */}
             <View style={styles.profile}>
-                <Image
-                    source={image ? { uri: image } : defaultAvatar}
-                    style={styles.avatar}
-                />
-                <Feather 
-                    name="edit-2" 
+            {image ? (
+              <Image source={{ uri: image }} style={styles.avatar} />
+            ) : (
+              <Ionicons name="person-circle" size={100} color="black" />
+            )}
+                <Ionicons
+                    name="pencil-outline" 
                     size={20} 
                     color={isDarkMode ? "#fff" : "#4F4F4F"} 
                     onPress={handleEditPhoto}
