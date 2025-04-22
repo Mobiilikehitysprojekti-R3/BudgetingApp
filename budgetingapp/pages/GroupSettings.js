@@ -92,10 +92,6 @@ export default function GroupSettings({ route }) {
         isDarkMode ? styles.settingsContainer2DarkMode : styles.settingsContainer2
       ]}>
 
-      <View style={styles.settingsTitleWrapper}>
-        <Text style={[styles.title, styles.settingsTitle]}>Group Settings</Text>
-      </View>
-
       <View style={styles.membersSection}>
         <Text style={[styles.link, styles.membersLabel]}>Group Members</Text>
   
@@ -104,7 +100,7 @@ export default function GroupSettings({ route }) {
           data={members}
           keyExtractor={(item) => item.uid}
           renderItem={({ item }) => (
-            <View style={[styles.editRow, {paddingVertical: 5}]}>
+            <View style={[styles.editRow, isDarkMode ? styles.categorySummaryDarkMode : styles.categorySummary, {paddingVertical: 8 }]}>
               <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>
                 {item.name}
               </Text>

@@ -199,7 +199,7 @@ export default function Group({ route, navigation }) {
       {group?.owner === auth.currentUser?.uid && (
       <Ionicons 
         name="add-circle-outline" 
-        size={30} color="#A984BE" 
+        size={33} color="#A984BE" 
         onPress={handleOpenCreateBudgetModal}
       />
       )}

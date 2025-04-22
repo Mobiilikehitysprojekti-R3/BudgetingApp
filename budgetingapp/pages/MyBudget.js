@@ -47,8 +47,6 @@ export default function MyBudget() {
   const { isDarkMode } = useContext(ThemeContext)
   const [monthlySavings, setMonthlySavings] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
-  
-
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -195,7 +193,6 @@ export default function MyBudget() {
     return savings;
   };
 
-
   useFocusEffect(
     useCallback(() => {
       fetchUserBudgetData();
@@ -204,7 +201,6 @@ export default function MyBudget() {
     }, [])
   );
   
-
   useEffect(() => {
     const loadGroups = async () => {
       const userGroups = await fetchUserGroups();
@@ -319,20 +315,20 @@ export default function MyBudget() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#1A1A1A' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#1A1A1A' : '#' }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1,}}
       keyboardVerticalOffset={100}
     >
 
-  <ScrollView contentContainerStyle={{ paddingBottom: 120 }} style={styles.scrollView}>
+  <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 10, paddingHorizontal: 5 }} style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
    {/* Calendar Icon to Open Calendar */}
    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
       <Text style={[isDarkMode ? styles.subtitleDarkMode : styles.subtitle, { flex: 1 }]}>
         {budgetTotal !== null && budgetTotal !== undefined 
-          ? `Your budget: €${budgetTotal.toFixed(2)}` 
-          : 'Your budget: €0.00'}
+          ? `Your Budget: €${budgetTotal.toFixed(2)}` 
+          : 'Your Budget: €0.00'}
       </Text>
       <TouchableOpacity onPress={() => setShowCalendar(true)}>
         <Ionicons name="calendar-outline" size={30} color="#A984BE" />
@@ -346,8 +342,10 @@ export default function MyBudget() {
         {/* Calendar Modal */}
         {showCalendar && (
           <Modal transparent={true} animationType="slide" visible={showCalendar}>
-          <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+          <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+          <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+            onPress={() => setShowCalendar(false)}/>
           <Calendar
             onDayPress={(day) => {
               setSelectedDate(day.dateString);
@@ -358,6 +356,16 @@ export default function MyBudget() {
                 selected: true,
                 selectedColor: '#00adf5',
               },
+            }}
+            theme={{
+              backgroundColor: isDarkMode ? '#1A1A1A' : '#fff',
+              calendarBackground: isDarkMode ? '#1A1A1A' : '#fff',
+              dayTextColor: isDarkMode ? '#fff' : '#000',
+              selectedDayBackgroundColor: '#00adf5',
+              selectedDayTextColor: '#fff',
+              arrowColor: isDarkMode ? '#fff' : '#000',
+              monthTextColor: isDarkMode ? '#fff' : '#000',
+              textSectionTitleColor: isDarkMode ? '#fff' : '#000',
             }}
             style={{ marginBottom: 20 }}
           />
@@ -395,17 +403,15 @@ export default function MyBudget() {
             }}
           />
         )}
-
-        <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.buttonForm}>
-          <Text style={styles.buttonTextMiddle}>Close</Text>
-        </TouchableOpacity>
       </View>
     </View>
   </Modal>
   )}
 
         <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-        <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
+        <View style={{ marginBottom: 10 }}>
+          <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
+          </View>
 
 
 {Object.entries(filteredBudget).map(([category, expenses]) => {
@@ -445,7 +451,6 @@ export default function MyBudget() {
 <Modal visible={detailModalVisible} animationType="slide" transparent>
   <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
     <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
-    <View style={{marginBottom: 5}}>
     <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
         onPress={() => setDetailModalVisible(false)}/>
       <Text style={[styles.link, { marginTop: 10 }]}>Details for {activeCategory?.toUpperCase()}</Text>
@@ -460,7 +465,6 @@ export default function MyBudget() {
           </View>
         ))}
       </ScrollView>
-      </View>
     </View>
   </View>
 </Modal>
@@ -562,11 +566,11 @@ export default function MyBudget() {
     <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
     <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
         onPress={() => setRecurringModalVisible(false)}/>
-    <Text style={isDarkMode ? styles.subtitleDarkMode : styles.subtitle}>Recurring Expenses</Text>
+    <Text style={[styles.link, { marginTop: 10 }]}>Recurring Expenses</Text>
     {recurringItems
       ?.filter((item) => item.type === 'expense')
       .map((item, index) => (
-      <View key={`${item.expense}-${index}`} style={styles.budgetItem}>
+      <View key={`${item.expense}-${index}`} style={isDarkMode ? styles.budgetItemDarkMode : styles.budgetItem}>
       <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>
         {item.expense}: €{item.amount} ({item.interval})
       </Text>

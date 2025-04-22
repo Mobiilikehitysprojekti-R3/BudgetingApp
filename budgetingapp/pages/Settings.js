@@ -129,8 +129,7 @@ export default function Settings({ navigation }) {
 
   return (
     <ScrollView style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
-    <View style={styles.settingsContainer}>  
-      <Text style={styles.title}>Settings</Text>
+    <View style={styles.settingsContainer}>
       <View style={styles.settingsForm}>
         <Text style={styles.link}>Profile settings</Text>
         {!isEditing ? (

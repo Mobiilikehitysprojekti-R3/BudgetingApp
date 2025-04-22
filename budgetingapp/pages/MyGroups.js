@@ -41,7 +41,6 @@ export default function MyGroups({ navigation }) {
 
   return (
   <View style={isDarkMode ? styles.containerDarkMode : styles.container}>
-		<Text style={styles.title}>MY GROUPS</Text>
 	<View style={styles.list}>
     <FlatList
       data={groups}
@@ -58,7 +57,7 @@ export default function MyGroups({ navigation }) {
 
 		<Ionicons 
 			name="add-circle-outline" 
-			size={30} color="#A984BE" 
+			size={33} color="#A984BE" 
 			onPress={() => {setOpenCreateGroupModal(true)}}
 		/>
 		<CreateGroupModal 

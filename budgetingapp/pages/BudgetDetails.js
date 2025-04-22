@@ -4,6 +4,7 @@ import { fetchBudgetById } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
 import styles from "../styles.js";
 import { ThemeContext } from '../context/ThemeContext.js';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 /* 
     The BudgetDetails component displays information about a specific
@@ -58,17 +59,19 @@ export default function BudgetDetails({ route }) {
     }
 
     return (
-        <ScrollView style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
-        <Text style={styles.title}>Budget Details</Text>
-
-        <BudgetPieChart data={formattedBudget} onSlicePress={handleCategoryPress} />
-
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 5 }} style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
+        <View style={{ marginBottom: 10 }}>
+          <BudgetPieChart data={formattedBudget} onSlicePress={handleCategoryPress} />
+        </View>
         {Object.entries(formattedBudget).map(([category, expenses]) => {
             const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
             return (
             <TouchableOpacity key={category} onPress={() => handleCategoryPress(category)}
             style={isDarkMode ? styles.categorySummaryDarkMode : styles.categorySummary}>
-                <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{category.toUpperCase()}: ${total}</Text>
+                <View style={styles.row}>
+                <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>{category.toUpperCase()}</Text>
+                <Text style={isDarkMode ? styles.categorySummaryTextDarkMode : styles.categorySummaryText}>€{total}</Text>
+                </View>
             </TouchableOpacity>
         )
     })}
@@ -76,6 +79,8 @@ export default function BudgetDetails({ route }) {
         <Modal visible={detailModalVisible} animationType="slide" transparent>
         <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
           <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+          <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+            onPress={() => setDetailModalVisible(false)}/>
             <Text style={[styles.link, { marginTop: 10 }]}>Details for {selectedCategory?.toUpperCase()}</Text>
             <ScrollView style={{ maxHeight: 300 }}>
               {selectedCategory &&
@@ -86,10 +91,6 @@ export default function BudgetDetails({ route }) {
                   </View>
                 ))}
             </ScrollView>
-            <View style={{marginTop: 10}}>
-            <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
-              <Text style={styles.buttonTextMiddle}>Close</Text>
-            </TouchableOpacity></View>
           </View>
         </View>
       </Modal>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TextInput, Button, Alert, TouchableOpacity, Modal } from 'react-native';
 import { fetchGroupBudgetById, addGroupBudgetField, deleteGroupBudgetField, setGroupBudget, deleteBudget } from '../firebase/firestore';
 import BudgetPieChart from '../components/BudgetPieChart.js';
@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { Calendar } from 'react-native-calendars';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { ThemeContext } from '../context/ThemeContext.js';
+import { getAuth } from 'firebase/auth'
 
 /*
   The GroupBudget component allows users to manage a group budget.
@@ -17,8 +19,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 */
 
 export default function GroupBudget({ route, navigation }) {
-  const categories = ['groceries', 'essentials', 'entertainment', 'other']
-
+  const categories = ['Groceries', 'Home', 'Essentials', 'Investments', 'Entertainment', 'Hobbies', 'Other'];
+  
   const { budgetId } = route.params
   const [groupBudget, setGroupBudgetState] = useState(null)
   const [expenseName, setExpenseName] = useState('')
@@ -35,16 +37,25 @@ export default function GroupBudget({ route, navigation }) {
   const [markedDates, setMarkedDates] = useState({})
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
+  const { isDarkMode } = useContext(ThemeContext)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const currentUserId = getAuth().currentUser?.uid
+  const isOwner = currentUserId === groupBudget?.ownerId;
 
   // Load group budget data
-  const loadGroupBudget = async () => {
+  useEffect(() => {
+    fetchBudget();
+  }, [budgetId]);
+  
+  const fetchBudget = async () => {
     try {
-      const data = await fetchGroupBudgetById(budgetId)
-      setGroupBudgetState(data)
+      const budgetData = await fetchGroupBudgetById(budgetId);
+      console.log("Fetched Budget:", budgetData); // Check if the budget data is being fetched correctly
+      setGroupBudgetState(budgetData);
     } catch (error) {
-      console.error('Error fetching group budget:', error)
+      console.error("Error fetching group budget:", error);
     }
-  }
+  };  
 
   const updateRemainingBudget = async () => {
     const value = parseFloat(newRemainingValue)
@@ -60,7 +71,7 @@ export default function GroupBudget({ route, navigation }) {
     } else {
       setIsEditingRemaining(false)
       setNewRemainingValue('')
-      loadGroupBudget()
+      fetchBudget()
     }
   }  
 
@@ -77,7 +88,7 @@ export default function GroupBudget({ route, navigation }) {
       Alert.alert('Error', result.error)
     } else {
       setInitialBudget('')
-      loadGroupBudget()
+      fetchBudget()
     }
   }
 
@@ -89,13 +100,14 @@ export default function GroupBudget({ route, navigation }) {
       return
     }
 
-    const result = await addGroupBudgetField(budgetId, selectedCategory, expenseName, value, selectedDate)
+    const budgetDate = selectedDate || new Date().toISOString().split('T')[0];
+    const result = await addGroupBudgetField(budgetId, selectedCategory, expenseName, value, budgetDate)
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
       setExpenseName('')
       setFieldValue('')
-      loadGroupBudget()
+      fetchBudget()
     }
   }
 
@@ -114,7 +126,7 @@ export default function GroupBudget({ route, navigation }) {
     if (result.error) {
       Alert.alert('Error', result.error)
     } else {
-      loadGroupBudget()
+      fetchBudget()
     }
   }
 
@@ -146,11 +158,6 @@ export default function GroupBudget({ route, navigation }) {
     setDetailModalVisible(true)
   }
 
-
-  useEffect(() => {
-    loadGroupBudget()
-  }, [budgetId])
-
   if (!groupBudget) {
     return (
       <View style={styles.container}>
@@ -170,33 +177,88 @@ export default function GroupBudget({ route, navigation }) {
   })
 
   return (
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#1A1A1A' : '#' }}>
     <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={100}
-        >
-    <ScrollView style={styles.scrollView}>
-      <Text style={styles.title}>Group Budget</Text>
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1,}}
+      keyboardVerticalOffset={100}
+    >
 
-      <Calendar
-        onDayPress={(day) => setSelectedDate(day.dateString)}
-        markedDates={{
-          ...markedDates,
-          ...(selectedDate && {
-            [selectedDate]: {
-              selected: true,
-              selectedColor: '#00adf5',
-              marked: markedDates[selectedDate]?.marked,
-              dotColor: markedDates[selectedDate]?.dotColor
-            }
-        })
-      }}/>
+  <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingTop: 10, paddingHorizontal: 5 }} style={isDarkMode ? styles.scrollViewDarkMode : styles.scrollView}>
+    {/* Calendar Modal */}
+    {showCalendar && (
+          <Modal transparent={true} animationType="slide" visible={showCalendar}>
+          <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+          <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+          <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+            onPress={() => setShowCalendar(false)}/>
+          <Calendar
+            onDayPress={(day) => {
+              setSelectedDate(day.dateString);
+              setShowCalendar(false);
+            }}
+            markedDates={{
+              [selectedDate]: {
+                selected: true,
+                selectedColor: '#00adf5',
+              },
+            }}
+            theme={{
+              backgroundColor: isDarkMode ? '#1A1A1A' : '#fff',
+              calendarBackground: isDarkMode ? '#1A1A1A' : '#fff',
+              dayTextColor: isDarkMode ? '#fff' : '#000',
+              selectedDayBackgroundColor: '#00adf5',
+              selectedDayTextColor: '#fff',
+              arrowColor: isDarkMode ? '#fff' : '#000',
+              monthTextColor: isDarkMode ? '#fff' : '#000',
+              textSectionTitleColor: isDarkMode ? '#fff' : '#000',
+            }}
+            style={{ marginBottom: 20 }}
+          />
+
+        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {startDate ? `Start: ${startDate}` : 'Select Start Date'}
+          </Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate ? new Date(startDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
+        )}
+
+        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
+          <Text style={styles.buttonTextMiddle}>
+            {endDate ? `End: ${endDate}` : 'Select End Date'}
+          </Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate ? new Date(endDate) : new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
+            }}
+          />
+        )}
+      </View>
+    </View>
+  </Modal>
+  )}
 
       {groupBudget.remainingBudget === undefined ? (
         <View>
-          <Text style={styles.title}>Set Budget</Text>
+          <Text style={isDarkMode ? styles.subtitleDarkMode : styles.subtitle}>Set Budget</Text>
           <TextInput
-            style={styles.inputActive}
+            style={isDarkMode ? styles.inputActiveDarkMode : styles.inputActive}
             placeholder="Enter budget amount"
             value={initialBudget}
             onChangeText={setInitialBudget}
@@ -211,26 +273,30 @@ export default function GroupBudget({ route, navigation }) {
               <View style={styles.editRow}>
 
               <TextInput
-                style={[styles.editInput, styles.remainingInputInline]}
+                style={[isDarkMode ? styles.editInputDarkMode : styles.editInput, styles.remainingInputInline]}
                 value={newRemainingValue}
                 onChangeText={setNewRemainingValue}
                 keyboardType="numeric"
                 placeholder="Remaining budget"
               />
 
-              <Button title="Save" onPress={updateRemainingBudget} />
-              <Button title="Cancel" onPress={() => {
+              <TouchableOpacity style={styles.buttonForm2} onPress={updateRemainingBudget}>
+                <Text style={styles.buttonTextMiddle}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.buttonForm2} onPress={() => {
                 setIsEditingRemaining(false)
                 setNewRemainingValue('')
-              }}/>
-          </View>
+              }}>
+                <Text style={styles.buttonTextMiddle}>Cancel</Text>
+              </TouchableOpacity>
+              </View>
           ) : (
             <View style={styles.editRow}>
-            <Text style={styles.remaining}>Remaining: ${groupBudget.remainingBudget}</Text>
+            <Text style={isDarkMode ? styles.subtitleDarkMode : styles.subtitle}>Budget: €{groupBudget.remainingBudget}</Text>
               <Ionicons
               name="pencil"
               size={20}
-              color="#4F4F4F"
+              color={isDarkMode ? "#fff" : "#000"}
               onPress={() => {
                 setIsEditingRemaining(true)
                 setNewRemainingValue(String(groupBudget.remainingBudget))
@@ -239,111 +305,97 @@ export default function GroupBudget({ route, navigation }) {
               )}
           </View>
 
-          <View style={{ marginVertical: 10 }}>
-          <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.buttonForm}>
-            <Text style={styles.buttonTextMiddle}>
-              {startDate ? `Start: ${startDate}` : 'Select Start Date'}
-            </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <TouchableOpacity onPress={() => setShowCalendar(true)} style={{ marginLeft: 'auto' }}>
+            <Ionicons name="calendar-outline" size={30} color="#A984BE" />
           </TouchableOpacity>
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate ? new Date(startDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowStartPicker(false);
-                if (selectedDate) setStartDate(selectedDate.toISOString().split('T')[0]);
-              }}
-            />
-          )}
+          </View>
 
-          <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.buttonForm}>
-            <Text style={styles.buttonTextMiddle}>
-              {endDate ? `End: ${endDate}` : 'Select End Date'}
-            </Text>
-          </TouchableOpacity>
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate ? new Date(endDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowEndPicker(false);
-                if (selectedDate) setEndDate(selectedDate.toISOString().split('T')[0]);
-              }}
-            />
-          )}
-        </View>
+          <View style={{ marginBottom: 10 }}>
+          <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
+          </View>
 
-          <View style={styles.pickerWrapper}>
+      {Object.entries(filteredBudget).map(([category, expenses]) => {
+          const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
+          return (
+            <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={isDarkMode? styles.categorySummaryDarkMode : styles.categorySummary}>
+              <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{category.toUpperCase()}: ${total}</Text>
+            </TouchableOpacity>
+          );
+        })}
+        </>
+      )}
+
+<View style={{ marginTop: 10, marginBottom: 5 }}>
+        <View style={isDarkMode? styles.pickerWrapperDarkMode : styles.pickerWrapper}>
           <Picker
+            style={isDarkMode? styles.regularTextDarkMode : styles.regularText}
             selectedValue={selectedCategory}
             onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            dropdownIconColor="#4F4F4F">
-
+            dropdownIconColor= {isDarkMode ? '#fff' : '#4F4F4F'}
+          >
             {categories.map((cat) => (
               <Picker.Item key={cat} label={cat} value={cat} />
             ))}
           </Picker>
         </View>
 
-          <TextInput
-            style={styles.inputActive}
-            placeholder="New field name"
-            value={expenseName}
-            onChangeText={setExpenseName}
-          />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+        <TextInput
+          style={[isDarkMode ? styles.inputActiveDarkMode : styles.inputActive, { flex: 1 }]}
+          placeholder="Description"
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
+          value={expenseName}
+          onChangeText={setExpenseName}
+        />
+        <TextInput
+          style={[isDarkMode ? styles.inputActiveDarkMode : styles.inputActive, { width: 100 }]}
+          placeholder="Amount"
+          placeholderTextColor={isDarkMode ? '#6B6B6B' : '#aaa'}
+          value={fieldValue}
+          onChangeText={setFieldValue}
+          keyboardType="numeric"
+        /></View>
 
-          <TextInput
-            style={styles.inputActive}
-            placeholder="Amount"
-            value={fieldValue}
-            onChangeText={setFieldValue}
-            keyboardType="numeric"
-          />
+<View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 5 }}>
+      <Ionicons 
+        name="add-circle-outline" 
+        size={33} color="#A984BE" 
+        onPress={handleAddField}
+      />
+</View></View>
 
-          <Button title="Add Group Expense" onPress={handleAddField} />
-        </>
-      )}
-
-      <BudgetPieChart data={filteredBudget} onSlicePress={handleSlicePress} />
-
-      <Text style={styles.title2}>Group Expenses:</Text>
-      {Object.entries(filteredBudget).map(([category, expenses]) => {
-          const total = Object.values(expenses).reduce((sum, val) => sum + val, 0);
-          return (
-            <TouchableOpacity key={category} onPress={() => handleSlicePress(category)} style={styles.categorySummary}>
-              <Text>{category.toUpperCase()}: ${total}</Text>
+<Modal visible={detailModalVisible} animationType="slide" transparent>
+  <View style={isDarkMode ? styles.modalOverlayDarkMode : styles.modalOverlay}>
+    <View style={isDarkMode ? styles.modalContentDarkMode : styles.modalContent}>
+    <Ionicons name="close" size={27} color={isDarkMode ? "#fff" : "#000"}
+        onPress={() => setDetailModalVisible(false)}/>
+      <Text style={[styles.link, { marginTop: 10 }]}>Details for {activeCategory?.toUpperCase()}</Text>
+      <ScrollView style={{ maxHeight: 300 }}>
+        {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
+          <View key={name} style={isDarkMode ? styles.budgetItemDarkMode : styles.budgetItem}>
+            <Text style={isDarkMode ? styles.regularTextDarkMode : styles.regularText}>{name}: €{value}</Text>
+            <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
+              <Text style={styles.deleteButton}>
+                <Ionicons name="close-outline" size={25}></Ionicons></Text>
             </TouchableOpacity>
-          );
-        })}
-
-      <Modal visible={detailModalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.title2}>Details for {activeCategory?.toUpperCase()}</Text>
-              <ScrollView style={{ maxHeight: 300 }}>
-                {activeCategory && filteredBudget[activeCategory] && Object.entries(filteredBudget[activeCategory]).map(([name, value]) => (
-                  <View key={name} style={styles.budgetItem}>
-                    <Text>{name}: ${value}</Text>
-                    <TouchableOpacity onPress={() => handleDeleteField(activeCategory, name)}>
-                      <Text style={styles.deleteButton}>❌</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-              <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={styles.buttonForm}>
-                <Text style={styles.buttonTextMiddle}>Close</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </Modal>
+        ))}
+      </ScrollView>
+    </View>
+  </View>
+</Modal>
 
-        <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteBudgetPress}>
-          <Text style={styles.deleteText}>Delete budget</Text>
-            <Ionicons name="trash-outline" size={16} color="#4F4F4F" />
-        </TouchableOpacity>
+        {isOwner && (
+          <View style={styles.deleteWrapper}>
+            <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteBudgetPress}>
+              <Text style={styles.deleteText}>Delete Budget</Text>
+              <Ionicons name="trash-outline" size={16} color={isDarkMode ? 'red' : '#4F4F4F'} />
+            </TouchableOpacity>
+          </View>
+        )}
     </ScrollView>
     </KeyboardAvoidingView>
+    </View>
   )
 }

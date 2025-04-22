@@ -22,13 +22,13 @@ const styles = StyleSheet.create({
     titleDark: {
         fontSize: 24,
         marginBottom: 20,
-        color: "#4F4F4F"
+        color: "#000"
     },
     /* A smaller title */
     subtitle: {
         fontSize: 18,
         marginBottom: 10,
-        color: "#4F4F4F"
+        color: "#000"
     },
     /* Text */
     regularText: {
@@ -117,6 +117,14 @@ const styles = StyleSheet.create({
         marginTop: 8,
         marginBottom: 5,
     },
+    buttonForm2: {
+        backgroundColor: '#A984BE',
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     /* Button text aligned left */
     buttonText: {
         color: "white",
@@ -129,7 +137,7 @@ const styles = StyleSheet.create({
         color: "white",
         fontSize: 18,
         fontWeight: "bold",
-        textAlign: "center",
+        textAlign: "center"
     },
     iconStyle: {
         marginRight: 20,
@@ -180,7 +188,8 @@ const styles = StyleSheet.create({
         width: "85%",
         backgroundColor: "#FFF",
         borderRadius: 18,
-        padding: 25,
+        padding: 20,
+        paddingBottom: 25,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -245,7 +254,7 @@ const styles = StyleSheet.create({
     },
     categorySummary: {
         width: '100%',
-        backgroundColor: '#eee',
+        backgroundColor: '#e7e7e7',
         borderRadius: 10,
         padding: 10,
         marginVertical: 5,
@@ -266,11 +275,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'green',
     },
-    remaining: {
+    /*remaining: {
         fontSize: 18,
         fontWeight: 'bold',
         color: 'blue',
-    },
+    },*/
     budgetItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -366,10 +375,12 @@ const styles = StyleSheet.create({
     },
     settingsContainer2: {
         flex: 1,
+        paddingTop: 40,
         paddingHorizontal: 15,
     },
     settingsContainer2DarkMode: {
         flex: 1,
+        paddingTop: 40,
         paddingHorizontal: 15,
         backgroundColor: "#1A1A1A"
     },
@@ -555,6 +566,14 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 10,
         color: "#fff"
+    },
+    editInputDarkMode: {
+        backgroundColor: '#444444',
+        color: '#fff',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#6B6B6B',
+        borderRadius: 5,
     },
 })
 

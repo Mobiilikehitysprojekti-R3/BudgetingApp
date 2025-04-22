@@ -803,22 +803,33 @@ const fetchBudgetById = async (budgetId) => {
 
 // Set initial budget for the group
 const createGroupBudget = async ({ budgetName, groupId }) => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("No user logged in.");
+    return null;
+  }
+
   try {
-  //Get the group's info
-  const groupBudgetRef = collection(db, "groupBudget")
-  const newBudget = await addDoc(groupBudgetRef, {
+    // Get the group's info (optional, if needed for other properties)
+    const groupBudgetRef = collection(db, "groupBudget");
+
+    // Create a new budget with ownerId set to the current user's UID
+    const newBudget = await addDoc(groupBudgetRef, {
       name: budgetName,
       groupId: groupId,
-      budget: {},
-  });
+      budget: {}, // You can fill this with your actual budget structure
+      ownerId: user.uid, // Add the ownerId field here
+      remainingBudget: 2722, // Example: initial budget for the group (if needed)
+    });
 
-      console.log("Budget created with ID:", newBudget.id);
-      return newBudget.id;
+    console.log("Budget created with ID:", newBudget.id);
+    return newBudget.id;
   } catch (error) {
-      console.error("Error creating budget:", error);
-      return null;
+    console.error("Error creating budget:", error);
+    return null;
   }
 }
+
 // Using for listing
 const fetchGroupBudgets = async (groupId) => {
   if (!groupId) {
@@ -1293,6 +1304,13 @@ const deleteBudget = async (budgetId) => {
 
         if (!groupBudgetSnap.exists()) {
             console.error("Group budget does not exist.");
+            return;
+        }
+
+        // Verify the current user is the owner
+        const groupBudgetData = groupBudgetSnap.data();
+        if (groupBudgetData.ownerId !== user.uid) {
+            console.error("Only the owner can delete the budget.");
             return;
         }
 
